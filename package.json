@@ -1,0 +1,59 @@
+{
+  "name": "passive-docs-index",
+  "version": "0.1.0",
+  "description": "Passive documentation indexing system for AI coding assistants - eliminates the decision point for documentation retrieval",
+  "type": "module",
+  "bin": {
+    "pdi": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "dev": "bun run --watch src/cli.ts",
+    "build": "bun build src/cli.ts --outfile dist/cli.js --target node --format esm && bun build src/index.ts --outfile dist/index.js --target node --format esm",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "prepublishOnly": "bun run build"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "yaml": "^2.7.0",
+    "ora": "^8.2.0",
+    "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.2",
+    "@types/prompts": "^2.4.9",
+    "typescript": "^5.7.3"
+  },
+  "keywords": [
+    "ai",
+    "documentation",
+    "claude",
+    "claude-code",
+    "agents",
+    "llm",
+    "context",
+    "index"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/user/passive-docs-index"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
