@@ -51,7 +51,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/user/passive-docs-index"
+    "url": "https://github.com/syx-labs/passive-docs-index"
   },
   "engines": {
     "node": ">=18.0.0"
