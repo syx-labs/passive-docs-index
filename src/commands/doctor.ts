@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { checkAvailability } from '../lib/context7-client.js';
 import { configExists, readConfig, readPackageJson, detectDependencies } from '../lib/config.js';
-import { hasTemplate, listTemplates } from '../lib/templates.js';
+import { hasTemplate } from '../lib/templates.js';
 import { CLAUDE_DOCS_DIR } from '../lib/constants.js';
 
 interface DiagnosticResult {
@@ -113,9 +113,10 @@ export async function doctorCommand(): Promise<void> {
   }
 
   // 5. Check installed docs
+  let config: Awaited<ReturnType<typeof readConfig>> = null;
   if (isInitialized) {
     spinner.start('Checking installed docs...');
-    const config = await readConfig(projectRoot);
+    config = await readConfig(projectRoot);
 
     if (config) {
       const frameworkCount = Object.keys(config.frameworks).length;
@@ -232,11 +233,10 @@ export async function doctorCommand(): Promise<void> {
     console.log(chalk.cyan('  2. pdi init          # Initialize PDI in this project'));
   }
 
-  if (isInitialized && packageJson) {
+  if (isInitialized && packageJson && config) {
     const detected = detectDependencies(packageJson);
-    const config = await readConfig(projectRoot);
     const notInstalled = detected.filter(
-      (d) => d.framework && hasTemplate(d.framework.name) && !config?.frameworks[d.framework.name]
+      (d) => d.framework && hasTemplate(d.framework.name) && !config.frameworks[d.framework.name]
     );
 
     if (notInstalled.length > 0) {

@@ -83,7 +83,7 @@ export async function updateCommand(
         initial: true,
       });
 
-      if (!response.confirm) {
+      if (response.confirm === undefined || !response.confirm) {
         console.log(chalk.dim('Cancelled.'));
         return;
       }
@@ -204,7 +204,7 @@ export async function updateCommand(
       ...existingConfig,
       source: 'context7',
       lastUpdate: new Date().toISOString(),
-      files: Math.max(fileCount, existingConfig.files || 0),
+      files: fileCount,
     };
 
     config = updateFrameworkInConfig(config, frameworkName, frameworkConfig);
