@@ -214,34 +214,41 @@ export async function updateCommand(
 
     totalUpdated += successCount;
 
-    // Update config
-    const frameworkConfig: FrameworkConfig = {
-      ...existingConfig,
-      source: "context7",
-      lastUpdate: new Date().toISOString(),
-      files: fileCount,
-    };
+    // Only update config if files were successfully updated
+    if (successCount > 0) {
+      const frameworkConfig: FrameworkConfig = {
+        ...existingConfig,
+        source: "context7",
+        lastUpdate: new Date().toISOString(),
+        files: fileCount,
+      };
 
-    config = updateFrameworkInConfig(config, frameworkName, frameworkConfig);
+      config = updateFrameworkInConfig(config, frameworkName, frameworkConfig);
+    }
   }
 
-  // Save config
-  config = updateSyncTime(config);
-  await writeConfig(projectRoot, config);
+  // Only save config and update index if any files were updated
+  if (totalUpdated > 0) {
+    config = updateSyncTime(config);
+    await writeConfig(projectRoot, config);
 
-  // Update index in CLAUDE.md
-  spinner.start("Updating index in CLAUDE.md...");
+    spinner.start("Updating index in CLAUDE.md...");
 
-  const indexResult = await updateClaudeMdFromConfig({ projectRoot, config });
+    const indexResult = await updateClaudeMdFromConfig({ projectRoot, config });
 
-  spinner.succeed(
-    `Updated index in CLAUDE.md (${indexResult.indexSize.toFixed(2)}KB)`
-  );
+    spinner.succeed(
+      `Updated index in CLAUDE.md (${indexResult.indexSize.toFixed(2)}KB)`
+    );
+  }
 
   // Final summary
   console.log("");
-  console.log(chalk.green("✓ Update complete"));
-  console.log(chalk.dim(`  Updated: ${totalUpdated} files`));
+  if (totalUpdated > 0) {
+    console.log(chalk.green("✓ Update complete"));
+    console.log(chalk.dim(`  Updated: ${totalUpdated} files`));
+  } else {
+    console.log(chalk.yellow("No files were updated"));
+  }
 
   if (totalFailed > 0) {
     console.log(chalk.yellow(`  Failed: ${totalFailed} files`));

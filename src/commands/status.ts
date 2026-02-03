@@ -53,7 +53,7 @@ export async function statusCommand(): Promise<void> {
     { version: string; categories: Record<string, string[]> }
   > = {};
   for (const [framework, frameworkConfig] of Object.entries(
-    config.frameworks
+    config.frameworks || {}
   )) {
     const docs = allDocs[framework] || {};
     const categories: Record<string, string[]> = {};

@@ -172,6 +172,7 @@ export async function addCommand(
           // Fallback to placeholder
           content = generatePlaceholderDoc(
             template.displayName,
+            template.name,
             version,
             query.category,
             query.file,
@@ -190,6 +191,7 @@ export async function addCommand(
         // Generate placeholder content
         content = generatePlaceholderDoc(
           template.displayName,
+          template.name,
           version,
           query.category,
           query.file,
@@ -285,7 +287,8 @@ export async function addCommand(
 }
 
 function generatePlaceholderDoc(
-  frameworkName: string,
+  displayName: string,
+  slug: string,
   version: string,
   category: string,
   fileName: string,
@@ -296,7 +299,7 @@ function generatePlaceholderDoc(
   const capitalizedTitle = title.charAt(0).toUpperCase() + title.slice(1);
 
   return `---
-# Part of Passive Docs Index for ${frameworkName}@${version}
+# Part of Passive Docs Index for ${displayName}@${version}
 # Source: Placeholder (needs CONTEXT7_API_KEY)
 # Last updated: ${new Date().toISOString().split("T")[0]}
 # Category: ${category}
@@ -322,7 +325,7 @@ Query: ${query}
    \`\`\`
 3. Update docs:
    \`\`\`bash
-   pdi update ${frameworkName.toLowerCase()}
+   pdi update ${slug}
    \`\`\`
 `;
 }

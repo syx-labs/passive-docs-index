@@ -95,7 +95,7 @@ export async function updateClaudeMdFromConfig(
   const result = await updateClaudeMdIndex(
     projectRoot,
     sections,
-    config.mcp.libraryMappings
+    config?.mcp?.libraryMappings ?? {}
   );
 
   return {

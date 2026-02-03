@@ -181,7 +181,7 @@ program
 // Update command
 program
   .command("update")
-  .description("Update docs to latest versions via Context7 MCP")
+  .description("Update docs to latest versions (HTTP first, MCP fallback)")
   .argument("[frameworks...]", "Specific frameworks to update (all if omitted)")
   .option("-f, --force", "Force update even if already up-to-date")
   .option("-y, --yes", "Accept all updates without prompting")

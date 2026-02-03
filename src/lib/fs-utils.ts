@@ -12,7 +12,7 @@ import {
   stat,
   writeFile,
 } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { join, normalize, relative, sep } from "node:path";
 import { CLAUDE_DOCS_DIR, FRAMEWORKS_DIR, INTERNAL_DIR } from "./constants.js";
 import type { DocFile } from "./types.js";
 
@@ -270,7 +270,7 @@ export async function calculateDocsSize(projectRoot: string): Promise<{
 
     const fileStat = await stat(filePath);
     const relativePath = relative(docsPath, filePath);
-    const parts = relativePath.split("/");
+    const parts = normalize(relativePath).split(sep);
 
     total += fileStat.size;
 

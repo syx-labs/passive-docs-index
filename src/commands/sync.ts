@@ -299,7 +299,11 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
     internalIndex
   );
 
-  await updateClaudeMdIndex(projectRoot, sections, config.mcp.libraryMappings);
+  await updateClaudeMdIndex(
+    projectRoot,
+    sections,
+    config?.mcp?.libraryMappings ?? {}
+  );
   spinner.succeed("Updated index in CLAUDE.md");
 
   // Update sync time and save config

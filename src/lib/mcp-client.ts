@@ -34,11 +34,47 @@ export interface Context7ResolveParams {
 // MCP CLI Detection
 // ============================================================================
 
-let mcpCliPath: string | null = null;
+/**
+ * Structure to hold CLI command info without naive string splitting.
+ * This avoids issues with paths containing spaces (e.g., "/Users/John Doe/...").
+ */
+interface McpCliInfo {
+  cmd: string;
+  baseArgs: string[];
+}
+
+let mcpCliInfo: McpCliInfo | null = null;
 let mcpCliAvailable: boolean | null = null;
 
+const isWindows = process.platform === "win32";
+
 /**
- * Find the mcp-cli executable path
+ * Find an executable in PATH using platform-appropriate command.
+ * Uses 'where' on Windows, 'which' on POSIX.
+ *
+ * Security note: Only static command names are passed to execSync,
+ * no user input is ever interpolated into shell commands.
+ */
+function findInPath(executable: string): string | null {
+  try {
+    // These are static commands with known executable names
+    const cmd = isWindows
+      ? `where ${executable}`
+      : `which ${executable} 2>/dev/null`;
+    const result = execSync(cmd, { encoding: "utf-8" }).trim();
+    // 'where' on Windows may return multiple lines; take first
+    const firstLine = result.split(/\r?\n/)[0];
+    if (firstLine && existsSync(firstLine)) {
+      return firstLine;
+    }
+  } catch {
+    // Not found
+  }
+  return null;
+}
+
+/**
+ * Find the mcp-cli executable info.
  * mcp-cli can be:
  * 1. A standalone executable in PATH
  * 2. Part of Claude Code (claude --mcp-cli)
@@ -46,24 +82,17 @@ let mcpCliAvailable: boolean | null = null;
  * Security note: This function only uses execSync with static commands,
  * no user input is ever passed to shell commands.
  */
-function findMcpCliPath(): string | null {
+function findMcpCliInfo(): McpCliInfo | null {
   // Check if already found
-  if (mcpCliPath !== null) {
-    return mcpCliPath;
+  if (mcpCliInfo !== null) {
+    return mcpCliInfo;
   }
 
   // Try to find standalone mcp-cli in PATH
-  // Note: 'which mcp-cli' is a static command with no user input
-  try {
-    const which = execSync("which mcp-cli 2>/dev/null", {
-      encoding: "utf-8",
-    }).trim();
-    if (which && existsSync(which)) {
-      mcpCliPath = which;
-      return mcpCliPath;
-    }
-  } catch {
-    // Not found via which
+  const mcpCliExe = findInPath("mcp-cli");
+  if (mcpCliExe) {
+    mcpCliInfo = { cmd: mcpCliExe, baseArgs: [] };
+    return mcpCliInfo;
   }
 
   // Check common Claude Code installation paths
@@ -73,6 +102,8 @@ function findMcpCliPath(): string | null {
     join(home, ".local/share/claude"),
     // Linux
     join(home, ".local/bin"),
+    // Windows
+    join(home, "AppData", "Local", "Programs", "claude"),
     // Check for versioned claude
     join(home, ".local/share/claude/versions"),
   ];
@@ -88,9 +119,12 @@ function findMcpCliPath(): string | null {
         const versions = readdirSync(basePath).sort().reverse();
         for (const version of versions) {
           const versionPath = join(basePath, version);
-          if (existsSync(versionPath)) {
-            mcpCliPath = `${versionPath} --mcp-cli`;
-            return mcpCliPath;
+          const claudeExe = isWindows
+            ? join(versionPath, "claude.exe")
+            : versionPath;
+          if (existsSync(claudeExe)) {
+            mcpCliInfo = { cmd: claudeExe, baseArgs: ["--mcp-cli"] };
+            return mcpCliInfo;
           }
         }
       } catch {
@@ -99,28 +133,23 @@ function findMcpCliPath(): string | null {
     }
 
     // Check for direct claude executable
-    const claudePath = join(basePath, "claude");
-    if (existsSync(claudePath)) {
-      mcpCliPath = `${claudePath} --mcp-cli`;
-      return mcpCliPath;
+    const claudeExe = isWindows
+      ? join(basePath, "claude.exe")
+      : join(basePath, "claude");
+    if (existsSync(claudeExe)) {
+      mcpCliInfo = { cmd: claudeExe, baseArgs: ["--mcp-cli"] };
+      return mcpCliInfo;
     }
   }
 
   // Fallback: try to use 'claude' command if available
-  // Note: 'which claude' is a static command with no user input
-  try {
-    const claudeWhich = execSync("which claude 2>/dev/null", {
-      encoding: "utf-8",
-    }).trim();
-    if (claudeWhich && existsSync(claudeWhich)) {
-      mcpCliPath = `${claudeWhich} --mcp-cli`;
-      return mcpCliPath;
-    }
-  } catch {
-    // Not found
+  const claudeExe = findInPath(isWindows ? "claude.exe" : "claude");
+  if (claudeExe) {
+    mcpCliInfo = { cmd: claudeExe, baseArgs: ["--mcp-cli"] };
+    return mcpCliInfo;
   }
 
-  mcpCliPath = null;
+  mcpCliInfo = null;
   return null;
 }
 
@@ -132,18 +161,16 @@ export async function isMcpCliAvailable(): Promise<boolean> {
     return mcpCliAvailable;
   }
 
-  const cliPath = findMcpCliPath();
-  if (!cliPath) {
+  const cliInfo = findMcpCliInfo();
+  if (!cliInfo) {
     mcpCliAvailable = false;
     return false;
   }
 
   return new Promise((resolve) => {
-    // Parse the command - it might be "path --mcp-cli"
-    const [cmd, ...args] = cliPath.split(" ");
-    const versionArgs = [...args, "--version"];
+    const versionArgs = [...cliInfo.baseArgs, "--version"];
 
-    const child = spawn(cmd, versionArgs, {
+    const child = spawn(cliInfo.cmd, versionArgs, {
       stdio: ["ignore", "pipe", "pipe"],
     });
 
@@ -185,7 +212,7 @@ export async function isMcpCliAvailable(): Promise<boolean> {
  */
 export function resetMcpCliCache(): void {
   mcpCliAvailable = null;
-  mcpCliPath = null;
+  mcpCliInfo = null;
 }
 
 // ============================================================================
@@ -204,8 +231,8 @@ async function executeMcpCliCall(
   params: Record<string, unknown>,
   timeoutMs = 60_000
 ): Promise<MCPResult> {
-  const cliPath = findMcpCliPath();
-  if (!cliPath) {
+  const cliInfo = findMcpCliInfo();
+  if (!cliInfo) {
     return {
       success: false,
       error: "mcp-cli not found",
@@ -215,16 +242,14 @@ async function executeMcpCliCall(
   const toolPath = `${server}/${tool}`;
   const paramsJson = JSON.stringify(params);
 
-  // Parse the command - it might be "path --mcp-cli"
-  const [cmd, ...baseArgs] = cliPath.split(" ");
-  const callArgs = [...baseArgs, "call", toolPath, paramsJson];
+  const callArgs = [...cliInfo.baseArgs, "call", toolPath, paramsJson];
 
   return new Promise((resolve) => {
     let stdout = "";
     let stderr = "";
     let resolved = false;
 
-    const child = spawn(cmd, callArgs, {
+    const child = spawn(cliInfo.cmd, callArgs, {
       stdio: ["ignore", "pipe", "pipe"],
     });
 

@@ -122,12 +122,25 @@ export async function doctorCommand(): Promise<void> {
   let config: Awaited<ReturnType<typeof readConfig>> = null;
   if (isInitialized) {
     spinner.start("Checking installed docs...");
-    config = await readConfig(projectRoot);
+    try {
+      config = await readConfig(projectRoot);
+    } catch (err) {
+      config = null;
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown error";
+      results.push({
+        name: "Docs",
+        status: "error",
+        message: `Failed to read config: ${errorMessage}`,
+        hint: "Fix or remove invalid config JSON",
+      });
+      spinner.fail(`Config: ${chalk.red("invalid JSON")}`);
+    }
 
     if (config) {
       const frameworkCount = Object.keys(config.frameworks).length;
       const totalFiles = Object.values(config.frameworks).reduce(
-        (sum, fw) => sum + fw.files,
+        (sum, fw) => sum + (fw.files ?? 0),
         0
       );
 
