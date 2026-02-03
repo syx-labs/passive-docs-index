@@ -11,14 +11,21 @@ import { addCommand } from './commands/add.js';
 import { statusCommand } from './commands/status.js';
 import { syncCommand } from './commands/sync.js';
 import { cleanCommand } from './commands/clean.js';
+import { updateCommand } from './commands/update.js';
+import { generateCommand } from './commands/generate.js';
+import { authCommand, loadApiKeyFromConfig } from './commands/auth.js';
+import { doctorCommand } from './commands/doctor.js';
 import { listTemplates } from './lib/templates.js';
+
+// Load API key from global config if not in environment
+await loadApiKeyFromConfig();
 
 const program = new Command();
 
 program
   .name('pdi')
   .description('Passive Docs Index - Documentation management for AI coding assistants')
-  .version('0.1.0');
+  .version('0.2.0');
 
 // Init command
 program
@@ -39,15 +46,16 @@ program
 // Add command
 program
   .command('add')
-  .description('Add documentation for frameworks')
-  .argument('<frameworks...>', 'Framework names to add (e.g., hono drizzle zod)')
+  .description('Add documentation for frameworks (interactive if no args)')
+  .argument('[frameworks...]', 'Framework names to add (e.g., hono drizzle zod)')
   .option('-v, --version <version>', 'Specify version (e.g., 4.x)')
   .option('--minimal', 'Download only essential docs')
   .option('-f, --force', 'Overwrite existing docs')
   .option('--no-index', 'Do not update CLAUDE.md index')
+  .option('--offline', 'Generate placeholders only (skip MCP)')
   .action(async (frameworks, options) => {
     try {
-      await addCommand(frameworks, options);
+      await addCommand(frameworks || [], options);
     } catch (error) {
       console.error(chalk.red('Error:'), error instanceof Error ? error.message : error);
       process.exit(1);
@@ -134,33 +142,65 @@ program
     console.log('');
   });
 
-// Update command (placeholder)
+// Update command
 program
   .command('update')
-  .description('Update docs to latest versions')
-  .argument('[frameworks...]', 'Specific frameworks to update')
-  .action(async (frameworks) => {
-    console.log(chalk.yellow('Update command coming soon.'));
-    console.log(chalk.dim('For now, use: pdi add --force <framework>'));
+  .description('Update docs to latest versions via Context7 MCP')
+  .argument('[frameworks...]', 'Specific frameworks to update (all if omitted)')
+  .option('-f, --force', 'Force update even if already up-to-date')
+  .option('-y, --yes', 'Accept all updates without prompting')
+  .action(async (frameworks, options) => {
+    try {
+      await updateCommand(frameworks, options);
+    } catch (error) {
+      console.error(chalk.red('Error:'), error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
   });
 
-// Generate internal command (placeholder)
+// Generate internal command
 program
   .command('generate')
   .description('Generate internal pattern documentation')
   .argument('<type>', 'Type of docs to generate (internal)')
   .option('--category <category>', 'Specific category to generate')
   .option('--dry-run', 'Show what would be generated')
-  .option('--ai', 'Use AI to enhance descriptions')
+  .option('--ai', 'Use AI to enhance descriptions (requires API key)')
   .action(async (type, options) => {
-    if (type !== 'internal') {
-      console.log(chalk.red(`Unknown type: ${type}`));
-      console.log(chalk.dim('Available: internal'));
-      return;
+    try {
+      await generateCommand(type, options);
+    } catch (error) {
+      console.error(chalk.red('Error:'), error instanceof Error ? error.message : error);
+      process.exit(1);
     }
+  });
 
-    console.log(chalk.yellow('Generate internal command coming soon.'));
-    console.log(chalk.dim('This will analyze your codebase and generate pattern documentation.'));
+// Auth command
+program
+  .command('auth')
+  .description('Configure Context7 API key')
+  .option('-s, --status', 'Show authentication status')
+  .option('--logout', 'Remove saved API key')
+  .action(async (options) => {
+    try {
+      await authCommand(options);
+    } catch (error) {
+      console.error(chalk.red('Error:'), error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
+
+// Doctor command
+program
+  .command('doctor')
+  .description('Diagnose configuration and provide recommendations')
+  .action(async () => {
+    try {
+      await doctorCommand();
+    } catch (error) {
+      console.error(chalk.red('Error:'), error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
   });
 
 // Parse and run

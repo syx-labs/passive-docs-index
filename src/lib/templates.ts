@@ -370,7 +370,7 @@ export const TAILWIND_TEMPLATE: FrameworkTemplate = {
   displayName: 'Tailwind CSS',
   version: '4.x',
   source: 'context7',
-  libraryId: '/tailwindlabs/tailwindcss',
+  libraryId: '/tailwindlabs/tailwindcss.com',
   category: 'styling',
   priority: 'P1',
   description: 'A utility-first CSS framework for rapid UI development.',

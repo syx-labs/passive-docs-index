@@ -204,7 +204,7 @@ export const KNOWN_FRAMEWORKS: KnownFramework[] = [
     pattern: /^tailwindcss$/,
     name: 'tailwind',
     displayName: 'Tailwind CSS',
-    libraryId: '/tailwindlabs/tailwindcss',
+    libraryId: '/tailwindlabs/tailwindcss.com',
     category: 'styling',
   },
 

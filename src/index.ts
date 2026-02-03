@@ -77,6 +77,31 @@ export {
   generateBatchQueries,
 } from './lib/context7.js';
 
+// MCP Client (low-level)
+export {
+  queryContext7 as queryContext7Mcp,
+  resolveContext7Library,
+  isMcpCliAvailable,
+  resetMcpCliCache,
+  extractContext7Content,
+  queryContext7Batch,
+  type MCPResult,
+  type BatchQueryItem,
+  type BatchQueryResult,
+} from './lib/mcp-client.js';
+
+// Context7 Unified Client (recommended)
+export {
+  queryContext7,
+  searchLibrary,
+  checkAvailability,
+  isHttpClientAvailable,
+  resetClients,
+  type Context7Result,
+  type Context7ClientConfig,
+  type AvailabilityStatus,
+} from './lib/context7-client.js';
+
 // File System Utils
 export {
   ensureDir,
@@ -107,3 +132,17 @@ export {
   KNOWN_FRAMEWORKS,
   PROJECT_TYPE_INDICATORS,
 } from './lib/constants.js';
+
+// Commands (for programmatic use)
+export {
+  initCommand,
+  addCommand,
+  statusCommand,
+  syncCommand,
+  cleanCommand,
+  updateCommand,
+  generateCommand,
+  authCommand,
+  doctorCommand,
+  loadApiKeyFromConfig,
+} from './commands/index.js';
