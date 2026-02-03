@@ -3,31 +3,31 @@
  * Removes orphan docs and optimizes the index
  */
 
-import { join } from 'node:path';
-import chalk from 'chalk';
-import ora from 'ora';
-import prompts from 'prompts';
+import { join } from "node:path";
+import chalk from "chalk";
+import ora from "ora";
+import prompts from "prompts";
 import {
-  readConfig,
-  writeConfig,
   configExists,
-  readPackageJson,
   detectDependencies,
+  readConfig,
+  readPackageJson,
   removeFrameworkFromConfig,
-} from '../lib/config.js';
+  writeConfig,
+} from "../lib/config.js";
+import { CLAUDE_DOCS_DIR, FRAMEWORKS_DIR } from "../lib/constants.js";
 import {
-  removeDir,
-  formatSize,
   calculateDocsSize,
+  formatSize,
   readAllFrameworkDocs,
   readInternalDocs,
-} from '../lib/fs-utils.js';
+  removeDir,
+} from "../lib/fs-utils.js";
 import {
   buildIndexSections,
-  updateClaudeMdIndex,
   calculateIndexSize,
-} from '../lib/index-parser.js';
-import { CLAUDE_DOCS_DIR, FRAMEWORKS_DIR } from '../lib/constants.js';
+  updateClaudeMdIndex,
+} from "../lib/index-parser.js";
 
 interface CleanOptions {
   yes?: boolean;
@@ -40,14 +40,14 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
 
   // Check if initialized
   if (!(await configExists(projectRoot))) {
-    console.log(chalk.red('PDI not initialized. Run: pdi init'));
+    console.log(chalk.red("PDI not initialized. Run: pdi init"));
     return;
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    console.log(chalk.red('Failed to read config'));
+    console.log(chalk.red("Failed to read config"));
     return;
   }
 
@@ -73,8 +73,13 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
   const allDocsBefore = await readAllFrameworkDocs(projectRoot);
   const internalDocs = await readInternalDocs(projectRoot);
 
-  const frameworksIndexBefore: Record<string, { version: string; categories: Record<string, string[]> }> = {};
-  for (const [framework, frameworkConfig] of Object.entries(config.frameworks)) {
+  const frameworksIndexBefore: Record<
+    string,
+    { version: string; categories: Record<string, string[]> }
+  > = {};
+  for (const [framework, frameworkConfig] of Object.entries(
+    config.frameworks
+  )) {
     const docs = allDocsBefore[framework] || {};
     const categories: Record<string, string[]> = {};
     for (const [category, files] of Object.entries(docs)) {
@@ -93,7 +98,7 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
 
   const sectionsBefore = buildIndexSections(
     `.claude-docs/${FRAMEWORKS_DIR}`,
-    `.claude-docs/internal`,
+    ".claude-docs/internal",
     frameworksIndexBefore,
     internalIndex
   );
@@ -101,16 +106,18 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
   const indexSizeBefore = calculateIndexSize(sectionsBefore);
 
   // Display findings
-  console.log(chalk.bold('PDI Clean'));
-  console.log('');
+  console.log(chalk.bold("PDI Clean"));
+  console.log("");
 
   if (orphans.length === 0) {
-    console.log(chalk.green('✓ No orphan docs found'));
+    console.log(chalk.green("✓ No orphan docs found"));
   } else {
-    console.log(chalk.yellow('Found orphan docs:'));
+    console.log(chalk.yellow("Found orphan docs:"));
     let totalOrphanSize = 0;
     for (const orphan of orphans) {
-      console.log(`  ${chalk.dim('└──')} ${orphan.name} (${formatSize(orphan.sizeBytes)})`);
+      console.log(
+        `  ${chalk.dim("└──")} ${orphan.name} (${formatSize(orphan.sizeBytes)})`
+      );
       totalOrphanSize += orphan.sizeBytes;
     }
     console.log(chalk.dim(`  Total: ${formatSize(totalOrphanSize)}`));
@@ -118,33 +125,39 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
 
   // Dry run mode
   if (options.dryRun) {
-    console.log('');
-    console.log(chalk.dim('Dry run mode - no changes made'));
+    console.log("");
+    console.log(chalk.dim("Dry run mode - no changes made"));
     return;
   }
 
   // Nothing to clean
   if (orphans.length === 0) {
     // Still optimize index
-    console.log('');
-    spinner.start('Optimizing index...');
+    console.log("");
+    spinner.start("Optimizing index...");
 
     const sectionsAfter = buildIndexSections(
       `.claude-docs/${FRAMEWORKS_DIR}`,
-      `.claude-docs/internal`,
+      ".claude-docs/internal",
       frameworksIndexBefore,
       internalIndex
     );
 
     const indexSizeAfter = calculateIndexSize(sectionsAfter);
 
-    await updateClaudeMdIndex(projectRoot, sectionsAfter, config.mcp.libraryMappings);
+    await updateClaudeMdIndex(
+      projectRoot,
+      sectionsAfter,
+      config.mcp.libraryMappings
+    );
 
     if (indexSizeBefore > indexSizeAfter) {
       const saved = indexSizeBefore - indexSizeAfter;
-      spinner.succeed(`Optimized index (saved ${(saved * 1024).toFixed(0)} bytes)`);
+      spinner.succeed(
+        `Optimized index (saved ${(saved * 1024).toFixed(0)} bytes)`
+      );
     } else {
-      spinner.succeed('Index already optimized');
+      spinner.succeed("Index already optimized");
     }
 
     return;
@@ -152,28 +165,33 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
 
   // Confirm removal
   if (!options.yes) {
-    console.log('');
+    console.log("");
     const { confirmed } = await prompts({
-      type: 'confirm',
-      name: 'confirmed',
-      message: 'Remove orphan docs?',
+      type: "confirm",
+      name: "confirmed",
+      message: "Remove orphan docs?",
       initial: false,
     });
 
     if (!confirmed) {
-      console.log(chalk.dim('Cancelled'));
+      console.log(chalk.dim("Cancelled"));
       return;
     }
   }
 
-  console.log('');
+  console.log("");
 
   // Remove orphans
   let totalRemoved = 0;
   for (const orphan of orphans) {
     spinner.start(`Removing ${orphan.name}...`);
 
-    const frameworkPath = join(projectRoot, CLAUDE_DOCS_DIR, FRAMEWORKS_DIR, orphan.name);
+    const frameworkPath = join(
+      projectRoot,
+      CLAUDE_DOCS_DIR,
+      FRAMEWORKS_DIR,
+      orphan.name
+    );
     await removeDir(frameworkPath);
     config = removeFrameworkFromConfig(config, orphan.name);
 
@@ -187,12 +205,17 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
   }
 
   // Rebuild index
-  spinner.start('Rebuilding index...');
+  spinner.start("Rebuilding index...");
 
   const allDocsAfter = await readAllFrameworkDocs(projectRoot);
 
-  const frameworksIndexAfter: Record<string, { version: string; categories: Record<string, string[]> }> = {};
-  for (const [framework, frameworkConfig] of Object.entries(config.frameworks)) {
+  const frameworksIndexAfter: Record<
+    string,
+    { version: string; categories: Record<string, string[]> }
+  > = {};
+  for (const [framework, frameworkConfig] of Object.entries(
+    config.frameworks
+  )) {
     const docs = allDocsAfter[framework] || {};
     const categories: Record<string, string[]> = {};
     for (const [category, files] of Object.entries(docs)) {
@@ -206,30 +229,40 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
 
   const sectionsAfter = buildIndexSections(
     `.claude-docs/${FRAMEWORKS_DIR}`,
-    `.claude-docs/internal`,
+    ".claude-docs/internal",
     frameworksIndexAfter,
     internalIndex
   );
 
   const indexSizeAfter = calculateIndexSize(sectionsAfter);
 
-  await updateClaudeMdIndex(projectRoot, sectionsAfter, config.mcp.libraryMappings);
+  await updateClaudeMdIndex(
+    projectRoot,
+    sectionsAfter,
+    config.mcp.libraryMappings
+  );
   await writeConfig(projectRoot, config);
 
-  spinner.succeed('Rebuilt index');
+  spinner.succeed("Rebuilt index");
 
   // Summary
-  console.log('');
-  console.log(chalk.bold('Index optimization:'));
+  console.log("");
+  console.log(chalk.bold("Index optimization:"));
   console.log(`  Before: ${indexSizeBefore.toFixed(2)}KB`);
   console.log(`  After: ${indexSizeAfter.toFixed(2)}KB`);
 
   const savedKb = indexSizeBefore - indexSizeAfter;
   if (savedKb > 0) {
     const percent = ((savedKb / indexSizeBefore) * 100).toFixed(0);
-    console.log(`  ${chalk.green(`Saved: ${savedKb.toFixed(2)}KB (${percent}%)`)}`);
+    console.log(
+      `  ${chalk.green(`Saved: ${savedKb.toFixed(2)}KB (${percent}%)`)}`
+    );
   }
 
-  console.log('');
-  console.log(chalk.green(`✓ Cleaned ${orphans.length} orphan(s), freed ${formatSize(totalRemoved)}`));
+  console.log("");
+  console.log(
+    chalk.green(
+      `✓ Cleaned ${orphans.length} orphan(s), freed ${formatSize(totalRemoved)}`
+    )
+  );
 }

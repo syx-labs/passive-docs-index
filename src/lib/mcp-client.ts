@@ -6,10 +6,10 @@
  * No user input is passed to shell commands - all paths are system-detected constants.
  */
 
-import { spawn, execSync } from 'node:child_process';
-import { existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { homedir } from 'node:os';
+import { execSync, spawn } from "node:child_process";
+import { existsSync, readdirSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 // ============================================================================
 // Types
@@ -55,7 +55,9 @@ function findMcpCliPath(): string | null {
   // Try to find standalone mcp-cli in PATH
   // Note: 'which mcp-cli' is a static command with no user input
   try {
-    const which = execSync('which mcp-cli 2>/dev/null', { encoding: 'utf-8' }).trim();
+    const which = execSync("which mcp-cli 2>/dev/null", {
+      encoding: "utf-8",
+    }).trim();
     if (which && existsSync(which)) {
       mcpCliPath = which;
       return mcpCliPath;
@@ -68,18 +70,20 @@ function findMcpCliPath(): string | null {
   const home = homedir();
   const claudePaths = [
     // macOS
-    join(home, '.local/share/claude'),
+    join(home, ".local/share/claude"),
     // Linux
-    join(home, '.local/bin'),
+    join(home, ".local/bin"),
     // Check for versioned claude
-    join(home, '.local/share/claude/versions'),
+    join(home, ".local/share/claude/versions"),
   ];
 
   for (const basePath of claudePaths) {
-    if (!existsSync(basePath)) continue;
+    if (!existsSync(basePath)) {
+      continue;
+    }
 
     // Check for versioned installations
-    if (basePath.endsWith('versions')) {
+    if (basePath.endsWith("versions")) {
       try {
         const versions = readdirSync(basePath).sort().reverse();
         for (const version of versions) {
@@ -95,7 +99,7 @@ function findMcpCliPath(): string | null {
     }
 
     // Check for direct claude executable
-    const claudePath = join(basePath, 'claude');
+    const claudePath = join(basePath, "claude");
     if (existsSync(claudePath)) {
       mcpCliPath = `${claudePath} --mcp-cli`;
       return mcpCliPath;
@@ -105,7 +109,9 @@ function findMcpCliPath(): string | null {
   // Fallback: try to use 'claude' command if available
   // Note: 'which claude' is a static command with no user input
   try {
-    const claudeWhich = execSync('which claude 2>/dev/null', { encoding: 'utf-8' }).trim();
+    const claudeWhich = execSync("which claude 2>/dev/null", {
+      encoding: "utf-8",
+    }).trim();
     if (claudeWhich && existsSync(claudeWhich)) {
       mcpCliPath = `${claudeWhich} --mcp-cli`;
       return mcpCliPath;
@@ -134,24 +140,28 @@ export async function isMcpCliAvailable(): Promise<boolean> {
 
   return new Promise((resolve) => {
     // Parse the command - it might be "path --mcp-cli"
-    const [cmd, ...args] = cliPath.split(' ');
-    const versionArgs = [...args, '--version'];
+    const [cmd, ...args] = cliPath.split(" ");
+    const versionArgs = [...args, "--version"];
 
     const child = spawn(cmd, versionArgs, {
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: ["ignore", "pipe", "pipe"],
     });
 
     let resolved = false;
 
-    child.on('close', (code) => {
-      if (resolved) return;
+    child.on("close", (code) => {
+      if (resolved) {
+        return;
+      }
       resolved = true;
       mcpCliAvailable = code === 0;
       resolve(mcpCliAvailable);
     });
 
-    child.on('error', () => {
-      if (resolved) return;
+    child.on("error", () => {
+      if (resolved) {
+        return;
+      }
       resolved = true;
       mcpCliAvailable = false;
       resolve(false);
@@ -159,7 +169,9 @@ export async function isMcpCliAvailable(): Promise<boolean> {
 
     // Timeout after 5 seconds
     setTimeout(() => {
-      if (resolved) return;
+      if (resolved) {
+        return;
+      }
       resolved = true;
       child.kill();
       mcpCliAvailable = false;
@@ -190,13 +202,13 @@ async function executeMcpCliCall(
   server: string,
   tool: string,
   params: Record<string, unknown>,
-  timeoutMs: number = 60000
+  timeoutMs = 60_000
 ): Promise<MCPResult> {
   const cliPath = findMcpCliPath();
   if (!cliPath) {
     return {
       success: false,
-      error: 'mcp-cli not found',
+      error: "mcp-cli not found",
     };
   }
 
@@ -204,28 +216,30 @@ async function executeMcpCliCall(
   const paramsJson = JSON.stringify(params);
 
   // Parse the command - it might be "path --mcp-cli"
-  const [cmd, ...baseArgs] = cliPath.split(' ');
-  const callArgs = [...baseArgs, 'call', toolPath, paramsJson];
+  const [cmd, ...baseArgs] = cliPath.split(" ");
+  const callArgs = [...baseArgs, "call", toolPath, paramsJson];
 
   return new Promise((resolve) => {
-    let stdout = '';
-    let stderr = '';
+    let stdout = "";
+    let stderr = "";
     let resolved = false;
 
     const child = spawn(cmd, callArgs, {
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: ["ignore", "pipe", "pipe"],
     });
 
-    child.stdout.on('data', (data) => {
+    child.stdout.on("data", (data) => {
       stdout += data.toString();
     });
 
-    child.stderr.on('data', (data) => {
+    child.stderr.on("data", (data) => {
       stderr += data.toString();
     });
 
-    child.on('close', (code) => {
-      if (resolved) return;
+    child.on("close", (code) => {
+      if (resolved) {
+        return;
+      }
       resolved = true;
 
       if (code === 0 && stdout.trim()) {
@@ -241,8 +255,10 @@ async function executeMcpCliCall(
       }
     });
 
-    child.on('error', (err) => {
-      if (resolved) return;
+    child.on("error", (err) => {
+      if (resolved) {
+        return;
+      }
       resolved = true;
       resolve({
         success: false,
@@ -252,7 +268,9 @@ async function executeMcpCliCall(
 
     // Timeout
     setTimeout(() => {
-      if (resolved) return;
+      if (resolved) {
+        return;
+      }
       resolved = true;
       child.kill();
       resolve({
@@ -282,7 +300,7 @@ export async function queryContext7(
   if (!available) {
     return {
       success: false,
-      error: 'mcp-cli is not available. Install it or use --offline mode.',
+      error: "mcp-cli is not available. Install it or use --offline mode.",
     };
   }
 
@@ -292,10 +310,10 @@ export async function queryContext7(
   };
 
   return executeMcpCliCall(
-    'plugin_context7_context7',
-    'query-docs',
+    "plugin_context7_context7",
+    "query-docs",
     params as unknown as Record<string, unknown>,
-    60000 // 60 second timeout for doc queries
+    60_000 // 60 second timeout for doc queries
   );
 }
 
@@ -311,7 +329,7 @@ export async function resolveContext7Library(
   if (!available) {
     return {
       success: false,
-      error: 'mcp-cli is not available.',
+      error: "mcp-cli is not available.",
     };
   }
 
@@ -320,10 +338,10 @@ export async function resolveContext7Library(
   };
 
   return executeMcpCliCall(
-    'plugin_context7_context7',
-    'resolve-library-id',
+    "plugin_context7_context7",
+    "resolve-library-id",
     params as unknown as Record<string, unknown>,
-    30000 // 30 second timeout for resolution
+    30_000 // 30 second timeout for resolution
   );
 }
 
@@ -349,7 +367,11 @@ export interface BatchQueryResult {
  */
 export async function queryContext7Batch(
   queries: BatchQueryItem[],
-  onProgress?: (completed: number, total: number, current: BatchQueryItem) => void
+  onProgress?: (
+    completed: number,
+    total: number,
+    current: BatchQueryItem
+  ) => void
 ): Promise<BatchQueryResult[]> {
   const results: BatchQueryResult[] = [];
 
@@ -386,7 +408,7 @@ export function extractContext7Content(rawResponse: string): string {
     const parsed = JSON.parse(rawResponse);
 
     // Handle various response formats
-    if (typeof parsed === 'string') {
+    if (typeof parsed === "string") {
       return parsed;
     }
 
@@ -395,16 +417,20 @@ export function extractContext7Content(rawResponse: string): string {
       // Extract text content from each block
       const textParts: string[] = [];
       for (const block of parsed) {
-        if (typeof block === 'string') {
+        if (typeof block === "string") {
           textParts.push(block);
         } else if (block.text) {
           textParts.push(block.text);
         } else if (block.content) {
-          textParts.push(typeof block.content === 'string' ? block.content : JSON.stringify(block.content));
+          textParts.push(
+            typeof block.content === "string"
+              ? block.content
+              : JSON.stringify(block.content)
+          );
         }
       }
       if (textParts.length > 0) {
-        return textParts.join('\n\n');
+        return textParts.join("\n\n");
       }
     }
 
@@ -413,23 +439,23 @@ export function extractContext7Content(rawResponse: string): string {
       if (Array.isArray(parsed.content)) {
         const textParts: string[] = [];
         for (const block of parsed.content) {
-          if (typeof block === 'string') {
+          if (typeof block === "string") {
             textParts.push(block);
           } else if (block.text) {
             textParts.push(block.text);
           }
         }
         if (textParts.length > 0) {
-          return textParts.join('\n\n');
+          return textParts.join("\n\n");
         }
       }
-      return typeof parsed.content === 'string'
+      return typeof parsed.content === "string"
         ? parsed.content
         : JSON.stringify(parsed.content);
     }
 
     if (parsed.result) {
-      return typeof parsed.result === 'string'
+      return typeof parsed.result === "string"
         ? parsed.result
         : JSON.stringify(parsed.result);
     }

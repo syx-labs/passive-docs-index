@@ -3,31 +3,23 @@
  * Analyzes codebase and generates internal pattern documentation
  */
 
-import { existsSync } from 'node:fs';
-import { readFile, readdir, stat } from 'node:fs/promises';
-import { join, relative, extname } from 'node:path';
-import chalk from 'chalk';
-import ora from 'ora';
-import prompts from 'prompts';
-import type { PDIConfig } from '../lib/types.js';
+import { readdir, readFile, stat } from "node:fs/promises";
+import { extname, join, relative } from "node:path";
+import chalk from "chalk";
+import ora from "ora";
+import prompts from "prompts";
 import {
-  readConfig,
-  writeConfig,
   configExists,
+  readConfig,
   updateSyncTime,
-} from '../lib/config.js';
+  writeConfig,
+} from "../lib/config.js";
 import {
-  writeInternalDocFile,
   formatSize,
-  readAllFrameworkDocs,
   readInternalDocs,
-} from '../lib/fs-utils.js';
-import {
-  buildIndexSections,
-  updateClaudeMdIndex,
-  calculateIndexSize,
-} from '../lib/index-parser.js';
-import { FRAMEWORKS_DIR, INTERNAL_DIR } from '../lib/constants.js';
+  writeInternalDocFile,
+} from "../lib/fs-utils.js";
+import { updateClaudeMdFromConfig } from "../lib/index-utils.js";
 
 export interface GenerateOptions {
   category?: string;
@@ -40,7 +32,7 @@ interface DetectedPattern {
   category: string;
   fileName: string;
   description: string;
-  confidence: 'HIGH' | 'MEDIUM' | 'LOW';
+  confidence: "HIGH" | "MEDIUM" | "LOW";
   evidence: string[];
   suggestedContent: string;
 }
@@ -53,43 +45,51 @@ const PATTERN_DETECTORS: Array<{
   name: string;
   category: string;
   fileName: string;
-  detect: (files: FileInfo[], content: Map<string, string>) => DetectedPattern | null;
+  detect: (
+    files: FileInfo[],
+    content: Map<string, string>
+  ) => DetectedPattern | null;
 }> = [
   {
-    name: 'Two-Schema Database Pattern',
-    category: 'database',
-    fileName: 'two-schema-pattern.mdx',
+    name: "Two-Schema Database Pattern",
+    category: "database",
+    fileName: "two-schema-pattern.mdx",
     detect: (files, content) => {
       const schemaFiles = files.filter(
         (f) =>
-          f.path.includes('schema') &&
-          (f.name.endsWith('.ts') || f.name.endsWith('.js'))
+          f.path.includes("schema") &&
+          (f.name.endsWith(".ts") || f.name.endsWith(".js"))
       );
 
-      if (schemaFiles.length < 2) return null;
+      if (schemaFiles.length < 2) {
+        return null;
+      }
 
       // Look for Better Auth schema and custom schema
       const hasBetterAuthSchema = schemaFiles.some((f) => {
         const c = content.get(f.path);
-        return c && (c.includes('better-auth') || c.includes('betterAuth'));
+        return c && (c.includes("better-auth") || c.includes("betterAuth"));
       });
 
       const hasCustomSchema = schemaFiles.some((f) => {
         const c = content.get(f.path);
         return (
           c &&
-          !c.includes('better-auth') &&
-          (c.includes('pgTable') || c.includes('mysqlTable') || c.includes('sqliteTable'))
+          !c.includes("better-auth") &&
+          (c.includes("pgTable") ||
+            c.includes("mysqlTable") ||
+            c.includes("sqliteTable"))
         );
       });
 
       if (hasBetterAuthSchema && hasCustomSchema) {
         return {
-          name: 'Two-Schema Database Pattern',
-          category: 'database',
-          fileName: 'two-schema-pattern.mdx',
-          description: 'Separates auto-generated schemas (e.g., Better Auth) from application schemas',
-          confidence: 'HIGH',
+          name: "Two-Schema Database Pattern",
+          category: "database",
+          fileName: "two-schema-pattern.mdx",
+          description:
+            "Separates auto-generated schemas (e.g., Better Auth) from application schemas",
+          confidence: "HIGH",
           evidence: schemaFiles.map((f) => f.path),
           suggestedContent: generateTwoSchemaDoc(schemaFiles),
         };
@@ -99,30 +99,31 @@ const PATTERN_DETECTORS: Array<{
     },
   },
   {
-    name: 'Feature Gating Pattern',
-    category: 'database',
-    fileName: 'feature-gating.mdx',
+    name: "Feature Gating Pattern",
+    category: "database",
+    fileName: "feature-gating.mdx",
     detect: (files, content) => {
       const middlewareFiles = files.filter(
         (f) =>
-          (f.path.includes('middleware') || f.path.includes('guard')) &&
-          (f.name.endsWith('.ts') || f.name.endsWith('.js'))
+          (f.path.includes("middleware") || f.path.includes("guard")) &&
+          (f.name.endsWith(".ts") || f.name.endsWith(".js"))
       );
 
       for (const file of middlewareFiles) {
         const c = content.get(file.path);
         if (
           c &&
-          (c.includes('requireFeature') ||
-            c.includes('featureGate') ||
-            c.includes('checkFeature'))
+          (c.includes("requireFeature") ||
+            c.includes("featureGate") ||
+            c.includes("checkFeature"))
         ) {
           return {
-            name: 'Feature Gating Pattern',
-            category: 'database',
-            fileName: 'feature-gating.mdx',
-            description: 'Middleware pattern for gating features based on subscription/plan',
-            confidence: 'HIGH',
+            name: "Feature Gating Pattern",
+            category: "database",
+            fileName: "feature-gating.mdx",
+            description:
+              "Middleware pattern for gating features based on subscription/plan",
+            confidence: "HIGH",
             evidence: [file.path],
             suggestedContent: generateFeatureGatingDoc(file.path, c),
           };
@@ -133,12 +134,12 @@ const PATTERN_DETECTORS: Array<{
     },
   },
   {
-    name: 'ESM Imports Convention',
-    category: 'conventions',
-    fileName: 'esm-imports.mdx',
+    name: "ESM Imports Convention",
+    category: "conventions",
+    fileName: "esm-imports.mdx",
     detect: (files, content) => {
       const tsFiles = files.filter(
-        (f) => f.name.endsWith('.ts') && !f.name.endsWith('.d.ts')
+        (f) => f.name.endsWith(".ts") && !f.name.endsWith(".d.ts")
       );
 
       let withJsExt = 0;
@@ -146,14 +147,16 @@ const PATTERN_DETECTORS: Array<{
 
       for (const file of tsFiles.slice(0, 50)) {
         const c = content.get(file.path);
-        if (!c) continue;
+        if (!c) {
+          continue;
+        }
 
         // Count imports with and without .js extension
         const imports = c.match(/from\s+['"]\..*?['"]/g) || [];
         for (const imp of imports) {
-          if (imp.includes('.js')) {
+          if (imp.includes(".js")) {
             withJsExt++;
-          } else if (!imp.includes('.json')) {
+          } else if (!imp.includes(".json")) {
             withoutJsExt++;
           }
         }
@@ -161,11 +164,12 @@ const PATTERN_DETECTORS: Array<{
 
       if (withJsExt > 10 && withJsExt > withoutJsExt * 2) {
         return {
-          name: 'ESM Imports with .js Extension',
-          category: 'conventions',
-          fileName: 'esm-imports.mdx',
-          description: 'TypeScript imports use .js extension for ESM compatibility',
-          confidence: 'HIGH',
+          name: "ESM Imports with .js Extension",
+          category: "conventions",
+          fileName: "esm-imports.mdx",
+          description:
+            "TypeScript imports use .js extension for ESM compatibility",
+          confidence: "HIGH",
           evidence: [`${withJsExt} imports with .js extension found`],
           suggestedContent: generateEsmImportsDoc(),
         };
@@ -175,19 +179,23 @@ const PATTERN_DETECTORS: Array<{
     },
   },
   {
-    name: 'Path Aliases Convention',
-    category: 'conventions',
-    fileName: 'path-aliases.mdx',
+    name: "Path Aliases Convention",
+    category: "conventions",
+    fileName: "path-aliases.mdx",
     detect: (files, content) => {
       // Check tsconfig.json for path aliases
       const tsconfigFile = files.find(
-        (f) => f.name === 'tsconfig.json' && !f.path.includes('node_modules')
+        (f) => f.name === "tsconfig.json" && !f.path.includes("node_modules")
       );
 
-      if (!tsconfigFile) return null;
+      if (!tsconfigFile) {
+        return null;
+      }
 
       const c = content.get(tsconfigFile.path);
-      if (!c) return null;
+      if (!c) {
+        return null;
+      }
 
       try {
         const tsconfig = JSON.parse(c);
@@ -195,11 +203,11 @@ const PATTERN_DETECTORS: Array<{
 
         if (paths && Object.keys(paths).length > 0) {
           return {
-            name: 'Path Aliases Convention',
-            category: 'conventions',
-            fileName: 'path-aliases.mdx',
-            description: 'TypeScript path aliases for cleaner imports',
-            confidence: 'HIGH',
+            name: "Path Aliases Convention",
+            category: "conventions",
+            fileName: "path-aliases.mdx",
+            description: "TypeScript path aliases for cleaner imports",
+            confidence: "HIGH",
             evidence: Object.keys(paths).map((p) => `${p} -> ${paths[p]}`),
             suggestedContent: generatePathAliasesDoc(paths),
           };
@@ -212,35 +220,35 @@ const PATTERN_DETECTORS: Array<{
     },
   },
   {
-    name: 'Add Route Workflow',
-    category: 'workflows',
-    fileName: 'add-route.mdx',
+    name: "Add Route Workflow",
+    category: "workflows",
+    fileName: "add-route.mdx",
     detect: (files, content) => {
       // Look for Hono or Express route patterns
       const routeFiles = files.filter(
         (f) =>
-          (f.path.includes('route') || f.path.includes('api')) &&
-          (f.name.endsWith('.ts') || f.name.endsWith('.js'))
+          (f.path.includes("route") || f.path.includes("api")) &&
+          (f.name.endsWith(".ts") || f.name.endsWith(".js"))
       );
 
       const hasHono = routeFiles.some((f) => {
         const c = content.get(f.path);
-        return c && (c.includes('Hono') || c.includes('hono'));
+        return c && (c.includes("Hono") || c.includes("hono"));
       });
 
       const hasExpress = routeFiles.some((f) => {
         const c = content.get(f.path);
-        return c && c.includes('express');
+        return c?.includes("express");
       });
 
       if (hasHono || hasExpress) {
-        const framework = hasHono ? 'Hono' : 'Express';
+        const framework = hasHono ? "Hono" : "Express";
         return {
-          name: 'Add Route Workflow',
-          category: 'workflows',
-          fileName: 'add-route.mdx',
+          name: "Add Route Workflow",
+          category: "workflows",
+          fileName: "add-route.mdx",
           description: `Steps to add a new API route using ${framework}`,
-          confidence: 'MEDIUM',
+          confidence: "MEDIUM",
           evidence: routeFiles.slice(0, 3).map((f) => f.path),
           suggestedContent: generateAddRouteDoc(framework, routeFiles),
         };
@@ -264,18 +272,18 @@ interface FileInfo {
 async function scanProjectFiles(projectRoot: string): Promise<FileInfo[]> {
   const files: FileInfo[] = [];
   const ignoreDirs = new Set([
-    'node_modules',
-    '.git',
-    'dist',
-    'build',
-    '.claude-docs',
-    '.next',
-    '.nuxt',
-    'coverage',
+    "node_modules",
+    ".git",
+    "dist",
+    "build",
+    ".claude-docs",
+    ".next",
+    ".nuxt",
+    "coverage",
   ]);
 
   async function scan(dir: string): Promise<void> {
-    let entries;
+    let entries: import("node:fs").Dirent[];
     try {
       entries = await readdir(dir, { withFileTypes: true });
     } catch {
@@ -287,12 +295,12 @@ async function scanProjectFiles(projectRoot: string): Promise<FileInfo[]> {
       const fullPath = join(dir, entry.name);
 
       if (entry.isDirectory()) {
-        if (!ignoreDirs.has(entry.name) && !entry.name.startsWith('.')) {
+        if (!(ignoreDirs.has(entry.name) || entry.name.startsWith("."))) {
           await scan(fullPath);
         }
       } else {
         const ext = extname(entry.name);
-        if (['.ts', '.tsx', '.js', '.jsx', '.json'].includes(ext)) {
+        if ([".ts", ".tsx", ".js", ".jsx", ".json"].includes(ext)) {
           try {
             const fileStat = await stat(fullPath);
             files.push({
@@ -323,7 +331,7 @@ async function readFileContents(
 
   for (const file of filesToRead.slice(0, 200)) {
     try {
-      const content = await readFile(join(projectRoot, file.path), 'utf-8');
+      const content = await readFile(join(projectRoot, file.path), "utf-8");
       contents.set(file.path, content);
     } catch {
       // Skip files that can't be read
@@ -341,7 +349,7 @@ function generateTwoSchemaDoc(schemaFiles: FileInfo[]): string {
   return `---
 # Part of Passive Docs Index - Internal Patterns
 # Category: database
-# Last updated: ${new Date().toISOString().split('T')[0]}
+# Last updated: ${new Date().toISOString().split("T")[0]}
 ---
 
 # Two-Schema Database Pattern
@@ -350,7 +358,7 @@ This project separates database schemas into two files to maintain clean boundar
 
 ## Schema Files
 
-${schemaFiles.map((f) => `- \`${f.path}\``).join('\n')}
+${schemaFiles.map((f) => `- \`${f.path}\``).join("\n")}
 
 ## Pattern
 
@@ -382,11 +390,11 @@ import { db } from '@/db/database.js';
 `;
 }
 
-function generateFeatureGatingDoc(filePath: string, content: string): string {
+function generateFeatureGatingDoc(filePath: string, _content: string): string {
   return `---
 # Part of Passive Docs Index - Internal Patterns
 # Category: database
-# Last updated: ${new Date().toISOString().split('T')[0]}
+# Last updated: ${new Date().toISOString().split("T")[0]}
 ---
 
 # Feature Gating Pattern
@@ -404,7 +412,7 @@ Middleware pattern for controlling access to features based on subscription plan
 app.post('/api/resource',
   requireAuth,
   requireFeature({
-    resourceType: 'plataform',
+    resourceType: 'platform',
     featureKey: 'premium_feature',
     action: 'consume', // or 'read', 'write'
   }),
@@ -431,7 +439,7 @@ function generateEsmImportsDoc(): string {
   return `---
 # Part of Passive Docs Index - Internal Patterns
 # Category: conventions
-# Last updated: ${new Date().toISOString().split('T')[0]}
+# Last updated: ${new Date().toISOString().split("T")[0]}
 ---
 
 # ESM Imports Convention
@@ -468,13 +476,13 @@ import { User } from './types';
 
 function generatePathAliasesDoc(paths: Record<string, string[]>): string {
   const aliasesDoc = Object.entries(paths)
-    .map(([alias, targets]) => `- \`${alias}\` → \`${targets.join(', ')}\``)
-    .join('\n');
+    .map(([alias, targets]) => `- \`${alias}\` → \`${targets.join(", ")}\``)
+    .join("\n");
 
   return `---
 # Part of Passive Docs Index - Internal Patterns
 # Category: conventions
-# Last updated: ${new Date().toISOString().split('T')[0]}
+# Last updated: ${new Date().toISOString().split("T")[0]}
 ---
 
 # Path Aliases Convention
@@ -506,7 +514,7 @@ Aliases are defined in \`tsconfig.json\`:
     "paths": {
 ${Object.entries(paths)
   .map(([alias, targets]) => `      "${alias}": ${JSON.stringify(targets)}`)
-  .join(',\n')}
+  .join(",\n")}
     }
   }
 }
@@ -522,13 +530,13 @@ function generateAddRouteDoc(
   framework: string,
   routeFiles: FileInfo[]
 ): string {
-  const examplePath = routeFiles[0]?.path || 'src/routes/example.ts';
+  const examplePath = routeFiles[0]?.path || "src/routes/example.ts";
 
-  if (framework === 'Hono') {
+  if (framework === "Hono") {
     return `---
 # Part of Passive Docs Index - Internal Patterns
 # Category: workflows
-# Last updated: ${new Date().toISOString().split('T')[0]}
+# Last updated: ${new Date().toISOString().split("T")[0]}
 ---
 
 # Add Route Workflow (Hono)
@@ -600,7 +608,7 @@ app.use('/api/my-feature/*', requireAuth);
   return `---
 # Part of Passive Docs Index - Internal Patterns
 # Category: workflows
-# Last updated: ${new Date().toISOString().split('T')[0]}
+# Last updated: ${new Date().toISOString().split("T")[0]}
 ---
 
 # Add Route Workflow (Express)
@@ -664,39 +672,39 @@ export async function generateCommand(
   const projectRoot = process.cwd();
   const spinner = ora();
 
-  if (type !== 'internal') {
+  if (type !== "internal") {
     console.log(chalk.red(`Unknown type: ${type}`));
-    console.log(chalk.dim('Available: internal'));
+    console.log(chalk.dim("Available: internal"));
     return;
   }
 
   // Check if initialized
   if (!(await configExists(projectRoot))) {
-    console.log(chalk.red('PDI not initialized. Run: pdi init'));
+    console.log(chalk.red("PDI not initialized. Run: pdi init"));
     return;
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    console.log(chalk.red('Failed to read config'));
+    console.log(chalk.red("Failed to read config"));
     return;
   }
 
-  console.log(chalk.bold('Analyzing codebase...\n'));
+  console.log(chalk.bold("Analyzing codebase...\n"));
 
   // Scan project files
-  spinner.start('Scanning project files...');
+  spinner.start("Scanning project files...");
   const files = await scanProjectFiles(projectRoot);
   spinner.succeed(`Found ${files.length} source files`);
 
   // Read file contents
-  spinner.start('Reading file contents...');
+  spinner.start("Reading file contents...");
   const contents = await readFileContents(projectRoot, files);
   spinner.succeed(`Read ${contents.size} files`);
 
   // Detect patterns
-  spinner.start('Detecting patterns...');
+  spinner.start("Detecting patterns...");
   const detectedPatterns: DetectedPattern[] = [];
 
   for (const detector of PATTERN_DETECTORS) {
@@ -713,38 +721,42 @@ export async function generateCommand(
   spinner.succeed(`Detected ${detectedPatterns.length} patterns`);
 
   if (detectedPatterns.length === 0) {
-    console.log(chalk.yellow('\nNo patterns detected.'));
-    console.log(chalk.dim('This could mean:'));
-    console.log(chalk.dim('  - The codebase is too small'));
-    console.log(chalk.dim('  - Patterns use non-standard conventions'));
-    console.log(chalk.dim('  - Add patterns manually to .claude-docs/internal/'));
+    console.log(chalk.yellow("\nNo patterns detected."));
+    console.log(chalk.dim("This could mean:"));
+    console.log(chalk.dim("  - The codebase is too small"));
+    console.log(chalk.dim("  - Patterns use non-standard conventions"));
+    console.log(
+      chalk.dim("  - Add patterns manually to .claude-docs/internal/")
+    );
     return;
   }
 
   // Display detected patterns
-  console.log(chalk.bold('\nDetected patterns:'));
+  console.log(chalk.bold("\nDetected patterns:"));
 
   for (let i = 0; i < detectedPatterns.length; i++) {
     const p = detectedPatterns[i];
     const confColor =
-      p.confidence === 'HIGH'
+      p.confidence === "HIGH"
         ? chalk.green
-        : p.confidence === 'MEDIUM'
-        ? chalk.yellow
-        : chalk.dim;
+        : p.confidence === "MEDIUM"
+          ? chalk.yellow
+          : chalk.dim;
 
     console.log(`  ${i + 1}. ${p.name}`);
     console.log(`     ${chalk.dim(p.description)}`);
     console.log(`     Confidence: ${confColor(p.confidence)}`);
 
     if (p.evidence.length > 0) {
-      console.log(`     Evidence: ${chalk.dim(p.evidence.slice(0, 2).join(', '))}`);
+      console.log(
+        `     Evidence: ${chalk.dim(p.evidence.slice(0, 2).join(", "))}`
+      );
     }
   }
 
   // Dry run - just show what would be generated
   if (options.dryRun) {
-    console.log(chalk.yellow('\n[Dry run] Would generate:'));
+    console.log(chalk.yellow("\n[Dry run] Would generate:"));
     for (const p of detectedPatterns) {
       console.log(`  - .claude-docs/internal/${p.category}/${p.fileName}`);
     }
@@ -753,19 +765,19 @@ export async function generateCommand(
 
   // Confirm generation
   const response = await prompts({
-    type: 'confirm',
-    name: 'confirm',
+    type: "confirm",
+    name: "confirm",
     message: `Generate documentation for ${detectedPatterns.length} pattern(s)?`,
     initial: true,
   });
 
   if (!response.confirm) {
-    console.log(chalk.dim('Cancelled.'));
+    console.log(chalk.dim("Cancelled."));
     return;
   }
 
   // Generate documentation
-  console.log('');
+  console.log("");
   let generatedCount = 0;
 
   for (const pattern of detectedPatterns) {
@@ -778,20 +790,15 @@ export async function generateCommand(
       pattern.suggestedContent
     );
 
-    const size = Buffer.byteLength(pattern.suggestedContent, 'utf-8');
+    const size = Buffer.byteLength(pattern.suggestedContent, "utf-8");
     spinner.succeed(
-      `${chalk.green('✓')} .claude-docs/internal/${pattern.category}/${pattern.fileName} (${formatSize(size)})`
+      `${chalk.green("✓")} .claude-docs/internal/${pattern.category}/${pattern.fileName} (${formatSize(size)})`
     );
     generatedCount++;
   }
 
-  // Update index in CLAUDE.md
-  spinner.start('Updating index in CLAUDE.md...');
-
-  const allDocs = await readAllFrameworkDocs(projectRoot);
-  const internalDocs = await readInternalDocs(projectRoot);
-
   // Update config based on actual internal docs on disk (not just this run)
+  const internalDocs = await readInternalDocs(projectRoot);
   const internalCategories = Object.keys(internalDocs);
   const totalInternalFiles = Object.values(internalDocs).reduce(
     (sum, docs) => sum + docs.length,
@@ -805,41 +812,15 @@ export async function generateCommand(
   config = updateSyncTime(config);
   await writeConfig(projectRoot, config);
 
-  // Build framework index data
-  const frameworksIndex: Record<string, { version: string; categories: Record<string, string[]> }> = {};
+  // Update index in CLAUDE.md
+  spinner.start("Updating index in CLAUDE.md...");
 
-  for (const [framework, frameworkConfig] of Object.entries(config.frameworks)) {
-    const docs = allDocs[framework] || {};
-    const fwCategories: Record<string, string[]> = {};
+  const indexResult = await updateClaudeMdFromConfig({ projectRoot, config });
 
-    for (const [category, docFiles] of Object.entries(docs)) {
-      fwCategories[category] = docFiles.map((f) => f.name);
-    }
-
-    frameworksIndex[framework] = {
-      version: frameworkConfig.version,
-      categories: fwCategories,
-    };
-  }
-
-  // Build internal index data
-  const internalIndex: Record<string, string[]> = {};
-  for (const [category, docFiles] of Object.entries(internalDocs)) {
-    internalIndex[category] = docFiles.map((f) => f.name);
-  }
-
-  const sections = buildIndexSections(
-    `.claude-docs/${FRAMEWORKS_DIR}`,
-    `.claude-docs/${INTERNAL_DIR}`,
-    frameworksIndex,
-    internalIndex
+  spinner.succeed(
+    `Updated index in CLAUDE.md (${indexResult.indexSize.toFixed(2)}KB)`
   );
 
-  const indexSize = calculateIndexSize(sections);
-  await updateClaudeMdIndex(projectRoot, sections, config.mcp.libraryMappings);
-
-  spinner.succeed(`Updated index in CLAUDE.md (${indexSize.toFixed(2)}KB)`);
-
-  console.log('');
+  console.log("");
   console.log(chalk.green(`✓ Generated ${generatedCount} internal doc(s)`));
 }

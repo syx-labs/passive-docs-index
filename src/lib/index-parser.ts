@@ -3,11 +3,15 @@
  * Handles the compressed index format in CLAUDE.md
  */
 
-import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import type { IndexSection, IndexEntry, IndexCategory } from './types.js';
-import { CLAUDE_MD_FILE, PDI_BEGIN_MARKER, PDI_END_MARKER } from './constants.js';
+import { existsSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import {
+  CLAUDE_MD_FILE,
+  PDI_BEGIN_MARKER,
+  PDI_END_MARKER,
+} from "./constants.js";
+import type { IndexCategory, IndexEntry, IndexSection } from "./types.js";
 
 // ============================================================================
 // Index Parser
@@ -25,7 +29,7 @@ export function parseIndex(content: string): IndexSection[] {
   const sections: IndexSection[] = [];
   let currentSection: IndexSection | null = null;
 
-  const lines = content.split('\n').filter((line) => line.trim());
+  const lines = content.split("\n").filter((line) => line.trim());
 
   for (const line of lines) {
     // Section header: [Title]|root:path
@@ -43,7 +47,9 @@ export function parseIndex(content: string): IndexSection[] {
       continue;
     }
 
-    if (!currentSection) continue;
+    if (!currentSection) {
+      continue;
+    }
 
     // Critical instruction: |CRITICAL:text
     const criticalMatch = line.match(/^\|CRITICAL:(.+)$/);
@@ -69,16 +75,20 @@ export function parseIndex(content: string): IndexSection[] {
   return sections;
 }
 
-function parseEntry(packageName: string, version: string, categoriesStr: string): IndexEntry | null {
+function parseEntry(
+  packageName: string,
+  version: string,
+  categoriesStr: string
+): IndexEntry | null {
   const categories: IndexCategory[] = [];
 
   // Match category:{file1,file2} patterns
   const categoryPattern = /([^:{|]+):\{([^}]+)\}/g;
-  let match;
+  const matches = categoriesStr.matchAll(categoryPattern);
 
-  while ((match = categoryPattern.exec(categoriesStr)) !== null) {
+  for (const match of matches) {
     const [, categoryName, filesStr] = match;
-    const files = filesStr.split(',').map((f) => f.trim());
+    const files = filesStr.split(",").map((f) => f.trim());
     categories.push({
       name: categoryName,
       files,
@@ -118,38 +128,37 @@ export function generateIndex(sections: IndexSection[]): string {
     // Entries
     for (const entry of section.entries) {
       const categoriesStr = entry.categories
-        .map((cat) => `${cat.name}:{${cat.files.join(',')}}`)
-        .join('|');
+        .map((cat) => `${cat.name}:{${cat.files.join(",")}}`)
+        .join("|");
       lines.push(`|${entry.package}@${entry.version}|${categoriesStr}`);
     }
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
  * Generate the full index block including markers and MCP fallback comment
  */
-export function generateIndexBlock(sections: IndexSection[], libraryMappings?: Record<string, string>): string {
+export function generateIndexBlock(
+  sections: IndexSection[],
+  libraryMappings?: Record<string, string>
+): string {
   const indexContent = generateIndex(sections);
 
-  const lines = [
-    PDI_BEGIN_MARKER,
-    indexContent,
-    PDI_END_MARKER,
-  ];
+  const lines = [PDI_BEGIN_MARKER, indexContent, PDI_END_MARKER];
 
   // Add MCP fallback comment if mappings exist
   if (libraryMappings && Object.keys(libraryMappings).length > 0) {
     const mappingsStr = Object.entries(libraryMappings)
       .map(([name, id]) => `${name}=${id}`)
-      .join(', ');
-    lines.push('');
-    lines.push(`<!-- MCP Fallback: Context7 for expanded queries`);
+      .join(", ");
+    lines.push("");
+    lines.push("<!-- MCP Fallback: Context7 for expanded queries");
     lines.push(`     ${mappingsStr} -->`);
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 // ============================================================================
@@ -164,14 +173,16 @@ export async function claudeMdExists(projectRoot: string): Promise<boolean> {
   return existsSync(getClaudeMdPath(projectRoot));
 }
 
-export async function readClaudeMd(projectRoot: string): Promise<string | null> {
+export async function readClaudeMd(
+  projectRoot: string
+): Promise<string | null> {
   const claudePath = getClaudeMdPath(projectRoot);
 
   if (!existsSync(claudePath)) {
     return null;
   }
 
-  return await readFile(claudePath, 'utf-8');
+  return await readFile(claudePath, "utf-8");
 }
 
 /**
@@ -214,12 +225,12 @@ This file provides guidance to Claude Code when working with this repository.
 
 ${indexBlock}
 `;
-    await writeFile(claudePath, newContent, 'utf-8');
+    await writeFile(claudePath, newContent, "utf-8");
     return { created: true, updated: false };
   }
 
   // Read existing content
-  const existingContent = await readFile(claudePath, 'utf-8');
+  const existingContent = await readFile(claudePath, "utf-8");
 
   // Check if PDI markers exist
   const beginIdx = existingContent.indexOf(PDI_BEGIN_MARKER);
@@ -242,10 +253,14 @@ ${indexBlock}
       existingContent.slice(endOfBlock);
   } else {
     // Append index at the end
-    newContent = existingContent.trimEnd() + '\n\n---\n\n## Docs Index\n\n' + indexBlock + '\n';
+    newContent =
+      existingContent.trimEnd() +
+      "\n\n---\n\n## Docs Index\n\n" +
+      indexBlock +
+      "\n";
   }
 
-  await writeFile(claudePath, newContent, 'utf-8');
+  await writeFile(claudePath, newContent, "utf-8");
   return { created: false, updated: true };
 }
 
@@ -259,7 +274,10 @@ ${indexBlock}
 export function buildIndexSections(
   frameworksRoot: string,
   internalRoot: string,
-  frameworks: Record<string, { version: string; categories: Record<string, string[]> }>,
+  frameworks: Record<
+    string,
+    { version: string; categories: Record<string, string[]> }
+  >,
   internal: Record<string, string[]>,
   options: {
     frameworkCriticals?: string[];
@@ -270,21 +288,23 @@ export function buildIndexSections(
 
   // Framework docs section
   if (Object.keys(frameworks).length > 0) {
-    const entries: IndexEntry[] = Object.entries(frameworks).map(([pkg, data]) => ({
-      package: pkg,
-      version: data.version,
-      categories: Object.entries(data.categories).map(([name, files]) => ({
-        name,
-        files,
-      })),
-    }));
+    const entries: IndexEntry[] = Object.entries(frameworks).map(
+      ([pkg, data]) => ({
+        package: pkg,
+        version: data.version,
+        categories: Object.entries(data.categories).map(([name, files]) => ({
+          name,
+          files,
+        })),
+      })
+    );
 
     sections.push({
-      title: 'Framework Docs',
+      title: "Framework Docs",
       root: frameworksRoot,
       criticalInstructions: options.frameworkCriticals || [
-        'Prefer retrieval-led reasoning over pre-training-led reasoning',
-        'Read the relevant .mdx files BEFORE writing code that uses these libraries',
+        "Prefer retrieval-led reasoning over pre-training-led reasoning",
+        "Read the relevant .mdx files BEFORE writing code that uses these libraries",
       ],
       entries,
     });
@@ -292,25 +312,27 @@ export function buildIndexSections(
 
   // Internal patterns section
   if (Object.keys(internal).length > 0) {
-    const entries: IndexEntry[] = [];
+    const _entries: IndexEntry[] = [];
 
     // For internal, we use a single "entry" with all categories
     // This is a slight deviation from the spec but makes more sense
-    const categories: IndexCategory[] = Object.entries(internal).map(([name, files]) => ({
-      name,
-      files,
-    }));
+    const categories: IndexCategory[] = Object.entries(internal).map(
+      ([name, files]) => ({
+        name,
+        files,
+      })
+    );
 
     if (categories.length > 0) {
       sections.push({
-        title: 'Internal Patterns',
+        title: "Internal Patterns",
         root: internalRoot,
         criticalInstructions: options.internalCriticals || [
-          'Follow these project-specific patterns for consistency',
+          "Follow these project-specific patterns for consistency",
         ],
         entries: categories.map((cat) => ({
           package: cat.name,
-          version: '',
+          version: "",
           categories: [{ name: cat.name, files: cat.files }],
         })),
       });

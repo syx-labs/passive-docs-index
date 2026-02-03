@@ -8,7 +8,7 @@
  * 3. Offline mode (returns null, caller handles placeholders)
  */
 
-import { Context7, type Documentation } from '@upstash/context7-sdk';
+import { Context7, type Documentation } from "@upstash/context7-sdk";
 
 // ============================================================================
 // Types
@@ -19,7 +19,7 @@ export interface Context7Result {
   content?: string;
   docs?: Documentation[];
   error?: string;
-  source: 'http' | 'mcp' | 'none';
+  source: "http" | "mcp" | "none";
 }
 
 export interface Context7ClientConfig {
@@ -77,6 +77,27 @@ export function isHttpClientAvailable(apiKeyOverride?: string): boolean {
 const libraryIdCache = new Map<string, string>();
 
 /**
+ * Convert documentation array to markdown string
+ */
+function docsToMarkdown(docs: Documentation[]): string {
+  return docs
+    .map((doc) => {
+      const parts: string[] = [];
+      if (doc.title) {
+        parts.push(`### ${doc.title}`);
+      }
+      if (doc.source) {
+        parts.push(`\nSource: ${doc.source}`);
+      }
+      if (doc.content) {
+        parts.push(`\n${doc.content}`);
+      }
+      return parts.join("\n");
+    })
+    .join("\n\n--------------------------------\n\n");
+}
+
+/**
  * Resolve the correct library ID if it has been redirected
  */
 async function resolveLibraryId(
@@ -90,10 +111,12 @@ async function resolveLibraryId(
 
   try {
     // Extract library name from ID (e.g., "/tailwindlabs/tailwindcss" -> "tailwindcss")
-    const parts = libraryId.split('/');
-    const libraryName = parts[parts.length - 1] || parts[parts.length - 2] || libraryId;
+    const parts = libraryId.split("/");
+    const libraryName = parts.at(-1) || parts.at(-2) || libraryId;
 
-    const results = await client.searchLibrary(libraryName, libraryName, { type: 'json' });
+    const results = await client.searchLibrary(libraryName, libraryName, {
+      type: "json",
+    });
 
     if (results && results.length > 0) {
       // Find best match - prefer exact match or highest trust score
@@ -127,95 +150,78 @@ async function queryViaHttp(
   if (!client) {
     return {
       success: false,
-      error: 'CONTEXT7_API_KEY not set',
-      source: 'none',
+      error: "CONTEXT7_API_KEY not set",
+      source: "none",
     };
   }
 
   try {
-    const docs = await client.getContext(query, libraryId, { type: 'json' });
+    const docs = await client.getContext(query, libraryId, { type: "json" });
 
     if (!docs || docs.length === 0) {
       return {
         success: false,
-        error: 'No documentation found',
-        source: 'http',
+        error: "No documentation found",
+        source: "http",
       };
     }
 
-    // Convert docs array to markdown content
-    const content = docs
-      .map((doc) => {
-        const parts: string[] = [];
-        if (doc.title) {
-          parts.push(`### ${doc.title}`);
-        }
-        if (doc.source) {
-          parts.push(`\nSource: ${doc.source}`);
-        }
-        if (doc.content) {
-          parts.push(`\n${doc.content}`);
-        }
-        return parts.join('\n');
-      })
-      .join('\n\n--------------------------------\n\n');
+    const content = docsToMarkdown(docs);
 
     return {
       success: true,
       content,
       docs,
-      source: 'http',
+      source: "http",
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'HTTP request failed';
+    const errorMessage =
+      error instanceof Error ? error.message : "HTTP request failed";
 
     // Handle library_redirected error - try to resolve the correct ID
-    if (errorMessage.includes('library_redirected') || errorMessage.includes('redirected')) {
+    if (
+      errorMessage.includes("library_redirected") ||
+      errorMessage.includes("redirected")
+    ) {
       const resolvedId = await resolveLibraryId(client, libraryId);
 
       if (resolvedId && resolvedId !== libraryId) {
         // Retry with resolved ID
         try {
-          const docs = await client.getContext(query, resolvedId, { type: 'json' });
+          const docs = await client.getContext(query, resolvedId, {
+            type: "json",
+          });
 
           if (docs && docs.length > 0) {
-            const content = docs
-              .map((doc) => {
-                const parts: string[] = [];
-                if (doc.title) parts.push(`### ${doc.title}`);
-                if (doc.source) parts.push(`\nSource: ${doc.source}`);
-                if (doc.content) parts.push(`\n${doc.content}`);
-                return parts.join('\n');
-              })
-              .join('\n\n--------------------------------\n\n');
+            const content = docsToMarkdown(docs);
 
             return {
               success: true,
               content,
               docs,
-              source: 'http',
+              source: "http",
             };
           }
         } catch (retryError) {
           return {
             success: false,
-            error: `Redirect resolved to ${resolvedId} but query failed: ${retryError instanceof Error ? retryError.message : 'unknown'}`,
-            source: 'http',
+            error: `Redirect resolved to ${resolvedId} but query failed: ${retryError instanceof Error ? retryError.message : "unknown"}`,
+            source: "http",
           };
         }
       }
 
       return {
         success: false,
-        error: `Library ID changed. Try: pdi add ${libraryId.split('/').pop()} --force`,
-        source: 'http',
+        error: `Library ID changed. Try: pdi add ${libraryId.split("/").pop()} --force`,
+        source: "http",
       };
     }
 
     return {
       success: false,
       error: errorMessage,
-      source: 'http',
+      source: "http",
     };
   }
 }
@@ -226,10 +232,10 @@ async function queryViaHttp(
 
 // Import MCP client functions
 import {
+  extractContext7Content,
   isMcpCliAvailable,
   queryContext7 as queryViaMcpCli,
-  extractContext7Content,
-} from './mcp-client.js';
+} from "./mcp-client.js";
 
 /**
  * Query documentation via MCP
@@ -242,28 +248,36 @@ async function queryViaMcp(
   if (!mcpAvailable) {
     return {
       success: false,
-      error: 'MCP not available (Claude Code not running)',
-      source: 'none',
+      error: "MCP not available (Claude Code not running)",
+      source: "none",
     };
   }
 
   const result = await queryViaMcpCli(libraryId, query);
 
-  if (!result.success || !result.content) {
+  if (!(result.success && result.content)) {
     return {
       success: false,
-      error: result.error || 'MCP query failed',
-      source: 'mcp',
+      error: result.error || "MCP query failed",
+      source: "mcp",
     };
   }
 
   // Extract content from MCP response
   const content = extractContext7Content(result.content);
 
+  if (!content || content.trim().length === 0) {
+    return {
+      success: false,
+      error: "MCP returned empty content",
+      source: "mcp",
+    };
+  }
+
   return {
     success: true,
     content,
-    source: 'mcp',
+    source: "mcp",
   };
 }
 
@@ -315,24 +329,30 @@ export async function queryContext7(
     error: httpAvailable
       ? `HTTP failed, MCP failed: ${mcpResult.error}`
       : `No API key set, MCP failed: ${mcpResult.error}`,
-    source: 'none',
+    source: "none",
   };
 }
 
 /**
  * Search for a library by name
+ * @param query - Search query
+ * @param libraryName - Library name to search for
+ * @param apiKeyOverride - Optional API key to use instead of environment variable
  */
 export async function searchLibrary(
   query: string,
-  libraryName: string
+  libraryName: string,
+  apiKeyOverride?: string
 ): Promise<{ id: string; name: string } | null> {
-  const client = getHttpClient();
+  const client = getHttpClient(apiKeyOverride);
   if (!client) {
     return null;
   }
 
   try {
-    const results = await client.searchLibrary(query, libraryName, { type: 'json' });
+    const results = await client.searchLibrary(query, libraryName, {
+      type: "json",
+    });
     if (results && results.length > 0) {
       return {
         id: results[0].id,
@@ -349,13 +369,13 @@ export async function searchLibrary(
 // Availability Check
 // ============================================================================
 
-export type AvailabilityStatus = {
+export interface AvailabilityStatus {
   http: boolean;
   mcp: boolean;
   available: boolean;
-  recommended: 'http' | 'mcp' | 'offline';
+  recommended: "http" | "mcp" | "offline";
   message: string;
-};
+}
 
 /**
  * Check what documentation sources are available
@@ -368,19 +388,19 @@ export async function checkAvailability(): Promise<AvailabilityStatus> {
   // MCP is only reliable inside an active Claude Code session
   const available = http || mcp;
 
-  let recommended: 'http' | 'mcp' | 'offline';
+  let recommended: "http" | "mcp" | "offline";
   let message: string;
 
   if (http) {
-    recommended = 'http';
-    message = 'Using Context7 HTTP API (API key configured)';
+    recommended = "http";
+    message = "Using Context7 HTTP API (API key configured)";
   } else if (mcp) {
-    recommended = 'mcp';
+    recommended = "mcp";
     // Warn that MCP might fail outside Claude Code
-    message = 'MCP available (requires active Claude Code session)';
+    message = "MCP available (requires active Claude Code session)";
   } else {
-    recommended = 'offline';
-    message = 'No documentation source available. Run: pdi auth';
+    recommended = "offline";
+    message = "No documentation source available. Run: pdi auth";
   }
 
   return {
@@ -398,4 +418,5 @@ export async function checkAvailability(): Promise<AvailabilityStatus> {
 export function resetClients(): void {
   httpClient = null;
   httpClientApiKey = null;
+  libraryIdCache.clear();
 }

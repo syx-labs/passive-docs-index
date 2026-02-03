@@ -20,7 +20,7 @@ export interface PDIConfig {
 
 export interface ProjectConfig {
   name: string;
-  type: 'backend' | 'frontend' | 'fullstack' | 'library' | 'cli';
+  type: "backend" | "frontend" | "fullstack" | "library" | "cli";
 }
 
 export interface SyncConfig {
@@ -30,7 +30,7 @@ export interface SyncConfig {
 
 export interface FrameworkConfig {
   version: string;
-  source: 'context7' | 'template' | 'manual';
+  source: "context7" | "template" | "manual";
   libraryId?: string;
   lastUpdate: string;
   files: number;
@@ -45,7 +45,7 @@ export interface InternalConfig {
 
 export interface MCPConfig {
   fallbackEnabled: boolean;
-  preferredProvider: 'context7' | 'firecrawl';
+  preferredProvider: "context7" | "firecrawl";
   providers?: {
     context7?: {
       resolveLibraryId: string;
@@ -70,10 +70,18 @@ export interface FrameworkTemplate {
   name: string;
   displayName: string;
   version: string;
-  source: 'context7' | 'template';
+  source: "context7" | "template";
   libraryId?: string;
-  category: 'backend' | 'frontend' | 'validation' | 'database' | 'auth' | 'styling' | 'build' | 'testing';
-  priority: 'P0' | 'P1' | 'P2';
+  category:
+    | "backend"
+    | "frontend"
+    | "validation"
+    | "database"
+    | "auth"
+    | "styling"
+    | "build"
+    | "testing";
+  priority: "P0" | "P1" | "P2";
   description: string;
   structure: Record<string, Record<string, DocFileTemplate>>;
   criticalPatterns?: CriticalPattern[];
@@ -121,7 +129,7 @@ export interface KnownFramework {
   name: string;
   displayName: string;
   libraryId?: string;
-  category: FrameworkTemplate['category'];
+  category: FrameworkTemplate["category"];
 }
 
 export interface DetectedDependency {
@@ -161,7 +169,7 @@ export interface StatusResult {
     version: string;
     files: number;
     sizeKb: number;
-    status: 'up-to-date' | 'update-available' | 'outdated';
+    status: "up-to-date" | "update-available" | "outdated";
     installedVersion?: string;
   }>;
   internal: {
