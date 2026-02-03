@@ -216,11 +216,18 @@ export async function updateCommand(
 
     // Only update config if files were successfully updated
     if (successCount > 0) {
+      // Calculate final file count based on existing files as baseline
+      // Files that failed to update still exist on disk with previous content
+      const finalFiles = Math.max(
+        0,
+        (existingConfig.files ?? 0) - failCount + successCount
+      );
+
       const frameworkConfig: FrameworkConfig = {
         ...existingConfig,
         source: "context7",
         lastUpdate: new Date().toISOString(),
-        files: fileCount,
+        files: finalFiles,
       };
 
       config = updateFrameworkInConfig(config, frameworkName, frameworkConfig);

@@ -19,7 +19,12 @@ import { updateCommand } from "./commands/update.js";
 import { listTemplates } from "./lib/templates.js";
 
 // Load API key from global config if not in environment
-await loadApiKeyFromConfig();
+try {
+  await loadApiKeyFromConfig();
+} catch {
+  // Silently ignore - API key loading is optional
+  // Commands that require auth will handle missing key
+}
 
 const program = new Command();
 

@@ -18,15 +18,8 @@ import {
   writeConfig,
 } from "../lib/config.js";
 import { CLAUDE_DOCS_DIR, FRAMEWORKS_DIR } from "../lib/constants.js";
-import {
-  readAllFrameworkDocs,
-  readInternalDocs,
-  removeDir,
-} from "../lib/fs-utils.js";
-import {
-  buildIndexSections,
-  updateClaudeMdIndex,
-} from "../lib/index-parser.js";
+import { removeDir } from "../lib/fs-utils.js";
+import { updateClaudeMdFromConfig } from "../lib/index-utils.js";
 import { hasTemplate } from "../lib/templates.js";
 import type { SyncOptions } from "../lib/types.js";
 import { addCommand } from "./add.js";
@@ -265,45 +258,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
 
   // Update index
   spinner.start("Updating index in CLAUDE.md...");
-
-  const allDocs = await readAllFrameworkDocs(projectRoot);
-  const internalDocs = await readInternalDocs(projectRoot);
-
-  const frameworksIndex: Record<
-    string,
-    { version: string; categories: Record<string, string[]> }
-  > = {};
-  for (const [framework, frameworkConfig] of Object.entries(
-    config.frameworks
-  )) {
-    const docs = allDocs[framework] || {};
-    const categories: Record<string, string[]> = {};
-    for (const [category, files] of Object.entries(docs)) {
-      categories[category] = files.map((f) => f.name);
-    }
-    frameworksIndex[framework] = {
-      version: frameworkConfig.version,
-      categories,
-    };
-  }
-
-  const internalIndex: Record<string, string[]> = {};
-  for (const [category, files] of Object.entries(internalDocs)) {
-    internalIndex[category] = files.map((f) => f.name);
-  }
-
-  const sections = buildIndexSections(
-    `.claude-docs/${FRAMEWORKS_DIR}`,
-    ".claude-docs/internal",
-    frameworksIndex,
-    internalIndex
-  );
-
-  await updateClaudeMdIndex(
-    projectRoot,
-    sections,
-    config?.mcp?.libraryMappings ?? {}
-  );
+  await updateClaudeMdFromConfig({ projectRoot, config });
   spinner.succeed("Updated index in CLAUDE.md");
 
   // Update sync time and save config
