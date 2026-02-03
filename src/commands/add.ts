@@ -143,6 +143,7 @@ export async function addCommand(
       spinner.start(`  Fetching ${query.category}/${query.file}...`);
 
       let content: string;
+      let fetchedSuccessfully = false;
 
       // Try to fetch from Context7 if available
       if (canFetchDocs) {
@@ -157,6 +158,7 @@ export async function addCommand(
             libraryId: query.libraryId,
           });
           successCount++;
+          fetchedSuccessfully = true;
         } else {
           // Fallback to placeholder
           content = generatePlaceholderDoc(
@@ -173,7 +175,6 @@ export async function addCommand(
             spinner.warn(
               `  ${chalk.yellow('!')} ${query.category}/${query.file} (fallback - ${result.error})`
             );
-            // Não usar continue - deixar o fluxo continuar para salvar o placeholder
           }
         }
       } else {
@@ -195,11 +196,8 @@ export async function addCommand(
       totalSize += sizeBytes;
       fileCount++;
 
-      const statusIcon = successCount > 0 && fallbackCount === 0
-        ? chalk.green('✓')
-        : successCount > fallbackCount
-          ? chalk.green('✓')
-          : chalk.yellow('○');
+      // Use per-file status icon based on THIS file's result
+      const statusIcon = fetchedSuccessfully ? chalk.green('✓') : chalk.yellow('○');
       spinner.succeed(`  ${statusIcon} ${query.category}/${query.file} (${formatSize(sizeBytes)})`);
     }
 

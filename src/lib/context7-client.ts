@@ -32,38 +32,45 @@ export interface Context7ClientConfig {
 // ============================================================================
 
 let httpClient: Context7 | null = null;
-let httpClientChecked = false;
+let httpClientApiKey: string | null = null;
 
 /**
  * Get or create the HTTP client
+ * @param apiKeyOverride - Optional API key to use instead of environment variable
  */
-function getHttpClient(): Context7 | null {
-  if (httpClientChecked) {
-    return httpClient;
-  }
+function getHttpClient(apiKeyOverride?: string): Context7 | null {
+  const requestedKey = apiKeyOverride || process.env.CONTEXT7_API_KEY;
 
-  httpClientChecked = true;
-
-  const apiKey = process.env.CONTEXT7_API_KEY;
-  if (!apiKey) {
+  // If no key available, return null
+  if (!requestedKey) {
     httpClient = null;
+    httpClientApiKey = null;
     return null;
   }
 
+  // Return cached client if same key
+  if (httpClient && httpClientApiKey === requestedKey) {
+    return httpClient;
+  }
+
+  // Create new client with the requested key
   try {
-    httpClient = new Context7({ apiKey });
+    httpClient = new Context7({ apiKey: requestedKey });
+    httpClientApiKey = requestedKey;
     return httpClient;
   } catch {
     httpClient = null;
+    httpClientApiKey = null;
     return null;
   }
 }
 
 /**
  * Check if HTTP client is available
+ * @param apiKeyOverride - Optional API key to check with
  */
-export function isHttpClientAvailable(): boolean {
-  return getHttpClient() !== null;
+export function isHttpClientAvailable(apiKeyOverride?: string): boolean {
+  return getHttpClient(apiKeyOverride) !== null;
 }
 
 // Cache for resolved library IDs (when redirected)
@@ -107,12 +114,16 @@ async function resolveLibraryId(
 
 /**
  * Query documentation via HTTP SDK
+ * @param libraryId - The Context7 library ID
+ * @param query - The query/topic to search for
+ * @param apiKeyOverride - Optional API key to use
  */
 async function queryViaHttp(
   libraryId: string,
-  query: string
+  query: string,
+  apiKeyOverride?: string
 ): Promise<Context7Result> {
-  const client = getHttpClient();
+  const client = getHttpClient(apiKeyOverride);
   if (!client) {
     return {
       success: false,
@@ -281,10 +292,10 @@ export async function queryContext7(
     // Fall through to HTTP if MCP fails
   }
 
-  // Try HTTP first (if API key is available)
-  const httpAvailable = isHttpClientAvailable();
+  // Try HTTP first (if API key is available - from config or env)
+  const httpAvailable = isHttpClientAvailable(config?.apiKey);
   if (httpAvailable) {
-    const httpResult = await queryViaHttp(libraryId, query);
+    const httpResult = await queryViaHttp(libraryId, query, config?.apiKey);
     if (httpResult.success) {
       return httpResult;
     }
@@ -386,5 +397,5 @@ export async function checkAvailability(): Promise<AvailabilityStatus> {
  */
 export function resetClients(): void {
   httpClient = null;
-  httpClientChecked = false;
+  httpClientApiKey = null;
 }

@@ -275,7 +275,13 @@ async function scanProjectFiles(projectRoot: string): Promise<FileInfo[]> {
   ]);
 
   async function scan(dir: string): Promise<void> {
-    const entries = await readdir(dir, { withFileTypes: true });
+    let entries;
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+      // Skip inaccessible directories
+      return;
+    }
 
     for (const entry of entries) {
       const fullPath = join(dir, entry.name);
@@ -287,12 +293,16 @@ async function scanProjectFiles(projectRoot: string): Promise<FileInfo[]> {
       } else {
         const ext = extname(entry.name);
         if (['.ts', '.tsx', '.js', '.jsx', '.json'].includes(ext)) {
-          const fileStat = await stat(fullPath);
-          files.push({
-            path: relative(projectRoot, fullPath),
-            name: entry.name,
-            size: fileStat.size,
-          });
+          try {
+            const fileStat = await stat(fullPath);
+            files.push({
+              path: relative(projectRoot, fullPath),
+              name: entry.name,
+              size: fileStat.size,
+            });
+          } catch {
+            // Skip inaccessible files
+          }
         }
       }
     }
@@ -775,21 +785,25 @@ export async function generateCommand(
     generatedCount++;
   }
 
-  // Update config
-  const categories = [...new Set(detectedPatterns.map((p) => p.category))];
-  config.internal = {
-    enabled: true,
-    categories,
-    totalFiles: generatedCount,
-  };
-  config = updateSyncTime(config);
-  await writeConfig(projectRoot, config);
-
   // Update index in CLAUDE.md
   spinner.start('Updating index in CLAUDE.md...');
 
   const allDocs = await readAllFrameworkDocs(projectRoot);
   const internalDocs = await readInternalDocs(projectRoot);
+
+  // Update config based on actual internal docs on disk (not just this run)
+  const internalCategories = Object.keys(internalDocs);
+  const totalInternalFiles = Object.values(internalDocs).reduce(
+    (sum, docs) => sum + docs.length,
+    0
+  );
+  config.internal = {
+    enabled: totalInternalFiles > 0,
+    categories: internalCategories,
+    totalFiles: totalInternalFiles,
+  };
+  config = updateSyncTime(config);
+  await writeConfig(projectRoot, config);
 
   // Build framework index data
   const frameworksIndex: Record<string, { version: string; categories: Record<string, string[]> }> = {};
