@@ -184,30 +184,38 @@ export async function updateCommand(
     const results = await Promise.all(
       queries.map((query) =>
         limit(async () => {
-          const result = await queryContext7(query.libraryId, query.query);
-          if (result.success && result.content) {
-            const content = processContext7Response(result.content, {
-              framework: template.displayName,
-              version,
-              category: query.category,
-              file: query.file,
-              libraryId: query.libraryId,
-            });
-            await writeDocFile(
-              projectRoot,
-              frameworkName,
-              query.category,
-              query.file,
-              content
-            );
-            const sizeBytes = Buffer.byteLength(content, "utf-8");
-            return { query, success: true as const, sizeBytes, content };
+          try {
+            const result = await queryContext7(query.libraryId, query.query);
+            if (result.success && result.content) {
+              const content = processContext7Response(result.content, {
+                framework: template.displayName,
+                version,
+                category: query.category,
+                file: query.file,
+                libraryId: query.libraryId,
+              });
+              await writeDocFile(
+                projectRoot,
+                frameworkName,
+                query.category,
+                query.file,
+                content
+              );
+              const sizeBytes = Buffer.byteLength(content, "utf-8");
+              return { query, success: true as const, sizeBytes };
+            }
+            return {
+              query,
+              success: false as const,
+              error: result.error || "unknown error",
+            };
+          } catch (err) {
+            return {
+              query,
+              success: false as const,
+              error: err instanceof Error ? err.message : String(err),
+            };
           }
-          return {
-            query,
-            success: false as const,
-            error: result.error || "unknown error",
-          };
         })
       )
     );
