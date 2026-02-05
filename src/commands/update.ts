@@ -170,7 +170,7 @@ export async function updateCommand(
     );
     console.log(
       chalk.dim(
-        `  Source: ${availability.recommended === "http" ? "Context7 HTTP API" : "Context7 MCP"} (${template.libraryId})`
+        `  Source: ${availability.recommended === "http" ? "Context7 HTTP API" : "Context7 MCP"} (${template.libraryId || "N/A"})`
       )
     );
 

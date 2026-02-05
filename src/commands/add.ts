@@ -132,7 +132,7 @@ export async function addCommand(
     );
     console.log(
       chalk.dim(
-        `  Source: ${docSource === "http" ? "Context7 HTTP API" : docSource === "mcp" ? "Context7 MCP" : "Placeholders"} (${template.libraryId})`
+        `  Source: ${docSource === "http" ? "Context7 HTTP API" : docSource === "mcp" ? "Context7 MCP" : "Placeholders"} (${template.libraryId || "N/A"})`
       )
     );
 
