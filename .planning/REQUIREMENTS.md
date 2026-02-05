@@ -7,10 +7,10 @@
 
 ### Testing & Quality
 
-- [ ] **TEST-01**: Test suite com Bun Test cobrindo core logic (config, templates, index-parser, fs-utils)
-- [ ] **TEST-02**: Integration tests para comandos (init, add, sync, status, clean, update)
-- [ ] **TEST-03**: Coverage minimo de 80% no core (`src/lib/`)
-- [ ] **TEST-04**: Mocking de I/O externo (file system, Context7 HTTP, MCP CLI) isolado por teste
+- [x] **TEST-01**: Test suite com Bun Test cobrindo core logic (config, templates, index-parser, fs-utils)
+- [x] **TEST-02**: Integration tests para comandos (init, add, sync, status, clean, update)
+- [x] **TEST-03**: Coverage minimo de 80% no core (`src/lib/`)
+- [x] **TEST-04**: Mocking de I/O externo (file system, Context7 HTTP, MCP CLI) isolado por teste
 
 ### CI/CD Pipeline
 
@@ -98,10 +98,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TEST-01 | Phase 1 | Pending |
-| TEST-02 | Phase 1 | Pending |
-| TEST-03 | Phase 1 | Pending |
-| TEST-04 | Phase 1 | Pending |
+| TEST-01 | Phase 1 | Complete |
+| TEST-02 | Phase 1 | Complete |
+| TEST-03 | Phase 1 | Complete |
+| TEST-04 | Phase 1 | Complete |
 | CICD-01 | Phase 2 | Pending |
 | CICD-02 | Phase 3 | Pending |
 | CICD-03 | Phase 3 | Pending |
@@ -145,4 +145,4 @@
 
 ---
 *Requirements defined: 2026-02-05*
-*Last updated: 2026-02-05 after roadmap creation*
+*Last updated: 2026-02-05 after Phase 1 completion*
