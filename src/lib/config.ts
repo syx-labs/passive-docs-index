@@ -3,17 +3,17 @@
  * Read/write config.json and detect project settings
  */
 
-import { existsSync } from 'node:fs';
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
-import type { PDIConfig, DetectedDependency, ProjectConfig } from './types.js';
+import { existsSync } from "node:fs";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import {
   CLAUDE_DOCS_DIR,
   CONFIG_FILE,
   DEFAULT_CONFIG,
   KNOWN_FRAMEWORKS,
   PROJECT_TYPE_INDICATORS,
-} from './constants.js';
+} from "./constants.js";
+import type { DetectedDependency, PDIConfig, ProjectConfig } from "./types.js";
 
 // ============================================================================
 // Config File Operations
@@ -31,7 +31,9 @@ export async function configExists(projectRoot: string): Promise<boolean> {
   return existsSync(getConfigPath(projectRoot));
 }
 
-export async function readConfig(projectRoot: string): Promise<PDIConfig | null> {
+export async function readConfig(
+  projectRoot: string
+): Promise<PDIConfig | null> {
   const configPath = getConfigPath(projectRoot);
 
   if (!existsSync(configPath)) {
@@ -39,14 +41,19 @@ export async function readConfig(projectRoot: string): Promise<PDIConfig | null>
   }
 
   try {
-    const content = await readFile(configPath, 'utf-8');
+    const content = await readFile(configPath, "utf-8");
     return JSON.parse(content) as PDIConfig;
   } catch (error) {
-    throw new Error(`Failed to read config: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to read config: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
   }
 }
 
-export async function writeConfig(projectRoot: string, config: PDIConfig): Promise<void> {
+export async function writeConfig(
+  projectRoot: string,
+  config: PDIConfig
+): Promise<void> {
   const configPath = getConfigPath(projectRoot);
   const configDir = dirname(configPath);
 
@@ -56,10 +63,13 @@ export async function writeConfig(projectRoot: string, config: PDIConfig): Promi
   }
 
   const content = JSON.stringify(config, null, 2);
-  await writeFile(configPath, content, 'utf-8');
+  await writeFile(configPath, content, "utf-8");
 }
 
-export function createDefaultConfig(projectName: string, projectType: ProjectConfig['type']): PDIConfig {
+export function createDefaultConfig(
+  projectName: string,
+  projectType: ProjectConfig["type"]
+): PDIConfig {
   return {
     ...DEFAULT_CONFIG,
     project: {
@@ -92,22 +102,26 @@ interface PackageJson {
   exports?: unknown;
 }
 
-export async function readPackageJson(projectRoot: string): Promise<PackageJson | null> {
-  const packagePath = join(projectRoot, 'package.json');
+export async function readPackageJson(
+  projectRoot: string
+): Promise<PackageJson | null> {
+  const packagePath = join(projectRoot, "package.json");
 
   if (!existsSync(packagePath)) {
     return null;
   }
 
   try {
-    const content = await readFile(packagePath, 'utf-8');
+    const content = await readFile(packagePath, "utf-8");
     return JSON.parse(content) as PackageJson;
   } catch {
     return null;
   }
 }
 
-export function detectProjectType(packageJson: PackageJson): ProjectConfig['type'] {
+export function detectProjectType(
+  packageJson: PackageJson
+): ProjectConfig["type"] {
   const allDeps = {
     ...packageJson.dependencies,
     ...packageJson.devDependencies,
@@ -126,45 +140,51 @@ export function detectProjectType(packageJson: PackageJson): ProjectConfig['type
     );
 
     if (!hasAppIndicators) {
-      return 'library';
+      return "library";
     }
   }
 
   // Check if it's a CLI
   if (packageJson.bin) {
-    return 'cli';
+    return "cli";
   }
 
   // Check for fullstack first (most specific)
   if (depNames.some((dep) => PROJECT_TYPE_INDICATORS.fullstack.includes(dep))) {
-    return 'fullstack';
+    return "fullstack";
   }
 
   // Check for backend and frontend
-  const hasBackend = depNames.some((dep) => PROJECT_TYPE_INDICATORS.backend.includes(dep));
-  const hasFrontend = depNames.some((dep) => PROJECT_TYPE_INDICATORS.frontend.includes(dep));
+  const hasBackend = depNames.some((dep) =>
+    PROJECT_TYPE_INDICATORS.backend.includes(dep)
+  );
+  const hasFrontend = depNames.some((dep) =>
+    PROJECT_TYPE_INDICATORS.frontend.includes(dep)
+  );
 
   if (hasBackend && hasFrontend) {
-    return 'fullstack';
+    return "fullstack";
   }
 
   if (hasBackend) {
-    return 'backend';
+    return "backend";
   }
 
   if (hasFrontend) {
-    return 'frontend';
+    return "frontend";
   }
 
   // Default to backend
-  return 'backend';
+  return "backend";
 }
 
 // ============================================================================
 // Dependency Detection
 // ============================================================================
 
-export function detectDependencies(packageJson: PackageJson): DetectedDependency[] {
+export function detectDependencies(
+  packageJson: PackageJson
+): DetectedDependency[] {
   const allDeps = {
     ...packageJson.dependencies,
     ...packageJson.devDependencies,
@@ -192,13 +212,13 @@ export function detectDependencies(packageJson: PackageJson): DetectedDependency
 
 export function cleanVersion(version: string): string {
   // Remove ^ ~ >= <= > < = prefixes
-  return version.replace(/^[\^~>=<]+/, '');
+  return version.replace(/^[\^~>=<]+/, "");
 }
 
 export function getMajorVersion(version: string): string {
   const clean = cleanVersion(version);
-  const parts = clean.split('.');
-  const major = parseInt(parts[0], 10);
+  const parts = clean.split(".");
+  const major = Number.parseInt(parts[0], 10);
 
   // For versions < 1.0, use major.minor
   if (major === 0 && parts.length > 1) {
@@ -215,7 +235,7 @@ export function getMajorVersion(version: string): string {
 export function updateFrameworkInConfig(
   config: PDIConfig,
   frameworkName: string,
-  update: Partial<PDIConfig['frameworks'][string]>
+  update: Partial<PDIConfig["frameworks"][string]>
 ): PDIConfig {
   return {
     ...config,
@@ -229,7 +249,10 @@ export function updateFrameworkInConfig(
   };
 }
 
-export function removeFrameworkFromConfig(config: PDIConfig, frameworkName: string): PDIConfig {
+export function removeFrameworkFromConfig(
+  config: PDIConfig,
+  frameworkName: string
+): PDIConfig {
   const { [frameworkName]: _, ...remainingFrameworks } = config.frameworks;
   return {
     ...config,

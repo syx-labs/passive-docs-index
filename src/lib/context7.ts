@@ -3,7 +3,7 @@
  * Provides functions to query documentation via Context7 MCP server
  */
 
-import type { FrameworkTemplate } from './types.js';
+import type { FrameworkTemplate } from "./types.js";
 
 // ============================================================================
 // Types
@@ -35,7 +35,7 @@ export interface Context7Options {
  */
 export function generateResolveLibraryCall(libraryName: string): string {
   return JSON.stringify({
-    tool: 'mcp__plugin_context7_context7__resolve-library-id',
+    tool: "mcp__plugin_context7_context7__resolve-library-id",
     params: {
       libraryName,
     },
@@ -51,11 +51,11 @@ export function generateQueryDocsCall(
   options: Context7Options = {}
 ): string {
   return JSON.stringify({
-    tool: 'mcp__plugin_context7_context7__query-docs',
+    tool: "mcp__plugin_context7_context7__query-docs",
     params: {
       context7CompatibleLibraryID: libraryId,
       topic: options.topic || query,
-      tokens: options.maxTokens || 10000,
+      tokens: options.maxTokens || 10_000,
     },
   });
 }
@@ -70,7 +70,12 @@ export function generateQueryDocsCall(
 export function generateTemplateQueries(
   template: FrameworkTemplate
 ): Array<{ category: string; file: string; query: string; libraryId: string }> {
-  const queries: Array<{ category: string; file: string; query: string; libraryId: string }> = [];
+  const queries: Array<{
+    category: string;
+    file: string;
+    query: string;
+    libraryId: string;
+  }> = [];
 
   if (!template.libraryId) {
     return queries;
@@ -109,24 +114,24 @@ export function processContext7Response(
 ): string {
   // Add frontmatter
   const frontmatter = [
-    '---',
+    "---",
     `# Part of Passive Docs Index for ${metadata.framework}@${metadata.version}`,
-    `# Source: Context7 (${metadata.libraryId || 'manual'})`,
-    `# Last updated: ${new Date().toISOString().split('T')[0]}`,
+    `# Source: Context7 (${metadata.libraryId || "manual"})`,
+    `# Last updated: ${new Date().toISOString().split("T")[0]}`,
     `# Category: ${metadata.category}`,
-    '---',
-    '',
-  ].join('\n');
+    "---",
+    "",
+  ].join("\n");
 
   // Clean up the content
   let content = rawContent;
 
   // Remove any existing frontmatter from Context7 response
-  content = content.replace(/^---[\s\S]*?---\n*/m, '');
+  content = content.replace(/^---[\s\S]*?---\n*/m, "");
 
   // Ensure proper heading structure
   if (!content.match(/^#\s/m)) {
-    const title = metadata.file.replace('.mdx', '').replace(/-/g, ' ');
+    const title = metadata.file.replace(".mdx", "").replace(/-/g, " ");
     const capitalizedTitle = title.charAt(0).toUpperCase() + title.slice(1);
     content = `# ${capitalizedTitle}\n\n${content}`;
   }
@@ -140,7 +145,7 @@ export function processContext7Response(
  */
 export function extractRelevantSections(
   content: string,
-  maxLength: number = 8000
+  maxLength = 8000
 ): string {
   if (content.length <= maxLength) {
     return content;
@@ -164,7 +169,9 @@ export function extractRelevantSections(
   const remaining: string[] = [];
 
   for (const section of sections) {
-    const isPriority = priorityPatterns.some((pattern) => pattern.test(section));
+    const isPriority = priorityPatterns.some((pattern) =>
+      pattern.test(section)
+    );
     if (isPriority) {
       prioritized.push(section);
     } else {
@@ -173,7 +180,7 @@ export function extractRelevantSections(
   }
 
   // Build result within limit
-  let result = '';
+  let result = "";
   const allSections = [...prioritized, ...remaining];
 
   for (const section of allSections) {
@@ -203,7 +210,7 @@ export function generateMcpFallbackInstructions(
 ): string {
   const mappingsList = Object.entries(libraryMappings)
     .map(([name, id]) => `- ${name}: ${id}`)
-    .join('\n');
+    .join("\n");
 
   return `<!-- MCP Fallback Protocol -->
 <!--
@@ -251,10 +258,12 @@ export function generateBatchQueries(
       framework: template.name,
       version: template.version,
       libraryId: template.libraryId!,
-      queries: generateTemplateQueries(template).map(({ category, file, query }) => ({
-        category,
-        file,
-        query,
-      })),
+      queries: generateTemplateQueries(template).map(
+        ({ category, file, query }) => ({
+          category,
+          file,
+          query,
+        })
+      ),
     }));
 }

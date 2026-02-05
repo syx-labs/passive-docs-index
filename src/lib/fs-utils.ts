@@ -3,11 +3,18 @@
  * Helper functions for file operations
  */
 
-import { existsSync } from 'node:fs';
-import { readdir, readFile, writeFile, mkdir, rm, stat } from 'node:fs/promises';
-import { join, relative } from 'node:path';
-import type { DocFile } from './types.js';
-import { CLAUDE_DOCS_DIR, FRAMEWORKS_DIR, INTERNAL_DIR } from './constants.js';
+import { existsSync } from "node:fs";
+import {
+  mkdir,
+  readdir,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
+import { join, normalize, relative, sep } from "node:path";
+import { CLAUDE_DOCS_DIR, FRAMEWORKS_DIR, INTERNAL_DIR } from "./constants.js";
+import type { DocFile } from "./types.js";
 
 // ============================================================================
 // Directory Operations
@@ -73,8 +80,10 @@ export async function writeDocFile(
     fileName
   );
 
-  await ensureDir(join(projectRoot, CLAUDE_DOCS_DIR, FRAMEWORKS_DIR, framework, category));
-  await writeFile(filePath, content, 'utf-8');
+  await ensureDir(
+    join(projectRoot, CLAUDE_DOCS_DIR, FRAMEWORKS_DIR, framework, category)
+  );
+  await writeFile(filePath, content, "utf-8");
 
   return filePath;
 }
@@ -94,7 +103,7 @@ export async function writeInternalDocFile(
   );
 
   await ensureDir(join(projectRoot, CLAUDE_DOCS_DIR, INTERNAL_DIR, category));
-  await writeFile(filePath, content, 'utf-8');
+  await writeFile(filePath, content, "utf-8");
 
   return filePath;
 }
@@ -103,7 +112,7 @@ export async function readDocFile(filePath: string): Promise<string | null> {
   if (!existsSync(filePath)) {
     return null;
   }
-  return await readFile(filePath, 'utf-8');
+  return await readFile(filePath, "utf-8");
 }
 
 // ============================================================================
@@ -114,7 +123,12 @@ export async function readFrameworkDocs(
   projectRoot: string,
   frameworkName: string
 ): Promise<Record<string, DocFile[]>> {
-  const frameworkPath = join(projectRoot, CLAUDE_DOCS_DIR, FRAMEWORKS_DIR, frameworkName);
+  const frameworkPath = join(
+    projectRoot,
+    CLAUDE_DOCS_DIR,
+    FRAMEWORKS_DIR,
+    frameworkName
+  );
 
   if (!existsSync(frameworkPath)) {
     return {};
@@ -127,16 +141,20 @@ export async function readFrameworkDocs(
     const categoryPath = join(frameworkPath, category);
     const categoryStat = await stat(categoryPath);
 
-    if (!categoryStat.isDirectory()) continue;
+    if (!categoryStat.isDirectory()) {
+      continue;
+    }
 
     const files = await listDir(categoryPath);
     result[category] = [];
 
     for (const fileName of files) {
-      if (!fileName.endsWith('.mdx')) continue;
+      if (!fileName.endsWith(".mdx")) {
+        continue;
+      }
 
       const filePath = join(categoryPath, fileName);
-      const content = await readFile(filePath, 'utf-8');
+      const content = await readFile(filePath, "utf-8");
       const fileStat = await stat(filePath);
 
       result[category].push({
@@ -169,7 +187,9 @@ export async function readAllFrameworkDocs(
     const frameworkPath = join(frameworksPath, framework);
     const frameworkStat = await stat(frameworkPath);
 
-    if (!frameworkStat.isDirectory()) continue;
+    if (!frameworkStat.isDirectory()) {
+      continue;
+    }
 
     result[framework] = await readFrameworkDocs(projectRoot, framework);
   }
@@ -193,21 +213,25 @@ export async function readInternalDocs(
     const categoryPath = join(internalPath, category);
     const categoryStat = await stat(categoryPath);
 
-    if (!categoryStat.isDirectory()) continue;
+    if (!categoryStat.isDirectory()) {
+      continue;
+    }
 
     const files = await listDir(categoryPath);
     result[category] = [];
 
     for (const fileName of files) {
-      if (!fileName.endsWith('.mdx')) continue;
+      if (!fileName.endsWith(".mdx")) {
+        continue;
+      }
 
       const filePath = join(categoryPath, fileName);
-      const content = await readFile(filePath, 'utf-8');
+      const content = await readFile(filePath, "utf-8");
       const fileStat = await stat(filePath);
 
       result[category].push({
         path: filePath,
-        framework: 'internal',
+        framework: "internal",
         category,
         name: fileName,
         content,
@@ -240,11 +264,13 @@ export async function calculateDocsSize(projectRoot: string): Promise<{
   let total = 0;
 
   for (const filePath of allFiles) {
-    if (!filePath.endsWith('.mdx')) continue;
+    if (!filePath.endsWith(".mdx")) {
+      continue;
+    }
 
     const fileStat = await stat(filePath);
     const relativePath = relative(docsPath, filePath);
-    const parts = relativePath.split('/');
+    const parts = normalize(relativePath).split(sep);
 
     total += fileStat.size;
 
@@ -276,20 +302,20 @@ export function formatSize(bytes: number): string {
 // ============================================================================
 
 export async function updateGitignore(projectRoot: string): Promise<boolean> {
-  const gitignorePath = join(projectRoot, '.gitignore');
-  const entry = '\n# PDI temp files\n.claude-docs/.cache/\n';
+  const gitignorePath = join(projectRoot, ".gitignore");
+  const entry = "\n# PDI temp files\n.claude-docs/.cache/\n";
 
   if (!existsSync(gitignorePath)) {
-    await writeFile(gitignorePath, entry.trim() + '\n', 'utf-8');
+    await writeFile(gitignorePath, `${entry.trim()}\n`, "utf-8");
     return true;
   }
 
-  const content = await readFile(gitignorePath, 'utf-8');
+  const content = await readFile(gitignorePath, "utf-8");
 
-  if (content.includes('.claude-docs/.cache/')) {
+  if (content.includes(".claude-docs/.cache/")) {
     return false;
   }
 
-  await writeFile(gitignorePath, content.trimEnd() + entry, 'utf-8');
+  await writeFile(gitignorePath, content.trimEnd() + entry, "utf-8");
   return true;
 }

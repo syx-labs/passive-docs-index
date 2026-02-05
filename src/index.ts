@@ -3,107 +3,138 @@
  * Library exports for programmatic usage
  */
 
-// Types
-export type {
-  PDIConfig,
-  ProjectConfig,
-  SyncConfig,
-  FrameworkConfig,
-  InternalConfig,
-  MCPConfig,
-  LimitsConfig,
-  FrameworkTemplate,
-  DocFileTemplate,
-  CriticalPattern,
-  IndexSection,
-  IndexEntry,
-  IndexCategory,
-  KnownFramework,
-  DetectedDependency,
-  InitOptions,
-  AddOptions,
-  SyncOptions,
-  StatusResult,
-  DocFile,
-  DocsStructure,
-} from './lib/types.js';
+// Commands (for programmatic use)
+export {
+  addCommand,
+  authCommand,
+  cleanCommand,
+  doctorCommand,
+  generateCommand,
+  initCommand,
+  loadApiKeyFromConfig,
+  statusCommand,
+  syncCommand,
+  updateCommand,
+} from "./commands/index.js";
 
 // Config
 export {
-  readConfig,
-  writeConfig,
+  cleanVersion,
   configExists,
   createDefaultConfig,
-  readPackageJson,
-  detectProjectType,
   detectDependencies,
+  detectProjectType,
   getMajorVersion,
-  cleanVersion,
-  updateFrameworkInConfig,
+  readConfig,
+  readPackageJson,
   removeFrameworkFromConfig,
+  updateFrameworkInConfig,
   updateSyncTime,
-} from './lib/config.js';
-
-// Index Parser
-export {
-  parseIndex,
-  generateIndex,
-  generateIndexBlock,
-  readClaudeMd,
-  extractIndexFromClaudeMd,
-  updateClaudeMdIndex,
-  buildIndexSections,
-  calculateIndexSize,
-} from './lib/index-parser.js';
-
-// Templates
-export {
-  getTemplate,
-  hasTemplate,
-  listTemplates,
-  getTemplatesByCategory,
-  getTemplatesByPriority,
-  FRAMEWORK_TEMPLATES,
-} from './lib/templates.js';
-
-// Context7
-export {
-  generateResolveLibraryCall,
-  generateQueryDocsCall,
-  generateTemplateQueries,
-  processContext7Response,
-  extractRelevantSections,
-  generateMcpFallbackInstructions,
-  generateBatchQueries,
-} from './lib/context7.js';
-
-// File System Utils
-export {
-  ensureDir,
-  removeDir,
-  listDir,
-  listDirRecursive,
-  writeDocFile,
-  writeInternalDocFile,
-  readDocFile,
-  readFrameworkDocs,
-  readAllFrameworkDocs,
-  readInternalDocs,
-  calculateDocsSize,
-  formatSize,
-  updateGitignore,
-} from './lib/fs-utils.js';
-
+  writeConfig,
+} from "./lib/config.js";
 // Constants
 export {
   CLAUDE_DOCS_DIR,
+  CLAUDE_MD_FILE,
   CONFIG_FILE,
+  DEFAULT_CONFIG,
   FRAMEWORKS_DIR,
   INTERNAL_DIR,
-  CLAUDE_MD_FILE,
+  KNOWN_FRAMEWORKS,
   PDI_BEGIN_MARKER,
   PDI_END_MARKER,
-  DEFAULT_CONFIG,
-  KNOWN_FRAMEWORKS,
   PROJECT_TYPE_INDICATORS,
-} from './lib/constants.js';
+} from "./lib/constants.js";
+// Context7
+export {
+  extractRelevantSections,
+  generateBatchQueries,
+  generateMcpFallbackInstructions,
+  generateQueryDocsCall,
+  generateResolveLibraryCall,
+  generateTemplateQueries,
+  processContext7Response,
+} from "./lib/context7.js";
+// Context7 Unified Client (recommended)
+export {
+  type AvailabilityStatus,
+  type Context7ClientConfig,
+  type Context7Result,
+  checkAvailability,
+  isHttpClientAvailable,
+  queryContext7,
+  resetClients,
+  searchLibrary,
+} from "./lib/context7-client.js";
+// File System Utils
+export {
+  calculateDocsSize,
+  ensureDir,
+  formatSize,
+  listDir,
+  listDirRecursive,
+  readAllFrameworkDocs,
+  readDocFile,
+  readFrameworkDocs,
+  readInternalDocs,
+  removeDir,
+  updateGitignore,
+  writeDocFile,
+  writeInternalDocFile,
+} from "./lib/fs-utils.js";
+// Index Parser
+export {
+  buildIndexSections,
+  calculateIndexSize,
+  extractIndexFromClaudeMd,
+  generateIndex,
+  generateIndexBlock,
+  parseIndex,
+  readClaudeMd,
+  updateClaudeMdIndex,
+} from "./lib/index-parser.js";
+// MCP Client (low-level)
+export {
+  type BatchQueryItem,
+  type BatchQueryResult,
+  extractContext7Content,
+  isMcpCliAvailable,
+  type MCPResult,
+  queryContext7 as queryContext7Mcp,
+  queryContext7Batch,
+  resetMcpCliCache,
+  resolveContext7Library,
+} from "./lib/mcp-client.js";
+// Templates
+export {
+  FRAMEWORK_TEMPLATES,
+  getTemplate,
+  getTemplatesByCategory,
+  getTemplatesByPriority,
+  hasTemplate,
+  listTemplates,
+} from "./lib/templates.js";
+// Types
+export type {
+  AddOptions,
+  CriticalPattern,
+  DetectedDependency,
+  DocFile,
+  DocFileTemplate,
+  DocsStructure,
+  FrameworkConfig,
+  FrameworkTemplate,
+  IndexCategory,
+  IndexEntry,
+  IndexSection,
+  InitOptions,
+  InternalConfig,
+  KnownFramework,
+  LimitsConfig,
+  MCPConfig,
+  PDIConfig,
+  ProjectConfig,
+  StatusResult,
+  SyncConfig,
+  SyncOptions,
+} from "./lib/types.js";
