@@ -37,7 +37,7 @@
     "yaml": "^2.7.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.13",
+    "@biomejs/biome": "^2.3.14",
     "@types/bun": "^1.2.2",
     "@types/prompts": "^2.4.9",
     "typescript": "^5.7.3",

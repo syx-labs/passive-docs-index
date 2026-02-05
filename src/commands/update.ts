@@ -146,8 +146,8 @@ export async function updateCommand(
       continue;
     }
 
-    const existingConfig = config.frameworks[frameworkName];
-    const version = existingConfig.version || template.version;
+    const existingConfig = config.frameworks[frameworkName] ?? ({} as Partial<FrameworkConfig>);
+    const version = existingConfig.version ?? template.version;
 
     // Skip recently updated frameworks unless --force is passed
     if (!options.force && existingConfig.lastUpdate) {
@@ -224,12 +224,12 @@ export async function updateCommand(
       if (r.success) {
         totalSize += r.sizeBytes;
         successCount++;
-        spinner.succeed(
+        console.log(
           `  ${chalk.green("✓")} ${r.query.category}/${r.query.file} (${formatSize(r.sizeBytes)})`
         );
       } else {
         failCount++;
-        spinner.fail(
+        console.log(
           `  ${chalk.red("✗")} ${r.query.category}/${r.query.file} (${r.error})`
         );
       }
