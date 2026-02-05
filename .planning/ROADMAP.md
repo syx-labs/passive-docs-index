@@ -34,11 +34,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Integration tests exercise each CLI command (init, add, sync, status, clean, update) against mocked I/O without hitting real filesystem or network
   3. Test coverage report shows 80%+ coverage on `src/lib/` directory
   4. External I/O (filesystem, Context7 HTTP, MCP CLI) is mocked in every test -- no test depends on network or disk state
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 01-01: Testability refactoring and unit tests
-- [ ] 01-02: Integration tests and coverage validation
+- [ ] 01-01-PLAN.md -- Test infrastructure setup and testability refactoring
+- [ ] 01-02-PLAN.md -- Unit tests for core data modules (config, templates, index-parser, fs-utils)
+- [ ] 01-03-PLAN.md -- Unit tests for I/O modules (context7-client, mcp-client, context7, index-utils)
+- [ ] 01-04-PLAN.md -- Integration tests for CLI commands and coverage validation
 
 ### Phase 2: CI/CD Pipeline
 **Goal**: Every push and PR is automatically validated by lint, typecheck, and test checks in GitHub Actions
@@ -180,7 +182,7 @@ Note: Phases 4 and 6 can start after Phase 1 (independent of Phase 2/3). Phase 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Testing Infrastructure | 0/2 | Not started | - |
+| 1. Testing Infrastructure | 0/4 | Planned | - |
 | 2. CI/CD Pipeline | 0/1 | Not started | - |
 | 3. Publishing & Distribution | 0/2 | Not started | - |
 | 4. Error Handling & Validation | 0/2 | Not started | - |
