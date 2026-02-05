@@ -58,7 +58,8 @@ function getHttpClient(apiKeyOverride?: string): Context7 | null {
     httpClient = new Context7({ apiKey: requestedKey });
     httpClientApiKey = requestedKey;
     return httpClient;
-  } catch {
+  } catch (error) {
+    console.error("Failed to create Context7 HTTP client:", error);
     httpClient = null;
     httpClientApiKey = null;
     return null;
@@ -130,7 +131,8 @@ async function resolveLibraryId(
     }
 
     return null;
-  } catch {
+  } catch (error) {
+    console.error("Failed to resolve library ID:", libraryId, error);
     return null;
   }
 }
@@ -236,15 +238,37 @@ import {
   isMcpCliAvailable,
   queryContext7 as queryViaMcpCli,
 } from "./mcp-client.js";
+import type { IMcpClient } from "./interfaces/mcp-client.js";
+import { McpCliClient } from "./interfaces/mcp-client.js";
+
+/** Default MCP client instance (uses real mcp-cli) */
+let defaultMcpClient: IMcpClient = new McpCliClient();
+
+/**
+ * Set the MCP client used by queryViaMcp. Primarily for testing.
+ */
+export function setMcpClient(client: IMcpClient): void {
+  defaultMcpClient = client;
+}
+
+/**
+ * Reset the MCP client to the default McpCliClient.
+ */
+export function resetMcpClient(): void {
+  defaultMcpClient = new McpCliClient();
+}
 
 /**
  * Query documentation via MCP
+ * @param mcpClient - Optional MCP client to use (defaults to McpCliClient)
  */
 async function queryViaMcp(
   libraryId: string,
-  query: string
+  query: string,
+  mcpClient?: IMcpClient,
 ): Promise<Context7Result> {
-  const mcpAvailable = await isMcpCliAvailable();
+  const client = mcpClient || defaultMcpClient;
+  const mcpAvailable = await client.isAvailable();
   if (!mcpAvailable) {
     return {
       success: false,
@@ -253,7 +277,7 @@ async function queryViaMcp(
     };
   }
 
-  const result = await queryViaMcpCli(libraryId, query);
+  const result = await client.queryDocs(libraryId, query);
 
   if (!(result.success && result.content)) {
     return {
@@ -360,7 +384,8 @@ export async function searchLibrary(
       };
     }
     return null;
-  } catch {
+  } catch (error) {
+    console.error("Failed to search library:", libraryName, error);
     return null;
   }
 }
@@ -380,9 +405,12 @@ export interface AvailabilityStatus {
 /**
  * Check what documentation sources are available
  */
-export async function checkAvailability(): Promise<AvailabilityStatus> {
+export async function checkAvailability(
+  mcpClient?: IMcpClient,
+): Promise<AvailabilityStatus> {
   const http = isHttpClientAvailable();
-  const mcp = await isMcpCliAvailable();
+  const client = mcpClient || defaultMcpClient;
+  const mcp = await client.isAvailable();
 
   // HTTP is always reliable if available
   // MCP is only reliable inside an active Claude Code session
@@ -419,4 +447,5 @@ export function resetClients(): void {
   httpClient = null;
   httpClientApiKey = null;
   libraryIdCache.clear();
+  resetMcpClient();
 }

@@ -20,8 +20,8 @@ import {
 import { buildIndexSections, calculateIndexSize } from "../lib/index-parser.js";
 import { hasTemplate } from "../lib/templates.js";
 
-export async function statusCommand(): Promise<void> {
-  const projectRoot = process.cwd();
+export async function statusCommand(options: { projectRoot?: string } = {}): Promise<void> {
+  const projectRoot = options.projectRoot || process.cwd();
 
   // Check if initialized
   if (!(await configExists(projectRoot))) {

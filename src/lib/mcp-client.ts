@@ -68,7 +68,7 @@ function findInPath(executable: string): string | null {
       return firstLine;
     }
   } catch {
-    // Not found
+    // Expected to fail for missing executables -- Phase 4 will add debug logging
   }
   return null;
 }

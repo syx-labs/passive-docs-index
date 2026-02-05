@@ -27,13 +27,14 @@ import type { FrameworkConfig } from "../lib/types.js";
 export interface UpdateOptions {
   force?: boolean;
   yes?: boolean;
+  projectRoot?: string;
 }
 
 export async function updateCommand(
   frameworks: string[],
   options: UpdateOptions
 ): Promise<void> {
-  const projectRoot = process.cwd();
+  const projectRoot = options.projectRoot || process.cwd();
   const spinner = ora();
 
   // Check if initialized

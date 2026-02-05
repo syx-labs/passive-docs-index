@@ -114,7 +114,8 @@ export async function readPackageJson(
   try {
     const content = await readFile(packagePath, "utf-8");
     return JSON.parse(content) as PackageJson;
-  } catch {
+  } catch (error) {
+    console.error("Failed to read package.json:", error);
     return null;
   }
 }

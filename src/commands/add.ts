@@ -33,7 +33,7 @@ export async function addCommand(
   frameworks: string[],
   options: ExtendedAddOptions
 ): Promise<void> {
-  const projectRoot = process.cwd();
+  const projectRoot = options.projectRoot || process.cwd();
   const spinner = ora();
 
   // Check if initialized

@@ -147,6 +147,7 @@ export interface InitOptions {
   force?: boolean;
   noDetect?: boolean;
   internal?: boolean;
+  projectRoot?: string;
 }
 
 export interface AddOptions {
@@ -154,12 +155,14 @@ export interface AddOptions {
   minimal?: boolean;
   force?: boolean;
   noIndex?: boolean;
+  projectRoot?: string;
 }
 
 export interface SyncOptions {
   yes?: boolean;
   check?: boolean;
   prune?: boolean;
+  projectRoot?: string;
 }
 
 export interface StatusResult {

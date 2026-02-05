@@ -24,7 +24,7 @@ import { hasTemplate } from "../lib/templates.js";
 import type { DetectedDependency, InitOptions } from "../lib/types.js";
 
 export async function initCommand(options: InitOptions): Promise<void> {
-  const projectRoot = process.cwd();
+  const projectRoot = options.projectRoot || process.cwd();
   const spinner = ora();
 
   // Check if already initialized

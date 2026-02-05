@@ -25,6 +25,7 @@ export interface GenerateOptions {
   category?: string;
   dryRun?: boolean;
   ai?: boolean;
+  projectRoot?: string;
 }
 
 interface DetectedPattern {
@@ -286,8 +287,8 @@ async function scanProjectFiles(projectRoot: string): Promise<FileInfo[]> {
     let entries: import("node:fs").Dirent[];
     try {
       entries = await readdir(dir, { withFileTypes: true });
-    } catch {
-      // Skip inaccessible directories
+    } catch (error) {
+      console.error("Failed to scan directory:", dir, error);
       return;
     }
 
@@ -669,7 +670,7 @@ export async function generateCommand(
   type: string,
   options: GenerateOptions
 ): Promise<void> {
-  const projectRoot = process.cwd();
+  const projectRoot = options.projectRoot || process.cwd();
   const spinner = ora();
 
   if (type !== "internal") {

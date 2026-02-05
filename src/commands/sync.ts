@@ -33,7 +33,7 @@ interface SyncAction {
 }
 
 export async function syncCommand(options: SyncOptions): Promise<void> {
-  const projectRoot = process.cwd();
+  const projectRoot = options.projectRoot || process.cwd();
   const spinner = ora();
 
   // Check if initialized

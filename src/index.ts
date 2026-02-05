@@ -64,7 +64,9 @@ export {
   isHttpClientAvailable,
   queryContext7,
   resetClients,
+  resetMcpClient,
   searchLibrary,
+  setMcpClient,
 } from "./lib/context7-client.js";
 // File System Utils
 export {
@@ -93,6 +95,13 @@ export {
   readClaudeMd,
   updateClaudeMdIndex,
 } from "./lib/index-parser.js";
+// MCP Client Interface
+export {
+  type IMcpClient,
+  type McpResult,
+  McpCliClient,
+  FakeMcpClient,
+} from "./lib/interfaces/mcp-client.js";
 // MCP Client (low-level)
 export {
   type BatchQueryItem,

@@ -32,10 +32,11 @@ import {
 interface CleanOptions {
   yes?: boolean;
   dryRun?: boolean;
+  projectRoot?: string;
 }
 
 export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
-  const projectRoot = process.cwd();
+  const projectRoot = options.projectRoot || process.cwd();
   const spinner = ora();
 
   // Check if initialized
