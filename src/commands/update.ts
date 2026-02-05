@@ -5,6 +5,7 @@
 
 import chalk from "chalk";
 import ora from "ora";
+import pLimit from "p-limit";
 import prompts from "prompts";
 import {
   configExists,
@@ -66,8 +67,8 @@ export async function updateCommand(
       chalk.bold(`Found ${frameworksToUpdate.length} installed framework(s):`)
     );
     for (const fw of frameworksToUpdate) {
-      const cfg = config.frameworks[fw];
-      console.log(`  - ${fw}@${cfg.version} (${cfg.files} files)`);
+      const cfg = config.frameworks[fw] ?? ({} as Partial<FrameworkConfig>);
+      console.log(`  - ${fw}@${cfg.version ?? "unknown"} (${cfg.files ?? 0} files)`);
     }
     console.log("");
 
@@ -178,39 +179,50 @@ export async function updateCommand(
     let successCount = 0;
     let failCount = 0;
 
-    for (const query of queries) {
-      spinner.start(`  Fetching ${query.category}/${query.file}...`);
+    const limit = pLimit(5);
 
-      const result = await queryContext7(query.libraryId, query.query);
+    const results = await Promise.all(
+      queries.map((query) =>
+        limit(async () => {
+          const result = await queryContext7(query.libraryId, query.query);
+          if (result.success && result.content) {
+            const content = processContext7Response(result.content, {
+              framework: template.displayName,
+              version,
+              category: query.category,
+              file: query.file,
+              libraryId: query.libraryId,
+            });
+            await writeDocFile(
+              projectRoot,
+              frameworkName,
+              query.category,
+              query.file,
+              content
+            );
+            const sizeBytes = Buffer.byteLength(content, "utf-8");
+            return { query, success: true as const, sizeBytes, content };
+          }
+          return {
+            query,
+            success: false as const,
+            error: result.error || "unknown error",
+          };
+        })
+      )
+    );
 
-      if (result.success && result.content) {
-        const content = processContext7Response(result.content, {
-          framework: template.displayName,
-          version,
-          category: query.category,
-          file: query.file,
-          libraryId: query.libraryId,
-        });
-
-        await writeDocFile(
-          projectRoot,
-          frameworkName,
-          query.category,
-          query.file,
-          content
-        );
-
-        const sizeBytes = Buffer.byteLength(content, "utf-8");
-        totalSize += sizeBytes;
+    for (const r of results) {
+      if (r.success) {
+        totalSize += r.sizeBytes;
         successCount++;
-
         spinner.succeed(
-          `  ${chalk.green("✓")} ${query.category}/${query.file} (${formatSize(sizeBytes)})`
+          `  ${chalk.green("✓")} ${r.query.category}/${r.query.file} (${formatSize(r.sizeBytes)})`
         );
       } else {
         failCount++;
         spinner.fail(
-          `  ${chalk.red("✗")} ${query.category}/${query.file} (${result.error || "unknown error"})`
+          `  ${chalk.red("✗")} ${r.query.category}/${r.query.file} (${r.error})`
         );
       }
     }
