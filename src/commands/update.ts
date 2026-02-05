@@ -148,6 +148,21 @@ export async function updateCommand(
     const existingConfig = config.frameworks[frameworkName];
     const version = existingConfig.version || template.version;
 
+    // Skip recently updated frameworks unless --force is passed
+    if (!options.force && existingConfig.lastUpdate) {
+      const hoursSinceUpdate =
+        (Date.now() - new Date(existingConfig.lastUpdate).getTime()) /
+        (1000 * 60 * 60);
+      if (hoursSinceUpdate < 24) {
+        console.log(
+          chalk.dim(
+            `\nSkipping ${template.displayName}@${version} (updated ${Math.round(hoursSinceUpdate)}h ago, use --force to override)`
+          )
+        );
+        continue;
+      }
+    }
+
     console.log("");
     console.log(
       chalk.bold(`Updating ${template.displayName}@${version} docs...`)
@@ -159,7 +174,6 @@ export async function updateCommand(
     );
 
     const queries = generateTemplateQueries(template);
-    let fileCount = 0;
     let totalSize = 0;
     let successCount = 0;
     let failCount = 0;
@@ -188,7 +202,6 @@ export async function updateCommand(
 
         const sizeBytes = Buffer.byteLength(content, "utf-8");
         totalSize += sizeBytes;
-        fileCount++;
         successCount++;
 
         spinner.succeed(
@@ -204,7 +217,7 @@ export async function updateCommand(
 
     // Summary for this framework
     console.log(
-      chalk.dim(`  Total: ${fileCount} files updated, ${formatSize(totalSize)}`)
+      chalk.dim(`  Total: ${successCount} files updated, ${formatSize(totalSize)}`)
     );
 
     if (failCount > 0) {
@@ -216,18 +229,11 @@ export async function updateCommand(
 
     // Only update config if files were successfully updated
     if (successCount > 0) {
-      // Calculate final file count based on existing files as baseline
-      // Files that failed to update still exist on disk with previous content
-      const finalFiles = Math.max(
-        0,
-        (existingConfig.files ?? 0) - failCount + successCount
-      );
-
       const frameworkConfig: FrameworkConfig = {
         ...existingConfig,
         source: "context7",
         lastUpdate: new Date().toISOString(),
-        files: finalFiles,
+        files: queries.length,
       };
 
       config = updateFrameworkInConfig(config, frameworkName, frameworkConfig);
