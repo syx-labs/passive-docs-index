@@ -78,11 +78,8 @@ export async function addCommand(
     console.log(
       chalk.yellow(`Unknown frameworks: ${invalidFrameworks.join(", ")}`)
     );
-    console.log(
-      chalk.dim(
-        "Available: hono, drizzle, better-auth, zod, tanstack-query, tanstack-router, react, vite, vitest, tailwind"
-      )
-    );
+    const available = listTemplates().map((t) => t.name).join(", ");
+    console.log(chalk.dim(`Available: ${available}`));
   }
 
   if (validFrameworks.length === 0) {
@@ -312,7 +309,7 @@ function generatePlaceholderDoc(
 ## Query for Context7
 
 \`\`\`
-Library ID: ${libraryId}
+Library ID: ${libraryId || "N/A"}
 Query: ${query}
 \`\`\`
 
