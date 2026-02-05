@@ -90,12 +90,12 @@ console.log("Per-module coverage report:");
 console.log("=".repeat(60));
 
 for (const mod of MODULES) {
-  // Match files that contain the module name in the src/lib/ path
-  // e.g., "context7" matches "src/lib/context7.ts" and "src/lib/context7-client.ts"
-  // But we need exact matching: "config" should match "config.ts" not "context7-client.ts"
+  // Match files in src/lib/ by exact filename (not in subdirectories).
+  // "mcp-client" should match "src/lib/mcp-client.ts" but NOT "src/lib/interfaces/mcp-client.ts"
   const moduleFiles = fileCoverages.filter((f) => {
     const fileName = f.file.split("/").pop()?.replace(".ts", "") ?? "";
-    return fileName === mod;
+    const isDirectChild = f.file === `src/lib/${mod}.ts`;
+    return fileName === mod && isDirectChild;
   });
 
   if (moduleFiles.length === 0) {

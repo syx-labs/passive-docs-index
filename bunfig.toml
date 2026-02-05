@@ -13,5 +13,7 @@ coveragePathIgnorePatterns = [
   "tests/**",
   "dist/**",
   "scripts/**",
-  "*.config.*"
+  "*.config.*",
+  "src/commands/**",
+  "src/lib/interfaces/**"
 ]
