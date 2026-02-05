@@ -56,7 +56,18 @@ export function createMockFs(
   const files = new Map<string, string>(Object.entries(initialFiles));
 
   const fsMock = {
-    existsSync: mock((path: string) => files.has(path)),
+    existsSync: mock((path: string) => {
+      // Check if it's an exact file
+      if (files.has(path)) return true;
+      // Check if it's a directory (has children under this path)
+      const prefix = path.endsWith("/") ? path : `${path}/`;
+      for (const filePath of files.keys()) {
+        if (filePath.startsWith(prefix)) {
+          return true;
+        }
+      }
+      return false;
+    }),
   };
 
   const fsPromisesMock = {
