@@ -1,0 +1,23 @@
+[
+  {
+    "id": "/honojs/hono",
+    "name": "Hono",
+    "description": "Web framework built on Web Standards. Fast, lightweight, built on Web Standards. Support for any JavaScript runtime.",
+    "trustScore": 15200,
+    "totalSnippets": 842
+  },
+  {
+    "id": "/honojs/honox",
+    "name": "HonoX",
+    "description": "HonoX - Hono based meta framework",
+    "trustScore": 1200,
+    "totalSnippets": 120
+  },
+  {
+    "id": "/honojs/middleware",
+    "name": "Hono Middleware",
+    "description": "Official middleware collection for Hono",
+    "trustScore": 800,
+    "totalSnippets": 95
+  }
+]

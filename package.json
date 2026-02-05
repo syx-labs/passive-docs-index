@@ -22,7 +22,7 @@
     "dev": "bun run --watch src/cli.ts",
     "build": "bun build src/cli.ts --outfile dist/cli.js --target node --format esm && bun build src/index.ts --outfile dist/index.js --target node --format esm",
     "typecheck": "tsc --noEmit",
-    "test": "bun test",
+    "test": "bun test --coverage && bun run scripts/check-coverage.ts",
     "prepublishOnly": "bun run build",
     "check": "ultracite check",
     "fix": "ultracite fix"

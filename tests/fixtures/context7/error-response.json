@@ -1,0 +1,5 @@
+{
+  "error": "library_redirected",
+  "message": "The library ID '/tailwindlabs/tailwindcss' has been redirected. Please use the search endpoint to find the correct library ID.",
+  "suggested_action": "Call resolve-library-id with libraryName='tailwindcss' to get the current ID"
+}

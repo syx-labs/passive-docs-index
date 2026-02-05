@@ -1,0 +1,6 @@
+[
+  {
+    "type": "text",
+    "text": "# Hono Routing\n\nHono's router is one of the fastest in the JavaScript ecosystem.\n\n## Basic Routing\n\n```ts\nconst app = new Hono()\n\napp.get('/', (c) => c.text('Hello!'))\napp.post('/posts', (c) => c.json({ ok: true }))\n```\n\n## Route Parameters\n\nUse `:param` syntax for dynamic route segments:\n\n```ts\napp.get('/users/:id', (c) => {\n  const id = c.req.param('id')\n  return c.json({ id })\n})\n```\n\n## Grouped Routes\n\n```ts\nconst api = new Hono()\napi.get('/users', listUsers)\napi.post('/users', createUser)\n\napp.route('/api', api)\n```"
+  }
+]

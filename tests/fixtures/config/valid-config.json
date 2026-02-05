@@ -1,0 +1,55 @@
+{
+  "$schema": "https://pdi.dev/schema/config.json",
+  "version": "1.0.0",
+  "project": {
+    "name": "my-saas-app",
+    "type": "fullstack"
+  },
+  "sync": {
+    "lastSync": "2026-01-15T10:30:00.000Z",
+    "autoSyncOnInstall": true
+  },
+  "frameworks": {
+    "hono": {
+      "version": "4.x",
+      "source": "context7",
+      "libraryId": "/honojs/hono",
+      "lastUpdate": "2026-01-15T10:30:00.000Z",
+      "files": 7,
+      "categories": ["api", "patterns"]
+    },
+    "drizzle": {
+      "version": "0.44",
+      "source": "context7",
+      "libraryId": "/drizzle-team/drizzle-orm",
+      "lastUpdate": "2026-01-15T10:30:00.000Z",
+      "files": 7,
+      "categories": ["schema", "queries", "migrations"]
+    }
+  },
+  "internal": {
+    "enabled": true,
+    "categories": ["database", "conventions"],
+    "totalFiles": 3
+  },
+  "mcp": {
+    "fallbackEnabled": true,
+    "preferredProvider": "context7",
+    "providers": {
+      "context7": {
+        "resolveLibraryId": "mcp__plugin_context7_context7__resolve-library-id",
+        "queryDocs": "mcp__plugin_context7_context7__query-docs"
+      }
+    },
+    "libraryMappings": {
+      "hono": "/honojs/hono",
+      "drizzle": "/drizzle-team/drizzle-orm"
+    },
+    "cacheHours": 168
+  },
+  "limits": {
+    "maxIndexKb": 4,
+    "maxDocsKb": 80,
+    "maxFilesPerFramework": 20
+  }
+}

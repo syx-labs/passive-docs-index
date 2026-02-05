@@ -1,0 +1,17 @@
+[test]
+# Test discovery
+root = "."
+preload = ["./tests/helpers/setup.ts"]
+
+# Coverage configuration
+coverage = true
+coverageReporter = ["text", "lcov"]
+coverageDir = "./coverage"
+coverageThreshold = 0.8
+coverageSkipTestFiles = true
+coveragePathIgnorePatterns = [
+  "tests/**",
+  "dist/**",
+  "scripts/**",
+  "*.config.*"
+]
