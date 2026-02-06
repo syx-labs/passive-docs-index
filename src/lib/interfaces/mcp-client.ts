@@ -8,9 +8,9 @@
 
 import {
   isMcpCliAvailable,
+  type MCPResult,
   queryContext7,
   resolveContext7Library,
-  type MCPResult,
 } from "../mcp-client.js";
 
 // ============================================================================
@@ -85,7 +85,7 @@ export class McpCliClient implements IMcpClient {
  */
 export class FakeMcpClient implements IMcpClient {
   private available = true;
-  private responses = new Map<string, McpResult>();
+  private readonly responses = new Map<string, McpResult>();
 
   /** Set whether the client reports as available */
   setAvailable(available: boolean): void {

@@ -7,10 +7,13 @@
  * updateFrameworkInConfig, removeFrameworkFromConfig, updateSyncTime.
  */
 
-import { describe, test, expect, mock, beforeEach, spyOn } from "bun:test";
-import { createMockFs } from "../../helpers/mock-fs.js";
-import { createConfig, createFrameworkConfig } from "../../helpers/factories.js";
+import { beforeEach, describe, expect, mock, spyOn, test } from "bun:test";
 import { join } from "node:path";
+import {
+  createConfig,
+  createFrameworkConfig,
+} from "../../helpers/factories.js";
+import { createMockFs } from "../../helpers/mock-fs.js";
 
 // ---------------------------------------------------------------------------
 // Filesystem mocks -- must be set up BEFORE importing config.ts
@@ -41,16 +44,16 @@ const {
 
 // Fixture loaders
 const validConfigFixture = await Bun.file(
-  join(import.meta.dir, "../../fixtures/config/valid-config.json"),
+  join(import.meta.dir, "../../fixtures/config/valid-config.json")
 ).text();
 const cliProjectFixture = await Bun.file(
-  join(import.meta.dir, "../../fixtures/package-json/cli-project.json"),
+  join(import.meta.dir, "../../fixtures/package-json/cli-project.json")
 ).text();
 const frontendProjectFixture = await Bun.file(
-  join(import.meta.dir, "../../fixtures/package-json/frontend-project.json"),
+  join(import.meta.dir, "../../fixtures/package-json/frontend-project.json")
 ).text();
 const fullstackProjectFixture = await Bun.file(
-  join(import.meta.dir, "../../fixtures/package-json/fullstack-project.json"),
+  join(import.meta.dir, "../../fixtures/package-json/fullstack-project.json")
 ).text();
 
 // ---------------------------------------------------------------------------
@@ -123,7 +126,9 @@ describe("readConfig", () => {
     const configPath = join("/project", ".claude-docs", "config.json");
     files.set(configPath, "{ invalid json !!!");
 
-    await expect(readConfig("/project")).rejects.toThrow("Failed to read config");
+    await expect(readConfig("/project")).rejects.toThrow(
+      "Failed to read config"
+    );
   });
 });
 
@@ -147,7 +152,9 @@ describe("writeConfig", () => {
   });
 
   test("writes JSON with 2-space indent (pretty-printed)", async () => {
-    const config = createConfig({ project: { name: "pretty-test", type: "backend" } });
+    const config = createConfig({
+      project: { name: "pretty-test", type: "backend" },
+    });
     await writeConfig("/project", config);
 
     const configPath = join("/project", ".claude-docs", "config.json");
@@ -208,7 +215,9 @@ describe("readPackageJson", () => {
     const pkgPath = join("/project", "package.json");
     files.set(pkgPath, "not json {{{");
 
-    const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+    const consoleSpy = spyOn(console, "error").mockImplementation(
+      () => undefined
+    );
     const result = await readPackageJson("/project");
     expect(result).toBeNull();
     expect(consoleSpy).toHaveBeenCalled();
@@ -386,7 +395,9 @@ describe("updateFrameworkInConfig", () => {
     const original = createConfig({
       frameworks: { hono: createFrameworkConfig() },
     });
-    const updated = updateFrameworkInConfig(original, "hono", { version: "5.x" });
+    const updated = updateFrameworkInConfig(original, "hono", {
+      version: "5.x",
+    });
     expect(updated).not.toBe(original);
     expect(original.frameworks.hono.version).toBe("4.x");
     expect(updated.frameworks.hono.version).toBe("5.x");
@@ -438,7 +449,9 @@ describe("removeFrameworkFromConfig", () => {
 
 describe("updateSyncTime", () => {
   test("returns new object with updated lastSync", () => {
-    const original = createConfig({ sync: { lastSync: null, autoSyncOnInstall: true } });
+    const original = createConfig({
+      sync: { lastSync: null, autoSyncOnInstall: true },
+    });
     const updated = updateSyncTime(original);
     expect(updated).not.toBe(original);
     expect(updated.sync.lastSync).not.toBeNull();

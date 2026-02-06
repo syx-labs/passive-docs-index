@@ -232,14 +232,10 @@ async function queryViaHttp(
 // MCP Client (Fallback)
 // ============================================================================
 
-// Import MCP client functions
-import {
-  extractContext7Content,
-  isMcpCliAvailable,
-  queryContext7 as queryViaMcpCli,
-} from "./mcp-client.js";
 import type { IMcpClient } from "./interfaces/mcp-client.js";
 import { McpCliClient } from "./interfaces/mcp-client.js";
+// Import MCP client functions
+import { extractContext7Content } from "./mcp-client.js";
 
 /** Default MCP client instance (uses real mcp-cli) */
 let defaultMcpClient: IMcpClient = new McpCliClient();
@@ -265,7 +261,7 @@ export function resetMcpClient(): void {
 async function queryViaMcp(
   libraryId: string,
   query: string,
-  mcpClient?: IMcpClient,
+  mcpClient?: IMcpClient
 ): Promise<Context7Result> {
   const client = mcpClient || defaultMcpClient;
   const mcpAvailable = await client.isAvailable();
@@ -406,7 +402,7 @@ export interface AvailabilityStatus {
  * Check what documentation sources are available
  */
 export async function checkAvailability(
-  mcpClient?: IMcpClient,
+  mcpClient?: IMcpClient
 ): Promise<AvailabilityStatus> {
   const http = isHttpClientAvailable();
   const client = mcpClient || defaultMcpClient;

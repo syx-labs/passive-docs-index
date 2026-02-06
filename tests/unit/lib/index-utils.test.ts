@@ -6,10 +6,10 @@
  * updateClaudeMdFromConfig depends on filesystem -- uses mock.module for node:fs/promises.
  */
 
-import { describe, test, expect, beforeEach, mock } from "bun:test";
-import { createMockFs } from "../../helpers/mock-fs.js";
-import { createConfig, createDocFile } from "../../helpers/factories.js";
+import { describe, expect, mock, test } from "bun:test";
 import type { DocFile } from "../../../src/lib/types.js";
+import { createConfig, createDocFile } from "../../helpers/factories.js";
+import { createMockFs } from "../../helpers/mock-fs.js";
 
 // ===========================================================================
 // buildFrameworksIndex (pure function -- no mocking)
@@ -30,16 +30,32 @@ describe("buildFrameworksIndex", () => {
     const allDocs: Record<string, Record<string, DocFile[]>> = {
       hono: {
         api: [
-          createDocFile({ name: "routing.mdx", framework: "hono", category: "api" }),
-          createDocFile({ name: "context.mdx", framework: "hono", category: "api" }),
+          createDocFile({
+            name: "routing.mdx",
+            framework: "hono",
+            category: "api",
+          }),
+          createDocFile({
+            name: "context.mdx",
+            framework: "hono",
+            category: "api",
+          }),
         ],
         patterns: [
-          createDocFile({ name: "middleware.mdx", framework: "hono", category: "patterns" }),
+          createDocFile({
+            name: "middleware.mdx",
+            framework: "hono",
+            category: "patterns",
+          }),
         ],
       },
       drizzle: {
         api: [
-          createDocFile({ name: "schema.mdx", framework: "drizzle", category: "api" }),
+          createDocFile({
+            name: "schema.mdx",
+            framework: "drizzle",
+            category: "api",
+          }),
         ],
       },
     };

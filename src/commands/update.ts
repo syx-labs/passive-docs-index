@@ -69,7 +69,9 @@ export async function updateCommand(
     );
     for (const fw of frameworksToUpdate) {
       const cfg = config.frameworks[fw] ?? ({} as Partial<FrameworkConfig>);
-      console.log(`  - ${fw}@${cfg.version ?? "unknown"} (${cfg.files ?? 0} files)`);
+      console.log(
+        `  - ${fw}@${cfg.version ?? "unknown"} (${cfg.files ?? 0} files)`
+      );
     }
     console.log("");
 
@@ -147,7 +149,8 @@ export async function updateCommand(
       continue;
     }
 
-    const existingConfig = config.frameworks[frameworkName] ?? ({} as Partial<FrameworkConfig>);
+    const existingConfig =
+      config.frameworks[frameworkName] ?? ({} as Partial<FrameworkConfig>);
     const version = existingConfig.version ?? template.version;
 
     // Skip recently updated frameworks unless --force is passed
@@ -238,7 +241,9 @@ export async function updateCommand(
 
     // Summary for this framework
     console.log(
-      chalk.dim(`  Total: ${successCount} files updated, ${formatSize(totalSize)}`)
+      chalk.dim(
+        `  Total: ${successCount} files updated, ${formatSize(totalSize)}`
+      )
     );
 
     if (failCount > 0) {

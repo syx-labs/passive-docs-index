@@ -51,14 +51,16 @@ export interface MockFsResult {
  * @returns Mock implementations for node:fs and node:fs/promises
  */
 export function createMockFs(
-  initialFiles: Record<string, string> = {},
+  initialFiles: Record<string, string> = {}
 ): MockFsResult {
   const files = new Map<string, string>(Object.entries(initialFiles));
 
   const fsMock = {
     existsSync: mock((path: string) => {
       // Check if it's an exact file
-      if (files.has(path)) return true;
+      if (files.has(path)) {
+        return true;
+      }
       // Check if it's a directory (has children under this path)
       const prefix = path.endsWith("/") ? path : `${path}/`;
       for (const filePath of files.keys()) {
@@ -74,7 +76,9 @@ export function createMockFs(
     readFile: mock(async (path: string) => {
       const content = files.get(path);
       if (content === undefined) {
-        const err = new Error(`ENOENT: no such file or directory, open '${path}'`);
+        const err = new Error(
+          `ENOENT: no such file or directory, open '${path}'`
+        );
         (err as NodeJS.ErrnoException).code = "ENOENT";
         throw err;
       }
@@ -92,8 +96,10 @@ export function createMockFs(
     readdir: mock(
       async (
         dirPath: string,
-        options?: { withFileTypes?: boolean },
-      ): Promise<string[] | Array<{ name: string; isDirectory: () => boolean }>> => {
+        options?: { withFileTypes?: boolean }
+      ): Promise<
+        string[] | Array<{ name: string; isDirectory: () => boolean }>
+      > => {
         const entries: string[] = [];
         const prefix = dirPath.endsWith("/") ? dirPath : `${dirPath}/`;
 
@@ -124,18 +130,23 @@ export function createMockFs(
         }
 
         return entries;
-      },
+      }
     ),
 
-    rm: mock(async (path: string, _options?: { recursive?: boolean; force?: boolean }) => {
-      // Remove the path and all children
-      const prefix = path.endsWith("/") ? path : `${path}/`;
-      for (const filePath of [...files.keys()]) {
-        if (filePath === path || filePath.startsWith(prefix)) {
-          files.delete(filePath);
+    rm: mock(
+      async (
+        path: string,
+        _options?: { recursive?: boolean; force?: boolean }
+      ) => {
+        // Remove the path and all children
+        const prefix = path.endsWith("/") ? path : `${path}/`;
+        for (const filePath of [...files.keys()]) {
+          if (filePath === path || filePath.startsWith(prefix)) {
+            files.delete(filePath);
+          }
         }
       }
-    }),
+    ),
 
     stat: mock(async (path: string) => {
       if (!files.has(path)) {
@@ -149,7 +160,9 @@ export function createMockFs(
           }
         }
         if (!isDir) {
-          const err = new Error(`ENOENT: no such file or directory, stat '${path}'`);
+          const err = new Error(
+            `ENOENT: no such file or directory, stat '${path}'`
+          );
           (err as NodeJS.ErrnoException).code = "ENOENT";
           throw err;
         }

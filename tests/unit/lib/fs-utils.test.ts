@@ -7,9 +7,9 @@
  * updateGitignore.
  */
 
-import { describe, test, expect, mock, beforeEach } from "bun:test";
-import { createMockFs } from "../../helpers/mock-fs.js";
+import { beforeEach, describe, expect, mock, test } from "bun:test";
 import { join } from "node:path";
+import { createMockFs } from "../../helpers/mock-fs.js";
 
 // ---------------------------------------------------------------------------
 // Filesystem mocks -- must be set up BEFORE importing fs-utils.ts
@@ -144,10 +144,17 @@ describe("writeDocFile", () => {
       "hono",
       "api",
       "routing.mdx",
-      "# Routing",
+      "# Routing"
     );
     expect(result).toBe(
-      join("/project", ".claude-docs", "frameworks", "hono", "api", "routing.mdx"),
+      join(
+        "/project",
+        ".claude-docs",
+        "frameworks",
+        "hono",
+        "api",
+        "routing.mdx"
+      )
     );
   });
 
@@ -159,7 +166,7 @@ describe("writeDocFile", () => {
       "frameworks",
       "hono",
       "api",
-      "routing.mdx",
+      "routing.mdx"
     );
     expect(files.get(filePath)).toBe("# Routing");
   });
@@ -181,10 +188,10 @@ describe("writeInternalDocFile", () => {
       "/project",
       "conventions",
       "esm.mdx",
-      "# ESM",
+      "# ESM"
     );
     expect(result).toBe(
-      join("/project", ".claude-docs", "internal", "conventions", "esm.mdx"),
+      join("/project", ".claude-docs", "internal", "conventions", "esm.mdx")
     );
   });
 });
@@ -261,11 +268,11 @@ describe("readAllFrameworkDocs", () => {
   test("returns docs for all frameworks", async () => {
     files.set(
       "/project/.claude-docs/frameworks/hono/api/app.mdx",
-      "# Hono App",
+      "# Hono App"
     );
     files.set(
       "/project/.claude-docs/frameworks/drizzle/schema/tables.mdx",
-      "# Tables",
+      "# Tables"
     );
 
     const result = await readAllFrameworkDocs("/project");
@@ -285,13 +292,10 @@ describe("readAllFrameworkDocs", () => {
 
 describe("readInternalDocs", () => {
   test("returns categorized internal docs", async () => {
-    files.set(
-      "/project/.claude-docs/internal/conventions/esm.mdx",
-      "# ESM",
-    );
+    files.set("/project/.claude-docs/internal/conventions/esm.mdx", "# ESM");
     files.set(
       "/project/.claude-docs/internal/database/two-schema.mdx",
-      "# Two Schema",
+      "# Two Schema"
     );
 
     const result = await readInternalDocs("/project");
@@ -313,11 +317,11 @@ describe("calculateDocsSize", () => {
   test("returns framework sizes and total", async () => {
     files.set(
       "/project/.claude-docs/frameworks/hono/api/app.mdx",
-      "A".repeat(100),
+      "A".repeat(100)
     );
     files.set(
       "/project/.claude-docs/frameworks/drizzle/schema/tables.mdx",
-      "B".repeat(200),
+      "B".repeat(200)
     );
 
     const result = await calculateDocsSize("/project");
@@ -329,11 +333,11 @@ describe("calculateDocsSize", () => {
   test("only counts .mdx files", async () => {
     files.set(
       "/project/.claude-docs/frameworks/hono/api/app.mdx",
-      "A".repeat(100),
+      "A".repeat(100)
     );
     files.set(
       "/project/.claude-docs/frameworks/hono/api/readme.txt",
-      "B".repeat(200),
+      "B".repeat(200)
     );
 
     const result = await calculateDocsSize("/project");
@@ -351,11 +355,11 @@ describe("calculateDocsSize", () => {
   test("counts internal docs separately", async () => {
     files.set(
       "/project/.claude-docs/internal/conventions/esm.mdx",
-      "C".repeat(50),
+      "C".repeat(50)
     );
     files.set(
       "/project/.claude-docs/frameworks/hono/api/app.mdx",
-      "D".repeat(75),
+      "D".repeat(75)
     );
 
     const result = await calculateDocsSize("/project");
@@ -383,7 +387,7 @@ describe("formatSize", () => {
   });
 
   test('"1048576" -> "1.00MB"', () => {
-    expect(formatSize(1048576)).toBe("1.00MB");
+    expect(formatSize(1_048_576)).toBe("1.00MB");
   });
 
   test('"0" -> "0B"', () => {

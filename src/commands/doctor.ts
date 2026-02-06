@@ -126,8 +126,7 @@ export async function doctorCommand(): Promise<void> {
       config = await readConfig(projectRoot);
     } catch (err) {
       config = null;
-      const errorMessage =
-        err instanceof Error ? err.message : "Unknown error";
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
       results.push({
         name: "Docs",
         status: "error",

@@ -39,8 +39,7 @@ export function createConfig(overrides: Partial<PDIConfig> = {}): PDIConfig {
       preferredProvider: "context7",
       providers: {
         context7: {
-          resolveLibraryId:
-            "mcp__plugin_context7_context7__resolve-library-id",
+          resolveLibraryId: "mcp__plugin_context7_context7__resolve-library-id",
           queryDocs: "mcp__plugin_context7_context7__query-docs",
         },
       },
@@ -62,7 +61,7 @@ export function createConfig(overrides: Partial<PDIConfig> = {}): PDIConfig {
  * Create a package.json-like object with sensible defaults.
  */
 export function createPackageJson(
-  overrides: Record<string, unknown> = {},
+  overrides: Record<string, unknown> = {}
 ): Record<string, unknown> {
   return {
     name: "test-project",
@@ -77,7 +76,7 @@ export function createPackageJson(
  * Create a FrameworkConfig with sensible defaults.
  */
 export function createFrameworkConfig(
-  overrides: Partial<FrameworkConfig> = {},
+  overrides: Partial<FrameworkConfig> = {}
 ): FrameworkConfig {
   return {
     version: "4.x",
@@ -94,7 +93,7 @@ export function createFrameworkConfig(
  * Create an IndexSection with sensible defaults.
  */
 export function createIndexSection(
-  overrides: Partial<IndexSection> = {},
+  overrides: Partial<IndexSection> = {}
 ): IndexSection {
   return {
     title: "Framework Docs",

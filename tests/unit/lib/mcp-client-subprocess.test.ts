@@ -10,7 +10,7 @@
  * the mockSpawnChild variable.
  */
 
-import { describe, test, expect, mock, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, mock, test } from "bun:test";
 import { EventEmitter } from "node:events";
 
 // ---------------------------------------------------------------------------
@@ -62,7 +62,9 @@ mock.module("node:child_process", () => ({
       const idx = execSyncCallCount - 1;
       if (idx < execSyncResults.length) {
         const val = execSyncResults[idx];
-        if (val === "ERROR") throw new Error("not found");
+        if (val === "ERROR") {
+          throw new Error("not found");
+        }
         return val;
       }
       throw new Error("not found");
@@ -238,7 +240,10 @@ describe("queryContext7 (mcp-client)", () => {
 
     const queryPromise = queryContext7("/honojs/hono", "routing");
     setTimeout(() => {
-      queryChild.stdout.emit("data", Buffer.from('{"content": "docs content"}'));
+      queryChild.stdout.emit(
+        "data",
+        Buffer.from('{"content": "docs content"}')
+      );
       queryChild.emit("close", 0);
     }, 10);
 
@@ -369,12 +374,22 @@ describe("queryContext7Batch", () => {
   test("processes queries with progress callback", async () => {
     execSyncBehavior = "error"; // not available -> all fail fast
 
-    const progress: Array<[number, number]> = [];
+    const progress: [number, number][] = [];
 
     const results = await queryContext7Batch(
       [
-        { category: "api", file: "routing.mdx", query: "routing", libraryId: "/honojs/hono" },
-        { category: "api", file: "context.mdx", query: "context", libraryId: "/honojs/hono" },
+        {
+          category: "api",
+          file: "routing.mdx",
+          query: "routing",
+          libraryId: "/honojs/hono",
+        },
+        {
+          category: "api",
+          file: "context.mdx",
+          query: "context",
+          libraryId: "/honojs/hono",
+        },
       ],
       (completed, total) => {
         progress.push([completed, total]);

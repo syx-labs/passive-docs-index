@@ -5,7 +5,10 @@
  */
 
 import { mock } from "bun:test";
-import type { IMcpClient, McpResult } from "../../src/lib/interfaces/mcp-client.js";
+import type {
+  IMcpClient,
+  McpResult,
+} from "../../src/lib/interfaces/mcp-client.js";
 
 /**
  * Fake MCP client for testing -- no subprocess, no network.
@@ -13,7 +16,7 @@ import type { IMcpClient, McpResult } from "../../src/lib/interfaces/mcp-client.
  */
 export class FakeMcpClient implements IMcpClient {
   private available = true;
-  private responses = new Map<string, McpResult>();
+  private readonly responses = new Map<string, McpResult>();
 
   /** Set whether the client reports as available */
   setAvailable(available: boolean): void {
@@ -68,7 +71,7 @@ export class FakeMcpClient implements IMcpClient {
  * ```
  */
 export function createPromptsMock(
-  responses: Record<string, unknown>,
+  responses: Record<string, unknown>
 ): ReturnType<typeof mock> {
   return mock(async () => responses);
 }

@@ -78,7 +78,9 @@ export async function addCommand(
     console.log(
       chalk.yellow(`Unknown frameworks: ${invalidFrameworks.join(", ")}`)
     );
-    const available = listTemplates().map((t) => t.name).join(", ");
+    const available = listTemplates()
+      .map((t) => t.name)
+      .join(", ");
     console.log(chalk.dim(`Available: ${available}`));
   }
 

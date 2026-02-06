@@ -8,9 +8,20 @@
  * - Console output, ora, chalk
  */
 
-import { describe, test, expect, mock, beforeEach, afterEach, spyOn } from "bun:test";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  mock,
+  spyOn,
+  test,
+} from "bun:test";
+import {
+  createConfig,
+  createFrameworkConfig,
+} from "../../helpers/factories.js";
 import { createMockFs } from "../../helpers/mock-fs.js";
-import { createConfig, createFrameworkConfig } from "../../helpers/factories.js";
 
 // ---------------------------------------------------------------------------
 // Filesystem mocks
@@ -44,8 +55,12 @@ mock.module("chalk", () => {
   const passthrough = (s: string) => s;
   const handler: ProxyHandler<object> = {
     get: (_target, prop) => {
-      if (prop === "default") return new Proxy({}, handler);
-      if (prop === "__esModule") return true;
+      if (prop === "default") {
+        return new Proxy({}, handler);
+      }
+      if (prop === "__esModule") {
+        return true;
+      }
       return passthrough;
     },
     apply: (_target, _this, args) => args[0],
@@ -68,14 +83,17 @@ mock.module("prompts", () => ({
 // ---------------------------------------------------------------------------
 
 mock.module("p-limit", () => ({
-  default: () => <T>(fn: () => T) => fn(),
+  default:
+    () =>
+    <T>(fn: () => T) =>
+      fn(),
 }));
 
 // ---------------------------------------------------------------------------
 // Mock context7-client
 // ---------------------------------------------------------------------------
 
-let mockCheckAvailability = mock(async () => ({
+const mockCheckAvailability = mock(async () => ({
   http: true,
   mcp: false,
   available: true,
@@ -83,15 +101,17 @@ let mockCheckAvailability = mock(async () => ({
   message: "Using Context7 HTTP API",
 }));
 
-let mockQueryContext7 = mock(async () => ({
+const mockQueryContext7 = mock(async () => ({
   success: true,
   content: "# Updated documentation content\n\nThis is updated doc content.",
   source: "http" as const,
 }));
 
 mock.module("../../../src/lib/context7-client.js", () => ({
-  checkAvailability: (...args: unknown[]) => mockCheckAvailability(...(args as [])),
-  queryContext7: (...args: unknown[]) => mockQueryContext7(...(args as [string, string])),
+  checkAvailability: (...args: unknown[]) =>
+    mockCheckAvailability(...(args as [])),
+  queryContext7: (...args: unknown[]) =>
+    mockQueryContext7(...(args as [string, string])),
   resetClients: mock(),
   setMcpClient: mock(),
   resetMcpClient: mock(),
@@ -132,8 +152,8 @@ beforeEach(() => {
     source: "http" as const,
   }));
 
-  logSpy = spyOn(console, "log").mockImplementation(() => {});
-  errorSpy = spyOn(console, "error").mockImplementation(() => {});
+  logSpy = spyOn(console, "log").mockImplementation(() => undefined);
+  errorSpy = spyOn(console, "error").mockImplementation(() => undefined);
 });
 
 afterEach(() => {
@@ -264,7 +284,11 @@ describe("updateCommand", () => {
     });
 
     const logs = logSpy.mock.calls.map((c) => c.join(" "));
-    expect(logs.some((l) => l.includes("No files were updated") || l.includes("Failed"))).toBe(true);
+    expect(
+      logs.some(
+        (l) => l.includes("No files were updated") || l.includes("Failed")
+      )
+    ).toBe(true);
   });
 
   test("handles no documentation source available", async () => {
@@ -291,7 +315,11 @@ describe("updateCommand", () => {
 
     const logs = logSpy.mock.calls.map((c) => c.join(" "));
     expect(
-      logs.some((l) => l.includes("No documentation source available") || l.includes("CONTEXT7_API_KEY"))
+      logs.some(
+        (l) =>
+          l.includes("No documentation source available") ||
+          l.includes("CONTEXT7_API_KEY")
+      )
     ).toBe(true);
   });
 

@@ -6,10 +6,10 @@
  * calculateIndexSize, getClaudeMdPath, claudeMdExists, readClaudeMd.
  */
 
-import { describe, test, expect, mock, beforeEach } from "bun:test";
-import { createMockFs } from "../../helpers/mock-fs.js";
-import { createIndexSection } from "../../helpers/factories.js";
+import { beforeEach, describe, expect, mock, test } from "bun:test";
 import { join } from "node:path";
+import { createIndexSection } from "../../helpers/factories.js";
+import { createMockFs } from "../../helpers/mock-fs.js";
 
 // ---------------------------------------------------------------------------
 // Filesystem mocks -- must be set up BEFORE importing index-parser.ts
@@ -40,10 +40,10 @@ const { PDI_BEGIN_MARKER, PDI_END_MARKER } = await import(
 
 // Fixture loaders
 const withIndexFixture = await Bun.file(
-  join(import.meta.dir, "../../fixtures/claude-md/with-index.md"),
+  join(import.meta.dir, "../../fixtures/claude-md/with-index.md")
 ).text();
 const withoutIndexFixture = await Bun.file(
-  join(import.meta.dir, "../../fixtures/claude-md/without-index.md"),
+  join(import.meta.dir, "../../fixtures/claude-md/without-index.md")
 ).text();
 
 // ---------------------------------------------------------------------------
@@ -71,7 +71,9 @@ describe("parseIndex", () => {
     const input = `[Framework Docs]|root:.claude-docs/frameworks
 |CRITICAL:Read docs before coding`;
     const sections = parseIndex(input);
-    expect(sections[0].criticalInstructions).toEqual(["Read docs before coding"]);
+    expect(sections[0].criticalInstructions).toEqual([
+      "Read docs before coding",
+    ]);
   });
 
   test("parses entry: extracts package, version, categories with files", () => {
@@ -168,7 +170,7 @@ describe("generateIndex", () => {
     ];
     const output = generateIndex(sections);
     expect(output).toBe(
-      `[Test Section]|root:.test/path\n|CRITICAL:Do the thing\n|hono@4.x|api:{app.mdx}`,
+      "[Test Section]|root:.test/path\n|CRITICAL:Do the thing\n|hono@4.x|api:{app.mdx}"
     );
   });
 
@@ -231,7 +233,10 @@ describe("generateIndexBlock", () => {
 
   test("includes MCP fallback comment when libraryMappings provided", () => {
     const sections = [createIndexSection()];
-    const mappings = { hono: "/honojs/hono", drizzle: "/drizzle-team/drizzle-orm" };
+    const mappings = {
+      hono: "/honojs/hono",
+      drizzle: "/drizzle-team/drizzle-orm",
+    };
     const block = generateIndexBlock(sections, mappings);
     expect(block).toContain("<!-- MCP Fallback: Context7 for expanded queries");
     expect(block).toContain("hono=/honojs/hono");
@@ -259,7 +264,9 @@ describe("extractIndexFromClaudeMd", () => {
   test("extracts content between pdi:begin and pdi:end markers", () => {
     const extracted = extractIndexFromClaudeMd(withIndexFixture);
     expect(extracted).not.toBeNull();
-    expect(extracted).toContain("[Framework Docs]|root:.claude-docs/frameworks");
+    expect(extracted).toContain(
+      "[Framework Docs]|root:.claude-docs/frameworks"
+    );
     expect(extracted).toContain("|hono@4.x|");
     expect(extracted).toContain("|drizzle@0.44|");
   });
@@ -402,7 +409,7 @@ describe("buildIndexSections", () => {
       ".claude-docs/frameworks",
       ".claude-docs/internal",
       frameworks,
-      {},
+      {}
     );
     expect(sections.length).toBe(1);
     expect(sections[0].title).toBe("Framework Docs");
@@ -421,7 +428,7 @@ describe("buildIndexSections", () => {
       ".claude-docs/frameworks",
       ".claude-docs/internal",
       {},
-      internal,
+      internal
     );
     expect(sections.length).toBe(1);
     expect(sections[0].title).toBe("Internal Patterns");
@@ -433,7 +440,7 @@ describe("buildIndexSections", () => {
       ".claude-docs/frameworks",
       ".claude-docs/internal",
       {},
-      {},
+      {}
     );
     expect(sections).toEqual([]);
   });
@@ -452,7 +459,7 @@ describe("buildIndexSections", () => {
       ".claude-docs/frameworks",
       ".claude-docs/internal",
       frameworks,
-      internal,
+      internal
     );
     expect(sections.length).toBe(2);
     expect(sections[0].title).toBe("Framework Docs");
@@ -471,7 +478,7 @@ describe("buildIndexSections", () => {
       ".claude-docs/internal",
       frameworks,
       {},
-      { frameworkCriticals: ["Custom critical instruction"] },
+      { frameworkCriticals: ["Custom critical instruction"] }
     );
     expect(sections[0].criticalInstructions).toEqual([
       "Custom critical instruction",
@@ -489,7 +496,7 @@ describe("buildIndexSections", () => {
       ".claude-docs/frameworks",
       ".claude-docs/internal",
       frameworks,
-      {},
+      {}
     );
     expect(sections[0].criticalInstructions.length).toBe(2);
     expect(sections[0].criticalInstructions[0]).toContain("retrieval-led");

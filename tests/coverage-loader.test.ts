@@ -10,7 +10,7 @@ import { test } from "bun:test";
 
 test("all source modules are loaded for coverage", async () => {
   const glob = new Bun.Glob("src/lib/**/*.ts");
-  const projectRoot = import.meta.dir + "/..";
+  const projectRoot = `${import.meta.dir}/..`;
   let loaded = 0;
 
   for await (const file of glob.scan({ cwd: projectRoot })) {
@@ -26,7 +26,7 @@ test("all source modules are loaded for coverage", async () => {
   // Sanity check: we should load at least the known 10 modules
   if (loaded < 8) {
     throw new Error(
-      `Expected at least 8 source modules but only loaded ${loaded}`,
+      `Expected at least 8 source modules but only loaded ${loaded}`
     );
   }
 });

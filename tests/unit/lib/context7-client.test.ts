@@ -8,15 +8,23 @@
  * - MCP: FakeMcpClient injected via setMcpClient()
  */
 
-import { describe, test, expect, beforeEach, afterEach, mock, spyOn } from "bun:test";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  mock,
+  spyOn,
+  test,
+} from "bun:test";
 import { FakeMcpClient } from "../../helpers/mock-mcp.js";
 
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
 
-import searchLibraryFixture from "../../fixtures/context7/search-library.json";
 import queryDocsFixture from "../../fixtures/context7/query-docs.json";
+import searchLibraryFixture from "../../fixtures/context7/search-library.json";
 
 // ---------------------------------------------------------------------------
 // Mock the Context7 SDK before importing the module under test
@@ -42,15 +50,13 @@ mock.module("@upstash/context7-sdk", () => ({
 // ---------------------------------------------------------------------------
 
 import {
-  queryContext7,
-  searchLibrary,
   checkAvailability,
-  resetClients,
-  setMcpClient,
-  resetMcpClient,
   isHttpClientAvailable,
-  type Context7Result,
-  type AvailabilityStatus,
+  queryContext7,
+  resetClients,
+  resetMcpClient,
+  searchLibrary,
+  setMcpClient,
 } from "../../../src/lib/context7-client.js";
 
 // ---------------------------------------------------------------------------
@@ -73,15 +79,15 @@ beforeEach(() => {
   mockSearchLibrary = mock(async () => searchLibraryFixture);
 
   // Suppress console.error noise in tests
-  consoleErrorSpy = spyOn(console, "error").mockImplementation(() => {});
+  consoleErrorSpy = spyOn(console, "error").mockImplementation(() => undefined);
 
   // Clear any stale env
-  delete process.env.CONTEXT7_API_KEY;
+  process.env.CONTEXT7_API_KEY = undefined;
 });
 
 afterEach(() => {
   consoleErrorSpy.mockRestore();
-  delete process.env.CONTEXT7_API_KEY;
+  process.env.CONTEXT7_API_KEY = undefined;
   resetMcpClient();
 });
 
@@ -146,7 +152,7 @@ describe("queryContext7 (unified)", () => {
 
   test("returns offline error when no API key and no MCP", async () => {
     // No API key
-    delete process.env.CONTEXT7_API_KEY;
+    process.env.CONTEXT7_API_KEY = undefined;
 
     // MCP not available
     fakeMcp.setAvailable(false);
@@ -243,7 +249,7 @@ describe("searchLibrary", () => {
   });
 
   test("returns null when client unavailable (no API key)", async () => {
-    delete process.env.CONTEXT7_API_KEY;
+    process.env.CONTEXT7_API_KEY = undefined;
 
     const result = await searchLibrary("hono", "hono");
 
@@ -290,7 +296,7 @@ describe("checkAvailability", () => {
   });
 
   test("returns http: false, mcp: true when only MCP available", async () => {
-    delete process.env.CONTEXT7_API_KEY;
+    process.env.CONTEXT7_API_KEY = undefined;
     fakeMcp.setAvailable(true);
 
     const status = await checkAvailability(fakeMcp);
@@ -315,7 +321,7 @@ describe("checkAvailability", () => {
   });
 
   test("returns both false when neither available", async () => {
-    delete process.env.CONTEXT7_API_KEY;
+    process.env.CONTEXT7_API_KEY = undefined;
     fakeMcp.setAvailable(false);
 
     const status = await checkAvailability(fakeMcp);
@@ -343,7 +349,7 @@ describe("resetClients", () => {
     resetClients();
 
     // Without API key, HTTP should now be unavailable
-    delete process.env.CONTEXT7_API_KEY;
+    process.env.CONTEXT7_API_KEY = undefined;
     expect(isHttpClientAvailable()).toBe(false);
   });
 
@@ -457,7 +463,7 @@ describe("queryContext7 HTTP error handling", () => {
   });
 
   test("MCP returns empty content", async () => {
-    delete process.env.CONTEXT7_API_KEY;
+    process.env.CONTEXT7_API_KEY = undefined;
 
     fakeMcp.setAvailable(true);
     fakeMcp.setResponse("/honojs/hono:routing", {
@@ -472,7 +478,7 @@ describe("queryContext7 HTTP error handling", () => {
   });
 
   test("MCP query fails with error", async () => {
-    delete process.env.CONTEXT7_API_KEY;
+    process.env.CONTEXT7_API_KEY = undefined;
 
     fakeMcp.setAvailable(true);
     fakeMcp.setResponse("/honojs/hono:routing", {
@@ -513,12 +519,12 @@ describe("isHttpClientAvailable", () => {
   });
 
   test("returns false when no API key", () => {
-    delete process.env.CONTEXT7_API_KEY;
+    process.env.CONTEXT7_API_KEY = undefined;
     expect(isHttpClientAvailable()).toBe(false);
   });
 
   test("returns true when apiKeyOverride is provided", () => {
-    delete process.env.CONTEXT7_API_KEY;
+    process.env.CONTEXT7_API_KEY = undefined;
     expect(isHttpClientAvailable("override-key")).toBe(true);
   });
 });

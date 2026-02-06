@@ -97,10 +97,10 @@ export {
 } from "./lib/index-parser.js";
 // MCP Client Interface
 export {
-  type IMcpClient,
-  type McpResult,
-  McpCliClient,
   FakeMcpClient,
+  type IMcpClient,
+  McpCliClient,
+  type McpResult,
 } from "./lib/interfaces/mcp-client.js";
 // MCP Client (low-level)
 export {

@@ -8,9 +8,20 @@
  * Note: status command does NOT use ora or prompts.
  */
 
-import { describe, test, expect, mock, beforeEach, afterEach, spyOn } from "bun:test";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  mock,
+  spyOn,
+  test,
+} from "bun:test";
+import {
+  createConfig,
+  createFrameworkConfig,
+} from "../../helpers/factories.js";
 import { createMockFs } from "../../helpers/mock-fs.js";
-import { createConfig, createFrameworkConfig } from "../../helpers/factories.js";
 
 // ---------------------------------------------------------------------------
 // Filesystem mocks
@@ -29,8 +40,12 @@ mock.module("chalk", () => {
   const passthrough = (s: string) => s;
   const handler: ProxyHandler<object> = {
     get: (_target, prop) => {
-      if (prop === "default") return new Proxy({}, handler);
-      if (prop === "__esModule") return true;
+      if (prop === "default") {
+        return new Proxy({}, handler);
+      }
+      if (prop === "__esModule") {
+        return true;
+      }
       return passthrough;
     },
     apply: (_target, _this, args) => args[0],
@@ -53,8 +68,8 @@ let errorSpy: ReturnType<typeof spyOn>;
 
 beforeEach(() => {
   files.clear();
-  logSpy = spyOn(console, "log").mockImplementation(() => {});
-  errorSpy = spyOn(console, "error").mockImplementation(() => {});
+  logSpy = spyOn(console, "log").mockImplementation(() => undefined);
+  errorSpy = spyOn(console, "error").mockImplementation(() => undefined);
 });
 
 afterEach(() => {
@@ -180,8 +195,7 @@ describe("statusCommand", () => {
     const logs = logSpy.mock.calls.map((c) => c.join(" "));
     expect(
       logs.some(
-        (l) =>
-          l.includes("Missing frameworks") || l.includes("not documented")
+        (l) => l.includes("Missing frameworks") || l.includes("not documented")
       )
     ).toBe(true);
   });

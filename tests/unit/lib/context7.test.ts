@@ -6,16 +6,16 @@
  * This module is pure logic (no I/O), so no mocking is needed.
  */
 
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 
 import {
-  generateResolveLibraryCall,
+  extractRelevantSections,
+  generateBatchQueries,
+  generateMcpFallbackInstructions,
   generateQueryDocsCall,
+  generateResolveLibraryCall,
   generateTemplateQueries,
   processContext7Response,
-  extractRelevantSections,
-  generateMcpFallbackInstructions,
-  generateBatchQueries,
 } from "../../../src/lib/context7.js";
 
 import type { FrameworkTemplate } from "../../../src/lib/types.js";
@@ -24,7 +24,9 @@ import type { FrameworkTemplate } from "../../../src/lib/types.js";
 // Helpers
 // ---------------------------------------------------------------------------
 
-function createTemplate(overrides: Partial<FrameworkTemplate> = {}): FrameworkTemplate {
+function createTemplate(
+  overrides: Partial<FrameworkTemplate> = {}
+): FrameworkTemplate {
   return {
     name: "hono",
     displayName: "Hono",
@@ -56,7 +58,9 @@ describe("generateResolveLibraryCall", () => {
     const call = generateResolveLibraryCall("hono");
     const parsed = JSON.parse(call);
 
-    expect(parsed.tool).toBe("mcp__plugin_context7_context7__resolve-library-id");
+    expect(parsed.tool).toBe(
+      "mcp__plugin_context7_context7__resolve-library-id"
+    );
     expect(parsed.params.libraryName).toBe("hono");
   });
 
@@ -230,7 +234,7 @@ describe("extractRelevantSections", () => {
   });
 
   test("truncates to first section if even one section exceeds maxLength", () => {
-    const longSection = "# Title\n\n" + "x".repeat(10000);
+    const longSection = `# Title\n\n${"x".repeat(10_000)}`;
     const result = extractRelevantSections(longSection, 100);
 
     expect(result.length).toBeLessThanOrEqual(100);

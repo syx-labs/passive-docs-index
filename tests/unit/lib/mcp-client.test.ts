@@ -7,7 +7,7 @@
  * are tested via FakeMcpClient in context7-client.test.ts instead.
  */
 
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 
 import {
   extractContext7Content,

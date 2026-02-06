@@ -6,14 +6,14 @@
  * the FRAMEWORK_TEMPLATES registry.
  */
 
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import {
+  FRAMEWORK_TEMPLATES,
   getTemplate,
-  hasTemplate,
-  listTemplates,
   getTemplatesByCategory,
   getTemplatesByPriority,
-  FRAMEWORK_TEMPLATES,
+  hasTemplate,
+  listTemplates,
 } from "../../../src/lib/templates.js";
 
 // ============================================================================
@@ -199,7 +199,7 @@ describe("getTemplatesByPriority", () => {
 
 describe("FRAMEWORK_TEMPLATES", () => {
   test("every template has a non-empty structure with at least one category", () => {
-    for (const [key, template] of Object.entries(FRAMEWORK_TEMPLATES)) {
+    for (const [_key, template] of Object.entries(FRAMEWORK_TEMPLATES)) {
       const categories = Object.keys(template.structure);
       expect(categories.length).toBeGreaterThan(0);
       // Each category should have at least one file entry
@@ -211,7 +211,7 @@ describe("FRAMEWORK_TEMPLATES", () => {
   });
 
   test("every template has a libraryId", () => {
-    for (const [key, template] of Object.entries(FRAMEWORK_TEMPLATES)) {
+    for (const [_key, template] of Object.entries(FRAMEWORK_TEMPLATES)) {
       expect(template.libraryId).toBeDefined();
       expect(typeof template.libraryId).toBe("string");
       expect(template.libraryId!.length).toBeGreaterThan(0);
@@ -225,16 +225,16 @@ describe("FRAMEWORK_TEMPLATES", () => {
   });
 
   test("every template has a description", () => {
-    for (const [key, template] of Object.entries(FRAMEWORK_TEMPLATES)) {
+    for (const [_key, template] of Object.entries(FRAMEWORK_TEMPLATES)) {
       expect(template.description).toBeDefined();
       expect(template.description.length).toBeGreaterThan(0);
     }
   });
 
   test("every file entry in structure has query and topics", () => {
-    for (const [key, template] of Object.entries(FRAMEWORK_TEMPLATES)) {
-      for (const [catName, catFiles] of Object.entries(template.structure)) {
-        for (const [fileName, fileTemplate] of Object.entries(catFiles)) {
+    for (const [_key, template] of Object.entries(FRAMEWORK_TEMPLATES)) {
+      for (const [_catName, catFiles] of Object.entries(template.structure)) {
+        for (const [_fileName, fileTemplate] of Object.entries(catFiles)) {
           expect(fileTemplate.query).toBeDefined();
           expect(typeof fileTemplate.query).toBe("string");
           expect(fileTemplate.topics).toBeDefined();

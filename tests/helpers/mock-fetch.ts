@@ -14,10 +14,7 @@ export interface FetchRoute {
   /** Response to return -- static Response or dynamic function */
   response:
     | Response
-    | ((
-        url: string,
-        options?: RequestInit,
-      ) => Response | Promise<Response>);
+    | ((url: string, options?: RequestInit) => Response | Promise<Response>);
 }
 
 /**
@@ -60,6 +57,6 @@ export function createFetchMock(routes: FetchRoute[]) {
       }
 
       throw new Error(`Unmocked fetch: ${method} ${url}`);
-    },
+    }
   );
 }
