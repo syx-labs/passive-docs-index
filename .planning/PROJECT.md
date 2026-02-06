@@ -29,10 +29,10 @@ Documentação de frameworks sempre disponível no contexto do assistente de IA,
 - [ ] Skill `/pdi-generate` — Geração assistida de docs via Claude
 - [ ] Hook para `bun install`/`npm install` sugerindo `pdi sync` automaticamente
 - [ ] Integração com Git hooks (pre-commit: verificar índice, post-merge: sugerir atualização)
-- [ ] Testes automatizados (unit, integration, E2E)
+- [x] Testes automatizados (unit, integration) — 297 tests, 16 files, 80%+ coverage
 - [ ] Publicação no npm
 - [ ] Publicação no JSR (Deno)
-- [ ] GitHub Actions para CI/CD
+- [x] GitHub Actions para CI/CD — ci.yml with lint, typecheck, test, coverage
 - [ ] Plugin VS Code (visualizar índice, atualizar docs inline)
 - [ ] Benchmark de performance
 - [ ] Documentação em inglês

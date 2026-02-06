@@ -94,9 +94,10 @@ passive-docs-index/
 - Purpose: Project documentation (guides, API docs)
 - Contains: User-facing documentation
 
-**tests/ (if exists):**
-- Purpose: Test files
-- Pattern: Not yet present in codebase; follows Bun test conventions when added
+**tests/:**
+- Purpose: Test files (297 tests, 16 files)
+- Pattern: Bun test conventions (*.test.ts)
+- Structure: unit/, integration/, helpers/, fixtures/
 
 ## Key File Locations
 
@@ -118,12 +119,15 @@ passive-docs-index/
 - `src/lib/index-parser.ts`: Compressed index format logic
 
 **Testing:**
-- Not yet implemented; will follow Bun test conventions (*.test.ts, *.spec.ts)
+- `tests/unit/lib/`: Unit tests for each lib module
+- `tests/integration/commands/`: Integration tests for CLI commands
+- `tests/helpers/`: Mock helpers (mock-fetch.ts, mock-fs.ts, mock-mcp.ts, factories.ts, setup.ts)
+- `tests/fixtures/`: Test data fixtures
 
 ## Naming Conventions
 
 **Files:**
-- TypeScript source: `camelCase.ts` (e.g., `fs-utils.ts`, `context7-client.ts`)
+- TypeScript source: `kebab-case.ts` (e.g., `fs-utils.ts`, `context7-client.ts`)
 - Commands: `commandName.ts` (e.g., `init.ts`, `add.ts`)
 - Compiled output: `*.js` with TypeScript types `*.d.ts`
 - Index files: `index.ts` in each directory (barrel files)

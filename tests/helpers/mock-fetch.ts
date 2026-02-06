@@ -41,7 +41,8 @@ export function createFetchMock(routes: FetchRoute[]) {
           : input instanceof URL
             ? input.toString()
             : (input as Request).url;
-      const method = init?.method || "GET";
+      const method =
+        init?.method || (input instanceof Request ? input.method : "GET");
 
       for (const route of routes) {
         const matches =

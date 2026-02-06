@@ -14,7 +14,7 @@ test("all source modules are loaded for coverage", async () => {
   let loaded = 0;
 
   for await (const file of glob.scan({ cwd: projectRoot })) {
-    // Skip declaration files and the interfaces directory (loaded via re-exports)
+    // Skip declaration files (.d.ts)
     if (file.endsWith(".d.ts")) {
       continue;
     }

@@ -216,7 +216,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   // Add new frameworks
   if (addActions.length > 0) {
     const frameworksToAdd = addActions.map((a) => a.framework);
-    await addCommand(frameworksToAdd, { noIndex: true });
+    await addCommand(frameworksToAdd, { noIndex: true, projectRoot });
   }
 
   // Update frameworks (re-add with force)
@@ -226,6 +226,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
         version: action.newVersion,
         force: true,
         noIndex: true,
+        projectRoot,
       });
     }
   }

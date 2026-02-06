@@ -97,7 +97,6 @@ export {
 } from "./lib/index-parser.js";
 // MCP Client Interface
 export {
-  FakeMcpClient,
   type IMcpClient,
   McpCliClient,
   type McpResult,

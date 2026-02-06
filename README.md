@@ -1,7 +1,8 @@
 # Passive Docs Index (PDI)
 
 [![CI](https://img.shields.io/github/actions/workflow/status/syx-labs/passive-docs-index/ci.yml?branch=main&style=flat&label=CI)](https://github.com/syx-labs/passive-docs-index/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/raw/coverage.json&label=Coverage)](https://github.com/syx-labs/passive-docs-index/actions/workflows/ci.yml)
+<!-- Coverage badge: configure COVERAGE_GIST_ID after creating the Gist -->
+<!-- [![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/syx-labs/GIST_ID/raw/coverage.json&label=Coverage)](https://github.com/syx-labs/passive-docs-index/actions/workflows/ci.yml) -->
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![Bun](https://img.shields.io/badge/Bun-1.x-f9f1e1.svg)](https://bun.sh/)

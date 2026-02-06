@@ -36,7 +36,7 @@ gh api \
 {
   "required_status_checks": {
     "strict": true,
-    "contexts": ["CI"]
+    "checks": [{"context": "CI", "app_id": -1}]
   },
   "enforce_admins": true,
   "required_pull_request_reviews": null,

@@ -31,7 +31,7 @@ Progress: [#####-------------] 24%
 | 02 CI/CD Pipeline | 1/2 | 2m 43s | 2m 43s |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (4m 56s), 01-03 (4m 34s), 01-04 (10m 32s), 02-01 (2m 43s)
+- Last 4 plans: 01-02 (4m 56s), 01-03 (4m 34s), 01-04 (10m 32s), 02-01 (2m 43s)
 - Trend: 02-01 was fast (config-only, no code logic)
 
 *Updated after each plan completion*

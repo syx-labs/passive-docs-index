@@ -8,7 +8,15 @@
  * 3. Offline mode (returns null, caller handles placeholders)
  */
 
-import { Context7, type Documentation } from "@upstash/context7-sdk";
+// NOTE: @upstash/context7-sdk is dynamically imported in getHttpClient()
+// to allow bun:test mock.module() to intercept before module resolution.
+
+// Re-export the Documentation type for consumers
+interface Documentation {
+  title?: string;
+  source?: string;
+  content?: string;
+}
 
 // ============================================================================
 // Types
@@ -31,14 +39,31 @@ export interface Context7ClientConfig {
 // HTTP Client (Primary)
 // ============================================================================
 
-let httpClient: Context7 | null = null;
+/** Duck-typed Context7 client (avoids static import for mock compatibility) */
+interface Context7Client {
+  getContext(
+    query: string,
+    libraryId: string,
+    options: { type: string }
+  ): Promise<Documentation[] | null>;
+  searchLibrary(
+    query: string,
+    libraryName: string,
+    options: { type: string }
+  ): Promise<Array<{ id: string; name: string; trustScore?: number }> | null>;
+}
+
+let httpClient: Context7Client | null = null;
 let httpClientApiKey: string | null = null;
 
 /**
- * Get or create the HTTP client
+ * Get or create the HTTP client.
+ * Uses dynamic import so bun:test mock.module() can intercept.
  * @param apiKeyOverride - Optional API key to use instead of environment variable
  */
-function getHttpClient(apiKeyOverride?: string): Context7 | null {
+async function getHttpClient(
+  apiKeyOverride?: string
+): Promise<Context7Client | null> {
   const requestedKey = apiKeyOverride || process.env.CONTEXT7_API_KEY;
 
   // If no key available, return null
@@ -53,8 +78,9 @@ function getHttpClient(apiKeyOverride?: string): Context7 | null {
     return httpClient;
   }
 
-  // Create new client with the requested key
+  // Create new client with the requested key (dynamic import)
   try {
+    const { Context7 } = await import("@upstash/context7-sdk");
     httpClient = new Context7({ apiKey: requestedKey });
     httpClientApiKey = requestedKey;
     return httpClient;
@@ -70,8 +96,10 @@ function getHttpClient(apiKeyOverride?: string): Context7 | null {
  * Check if HTTP client is available
  * @param apiKeyOverride - Optional API key to check with
  */
-export function isHttpClientAvailable(apiKeyOverride?: string): boolean {
-  return getHttpClient(apiKeyOverride) !== null;
+export async function isHttpClientAvailable(
+  apiKeyOverride?: string
+): Promise<boolean> {
+  return (await getHttpClient(apiKeyOverride)) !== null;
 }
 
 // Cache for resolved library IDs (when redirected)
@@ -102,7 +130,7 @@ function docsToMarkdown(docs: Documentation[]): string {
  * Resolve the correct library ID if it has been redirected
  */
 async function resolveLibraryId(
-  client: Context7,
+  client: Context7Client,
   libraryId: string
 ): Promise<string | null> {
   // Check cache first
@@ -148,7 +176,7 @@ async function queryViaHttp(
   query: string,
   apiKeyOverride?: string
 ): Promise<Context7Result> {
-  const client = getHttpClient(apiKeyOverride);
+  const client = await getHttpClient(apiKeyOverride);
   if (!client) {
     return {
       success: false,
@@ -263,42 +291,50 @@ async function queryViaMcp(
   query: string,
   mcpClient?: IMcpClient
 ): Promise<Context7Result> {
-  const client = mcpClient || defaultMcpClient;
-  const mcpAvailable = await client.isAvailable();
-  if (!mcpAvailable) {
+  try {
+    const client = mcpClient || defaultMcpClient;
+    const mcpAvailable = await client.isAvailable();
+    if (!mcpAvailable) {
+      return {
+        success: false,
+        error: "MCP not available (Claude Code not running)",
+        source: "none",
+      };
+    }
+
+    const result = await client.queryDocs(libraryId, query);
+
+    if (!(result.success && result.content)) {
+      return {
+        success: false,
+        error: result.error || "MCP query failed",
+        source: "mcp",
+      };
+    }
+
+    // Extract content from MCP response
+    const content = extractContext7Content(result.content);
+
+    if (!content || content.trim().length === 0) {
+      return {
+        success: false,
+        error: "MCP returned empty content",
+        source: "mcp",
+      };
+    }
+
     return {
-      success: false,
-      error: "MCP not available (Claude Code not running)",
-      source: "none",
+      success: true,
+      content,
+      source: "mcp",
     };
-  }
-
-  const result = await client.queryDocs(libraryId, query);
-
-  if (!(result.success && result.content)) {
+  } catch (error) {
     return {
       success: false,
-      error: result.error || "MCP query failed",
+      error: error instanceof Error ? error.message : "MCP query failed",
       source: "mcp",
     };
   }
-
-  // Extract content from MCP response
-  const content = extractContext7Content(result.content);
-
-  if (!content || content.trim().length === 0) {
-    return {
-      success: false,
-      error: "MCP returned empty content",
-      source: "mcp",
-    };
-  }
-
-  return {
-    success: true,
-    content,
-    source: "mcp",
-  };
 }
 
 // ============================================================================
@@ -327,7 +363,7 @@ export async function queryContext7(
   }
 
   // Try HTTP first (if API key is available - from config or env)
-  const httpAvailable = isHttpClientAvailable(config?.apiKey);
+  const httpAvailable = await isHttpClientAvailable(config?.apiKey);
   if (httpAvailable) {
     const httpResult = await queryViaHttp(libraryId, query, config?.apiKey);
     if (httpResult.success) {
@@ -364,7 +400,7 @@ export async function searchLibrary(
   libraryName: string,
   apiKeyOverride?: string
 ): Promise<{ id: string; name: string } | null> {
-  const client = getHttpClient(apiKeyOverride);
+  const client = await getHttpClient(apiKeyOverride);
   if (!client) {
     return null;
   }
@@ -404,7 +440,7 @@ export interface AvailabilityStatus {
 export async function checkAvailability(
   mcpClient?: IMcpClient
 ): Promise<AvailabilityStatus> {
-  const http = isHttpClientAvailable();
+  const http = await isHttpClientAvailable();
   const client = mcpClient || defaultMcpClient;
   const mcp = await client.isAvailable();
 

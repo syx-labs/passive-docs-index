@@ -350,7 +350,7 @@ describe("resetClients", () => {
 
     // Without API key, HTTP should now be unavailable
     process.env.CONTEXT7_API_KEY = undefined;
-    expect(isHttpClientAvailable()).toBe(false);
+    expect(await isHttpClientAvailable()).toBe(false);
   });
 
   test("resets MCP client to default", async () => {
@@ -513,18 +513,18 @@ describe("queryContext7 HTTP error handling", () => {
 // ===========================================================================
 
 describe("isHttpClientAvailable", () => {
-  test("returns true when API key is set via env", () => {
+  test("returns true when API key is set via env", async () => {
     process.env.CONTEXT7_API_KEY = "test-key";
-    expect(isHttpClientAvailable()).toBe(true);
+    expect(await isHttpClientAvailable()).toBe(true);
   });
 
-  test("returns false when no API key", () => {
+  test("returns false when no API key", async () => {
     process.env.CONTEXT7_API_KEY = undefined;
-    expect(isHttpClientAvailable()).toBe(false);
+    expect(await isHttpClientAvailable()).toBe(false);
   });
 
-  test("returns true when apiKeyOverride is provided", () => {
+  test("returns true when apiKeyOverride is provided", async () => {
     process.env.CONTEXT7_API_KEY = undefined;
-    expect(isHttpClientAvailable("override-key")).toBe(true);
+    expect(await isHttpClientAvailable("override-key")).toBe(true);
   });
 });

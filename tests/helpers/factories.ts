@@ -53,7 +53,6 @@ export function createConfig(overrides: Partial<PDIConfig> = {}): PDIConfig {
       maxFilesPerFramework: 20,
       ...overrides.limits,
     },
-    ...overrides,
   };
 }
 

@@ -88,7 +88,10 @@
 - GitHub - Source repository at `https://github.com/syx-labs/passive-docs-index`
 
 **CI Pipeline:**
-- None detected - No `.github/workflows` or CI configuration files
+- GitHub Actions: `.github/workflows/ci.yml`
+  - Triggers: push to main, pull requests
+  - Steps: lint (Biome), typecheck (tsc), test (bun test), coverage check
+  - Branch protection: required status checks via `scripts/setup-branch-protection.sh`
 - Build process:
   - `bun build src/cli.ts --outfile dist/cli.js --target node --format esm`
   - `bun build src/index.ts --outfile dist/index.js --target node --format esm`
