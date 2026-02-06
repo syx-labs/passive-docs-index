@@ -158,7 +158,7 @@ export async function addCommand(
       if (canFetchDocs) {
         const result = await queryContext7(query.libraryId, query.query);
 
-        if (result.success && result.content) {
+        if (result.success) {
           content = processContext7Response(result.content, {
             framework: template.displayName,
             version,
@@ -181,11 +181,9 @@ export async function addCommand(
           );
           fallbackCount++;
 
-          if (result.error) {
-            spinner.warn(
-              `  ${chalk.yellow("!")} ${query.category}/${query.file} (fallback - ${result.error})`
-            );
-          }
+          spinner.warn(
+            `  ${chalk.yellow("!")} ${query.category}/${query.file} (fallback - ${result.error})`
+          );
         }
       } else {
         // Generate placeholder content

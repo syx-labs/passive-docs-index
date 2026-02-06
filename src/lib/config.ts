@@ -6,6 +6,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { z } from "zod";
 import {
   CLAUDE_DOCS_DIR,
   CONFIG_FILE,
@@ -15,6 +16,59 @@ import {
 } from "./constants.js";
 import { hasTemplate } from "./templates.js";
 import type { DetectedDependency, PDIConfig, ProjectConfig } from "./types.js";
+
+// ============================================================================
+// Config Schema (Zod validation)
+// ============================================================================
+
+const FrameworkConfigSchema = z.object({
+  version: z.string(),
+  source: z.enum(["context7", "template", "manual"]),
+  libraryId: z.string().optional(),
+  lastUpdate: z.string(),
+  files: z.number(),
+  categories: z.array(z.string()).optional(),
+});
+
+const PDIConfigSchema = z.object({
+  $schema: z.string().optional(),
+  version: z.string(),
+  project: z.object({
+    name: z.string(),
+    type: z.enum(["backend", "frontend", "fullstack", "library", "cli"]),
+  }),
+  sync: z.object({
+    lastSync: z.string().nullable(),
+    autoSyncOnInstall: z.boolean(),
+  }),
+  frameworks: z.record(z.string(), FrameworkConfigSchema),
+  internal: z.object({
+    enabled: z.boolean(),
+    categories: z.array(z.string()),
+    totalFiles: z.number(),
+  }),
+  mcp: z.object({
+    fallbackEnabled: z.boolean(),
+    preferredProvider: z.enum(["context7", "firecrawl"]),
+    providers: z
+      .object({
+        context7: z
+          .object({
+            resolveLibraryId: z.string(),
+            queryDocs: z.string(),
+          })
+          .optional(),
+      })
+      .optional(),
+    libraryMappings: z.record(z.string(), z.string()).optional(),
+    cacheHours: z.number(),
+  }),
+  limits: z.object({
+    maxIndexKb: z.number(),
+    maxDocsKb: z.number(),
+    maxFilesPerFramework: z.number(),
+  }),
+});
 
 // ============================================================================
 // Config File Operations
@@ -43,8 +97,19 @@ export async function readConfig(
 
   try {
     const content = await readFile(configPath, "utf-8");
-    return JSON.parse(content) as PDIConfig;
+    const parsed = JSON.parse(content);
+    const result = PDIConfigSchema.safeParse(parsed);
+    if (!result.success) {
+      const issues = result.error.issues
+        .map((i) => `${i.path.join(".")}: ${i.message}`)
+        .join("; ");
+      throw new Error(`Invalid config: ${issues}`);
+    }
+    return result.data as PDIConfig;
   } catch (error) {
+    if (error instanceof Error && error.message.startsWith("Invalid config")) {
+      throw error;
+    }
     throw new Error(
       `Failed to read config: ${error instanceof Error ? error.message : "Unknown error"}`
     );

@@ -130,6 +130,36 @@ describe("readConfig", () => {
       "Failed to read config"
     );
   });
+
+  test("throws Error when config has invalid schema (Zod validation)", async () => {
+    const configPath = join("/project", ".claude-docs", "config.json");
+    // Valid JSON but missing required fields
+    files.set(configPath, JSON.stringify({ version: "1.0.0" }));
+
+    await expect(readConfig("/project")).rejects.toThrow("Invalid config");
+  });
+
+  test("throws descriptive error for wrong field types", async () => {
+    const configPath = join("/project", ".claude-docs", "config.json");
+    files.set(
+      configPath,
+      JSON.stringify({
+        version: "1.0.0",
+        project: { name: "test", type: "invalid-type" },
+        sync: { lastSync: null, autoSyncOnInstall: true },
+        frameworks: {},
+        internal: { enabled: false, categories: [], totalFiles: 0 },
+        mcp: {
+          fallbackEnabled: false,
+          preferredProvider: "context7",
+          cacheHours: 24,
+        },
+        limits: { maxIndexKb: 30, maxDocsKb: 500, maxFilesPerFramework: 50 },
+      })
+    );
+
+    await expect(readConfig("/project")).rejects.toThrow("Invalid config");
+  });
 });
 
 // ============================================================================

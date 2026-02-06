@@ -22,13 +22,14 @@ interface Documentation {
 // Types
 // ============================================================================
 
-export interface Context7Result {
-  success: boolean;
-  content?: string;
-  docs?: Documentation[];
-  error?: string;
-  source: "http" | "mcp" | "none";
-}
+export type Context7Result =
+  | {
+      success: true;
+      content: string;
+      docs?: Documentation[];
+      source: "http" | "mcp";
+    }
+  | { success: false; error: string; source: "http" | "mcp" | "none" };
 
 export interface Context7ClientConfig {
   apiKey?: string;
@@ -304,7 +305,7 @@ async function queryViaMcp(
 
     const result = await client.queryDocs(libraryId, query);
 
-    if (!(result.success && result.content)) {
+    if (!result.success) {
       return {
         success: false,
         error: result.error || "MCP query failed",

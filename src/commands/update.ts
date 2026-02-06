@@ -187,7 +187,7 @@ export async function updateCommand(
         limit(async () => {
           try {
             const result = await queryContext7(query.libraryId, query.query);
-            if (result.success && result.content) {
+            if (result.success) {
               const content = processContext7Response(result.content, {
                 framework: template.displayName,
                 version,
@@ -208,7 +208,7 @@ export async function updateCommand(
             return {
               query,
               success: false as const,
-              error: result.error || "unknown error",
+              error: result.error,
             };
           } catch (err) {
             return {

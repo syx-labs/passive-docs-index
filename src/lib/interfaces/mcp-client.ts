@@ -13,16 +13,8 @@ import {
   resolveContext7Library,
 } from "../mcp-client.js";
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/** Result of an MCP operation */
-export interface McpResult {
-  success: boolean;
-  content?: string;
-  error?: string;
-}
+// Re-export MCPResult as McpResult for backward compatibility
+export type McpResult = MCPResult;
 
 // ============================================================================
 // Interface
@@ -57,20 +49,10 @@ export class McpCliClient implements IMcpClient {
   }
 
   async queryDocs(libraryId: string, query: string): Promise<McpResult> {
-    const result: MCPResult = await queryContext7(libraryId, query);
-    return {
-      success: result.success,
-      content: result.content,
-      error: result.error,
-    };
+    return queryContext7(libraryId, query);
   }
 
   async resolveLibrary(libraryName: string): Promise<McpResult> {
-    const result: MCPResult = await resolveContext7Library(libraryName);
-    return {
-      success: result.success,
-      content: result.content,
-      error: result.error,
-    };
+    return resolveContext7Library(libraryName);
   }
 }

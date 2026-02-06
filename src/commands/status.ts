@@ -18,6 +18,10 @@ import {
   readInternalDocs,
 } from "../lib/fs-utils.js";
 import { buildIndexSections, calculateIndexSize } from "../lib/index-parser.js";
+import {
+  buildFrameworksIndex,
+  buildInternalIndex,
+} from "../lib/index-utils.js";
 import { hasTemplate } from "../lib/templates.js";
 
 export async function statusCommand(
@@ -48,28 +52,11 @@ export async function statusCommand(
   const internalDocs = await readInternalDocs(projectRoot);
 
   // Build index to calculate size
-  const frameworksIndex: Record<
-    string,
-    { version: string; categories: Record<string, string[]> }
-  > = {};
-  for (const [framework, frameworkConfig] of Object.entries(
-    config.frameworks || {}
-  )) {
-    const docs = allDocs[framework] || {};
-    const categories: Record<string, string[]> = {};
-    for (const [category, files] of Object.entries(docs)) {
-      categories[category] = files.map((f) => f.name);
-    }
-    frameworksIndex[framework] = {
-      version: frameworkConfig.version,
-      categories,
-    };
-  }
-
-  const internalIndex: Record<string, string[]> = {};
-  for (const [category, files] of Object.entries(internalDocs)) {
-    internalIndex[category] = files.map((f) => f.name);
-  }
+  const frameworksIndex = buildFrameworksIndex(
+    config.frameworks || {},
+    allDocs
+  );
+  const internalIndex = buildInternalIndex(internalDocs);
 
   const sections = buildIndexSections(
     `.claude-docs/${FRAMEWORKS_DIR}`,

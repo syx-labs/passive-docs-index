@@ -28,6 +28,10 @@ import {
   calculateIndexSize,
   updateClaudeMdIndex,
 } from "../lib/index-parser.js";
+import {
+  buildFrameworksIndex,
+  buildInternalIndex,
+} from "../lib/index-utils.js";
 
 interface CleanOptions {
   yes?: boolean;
@@ -72,28 +76,11 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
   const allDocsBefore = await readAllFrameworkDocs(projectRoot);
   const internalDocs = await readInternalDocs(projectRoot);
 
-  const frameworksIndexBefore: Record<
-    string,
-    { version: string; categories: Record<string, string[]> }
-  > = {};
-  for (const [framework, frameworkConfig] of Object.entries(
-    config.frameworks
-  )) {
-    const docs = allDocsBefore[framework] || {};
-    const categories: Record<string, string[]> = {};
-    for (const [category, files] of Object.entries(docs)) {
-      categories[category] = files.map((f) => f.name);
-    }
-    frameworksIndexBefore[framework] = {
-      version: frameworkConfig.version,
-      categories,
-    };
-  }
-
-  const internalIndex: Record<string, string[]> = {};
-  for (const [category, files] of Object.entries(internalDocs)) {
-    internalIndex[category] = files.map((f) => f.name);
-  }
+  const frameworksIndexBefore = buildFrameworksIndex(
+    config.frameworks,
+    allDocsBefore
+  );
+  const internalIndex = buildInternalIndex(internalDocs);
 
   const sectionsBefore = buildIndexSections(
     `.claude-docs/${FRAMEWORKS_DIR}`,
@@ -208,23 +195,10 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
 
   const allDocsAfter = await readAllFrameworkDocs(projectRoot);
 
-  const frameworksIndexAfter: Record<
-    string,
-    { version: string; categories: Record<string, string[]> }
-  > = {};
-  for (const [framework, frameworkConfig] of Object.entries(
-    config.frameworks
-  )) {
-    const docs = allDocsAfter[framework] || {};
-    const categories: Record<string, string[]> = {};
-    for (const [category, files] of Object.entries(docs)) {
-      categories[category] = files.map((f) => f.name);
-    }
-    frameworksIndexAfter[framework] = {
-      version: frameworkConfig.version,
-      categories,
-    };
-  }
+  const frameworksIndexAfter = buildFrameworksIndex(
+    config.frameworks,
+    allDocsAfter
+  );
 
   const sectionsAfter = buildIndexSections(
     `.claude-docs/${FRAMEWORKS_DIR}`,

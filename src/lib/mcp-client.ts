@@ -15,11 +15,9 @@ import { join } from "node:path";
 // Types
 // ============================================================================
 
-export interface MCPResult {
-  success: boolean;
-  content?: string;
-  error?: string;
-}
+export type MCPResult =
+  | { success: true; content: string }
+  | { success: false; error: string };
 
 export interface Context7QueryParams {
   libraryId: string;
