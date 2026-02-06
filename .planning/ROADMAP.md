@@ -50,10 +50,11 @@ Plans:
   1. Opening a PR triggers a GitHub Actions workflow that runs Biome lint, tsc typecheck, and bun test
   2. PRs with lint errors, type errors, or failing tests cannot merge (branch protection enforced)
   3. CI status badge in README reflects current build health
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: GitHub Actions CI workflow
+- [ ] 02-01-PLAN.md -- CI workflow, tsc problem matcher, and branch protection script
+- [ ] 02-02-PLAN.md -- README badges and end-to-end CI verification
 
 ### Phase 3: Publishing & Distribution
 **Goal**: PDI is installable from npm with `npx pdi` working out of the box, with provenance and changelogs
@@ -183,7 +184,7 @@ Note: Phases 4 and 6 can start after Phase 1 (independent of Phase 2/3). Phase 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Testing Infrastructure | 4/4 | Complete | 2026-02-05 |
-| 2. CI/CD Pipeline | 0/1 | Not started | - |
+| 2. CI/CD Pipeline | 0/2 | Not started | - |
 | 3. Publishing & Distribution | 0/2 | Not started | - |
 | 4. Error Handling & Validation | 0/2 | Not started | - |
 | 5. Automation | 0/1 | Not started | - |
