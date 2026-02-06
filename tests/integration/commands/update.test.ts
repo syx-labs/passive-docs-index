@@ -324,10 +324,9 @@ describe("updateCommand", () => {
   });
 
   test("handles uninitialized project", async () => {
-    await updateCommand(["hono"], { projectRoot: "/project" });
-
-    const logs = logSpy.mock.calls.map((c) => c.join(" "));
-    expect(logs.some((l) => l.includes("not initialized"))).toBe(true);
+    await expect(
+      updateCommand(["hono"], { projectRoot: "/project" })
+    ).rejects.toThrow("not initialized");
   });
 
   test("handles unknown framework name", async () => {

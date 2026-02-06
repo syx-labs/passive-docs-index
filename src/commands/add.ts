@@ -38,15 +38,13 @@ export async function addCommand(
 
   // Check if initialized
   if (!configExists(projectRoot)) {
-    console.log(chalk.red("PDI not initialized. Run: pdi init"));
-    return;
+    throw new Error("PDI not initialized. Run: pdi init");
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    console.log(chalk.red("Failed to read config"));
-    return;
+    throw new Error("Failed to read config");
   }
 
   // Interactive mode if no frameworks specified
@@ -121,6 +119,9 @@ export async function addCommand(
   }
 
   // Process each framework
+  let totalSuccessCount = 0;
+  let totalFallbackCount = 0;
+
   for (const frameworkName of validFrameworks) {
     const template = getTemplate(frameworkName)!;
     const version = options.version || template.version;
@@ -231,6 +232,9 @@ export async function addCommand(
       );
     }
 
+    totalSuccessCount += successCount;
+    totalFallbackCount += fallbackCount;
+
     // Update config
     const frameworkConfig: FrameworkConfig = {
       version,
@@ -274,9 +278,20 @@ export async function addCommand(
   }
 
   console.log("");
-  console.log(chalk.green("✓ Docs added successfully"));
-
-  if (!canFetchDocs) {
+  if (totalSuccessCount > 0 && totalFallbackCount === 0) {
+    console.log(chalk.green("✓ Docs added successfully"));
+  } else if (totalSuccessCount > 0) {
+    console.log(
+      chalk.yellow(
+        `⚠ Docs added with ${totalFallbackCount} placeholder(s). Run: pdi update`
+      )
+    );
+  } else {
+    console.log(
+      chalk.yellow(
+        "⚠ Placeholder docs added (no documentation source available)"
+      )
+    );
     console.log("");
     console.log(chalk.dim("To fetch real documentation:"));
     console.log(chalk.dim("  1. Get API key from https://context7.com"));

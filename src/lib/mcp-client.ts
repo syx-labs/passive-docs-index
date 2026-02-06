@@ -44,6 +44,7 @@ interface McpCliInfo {
 }
 
 let mcpCliInfo: McpCliInfo | null = null;
+let mcpCliInfoChecked = false;
 let mcpCliAvailable: boolean | null = null;
 
 const isWindows = process.platform === "win32";
@@ -83,8 +84,8 @@ function findInPath(executable: string): string | null {
  * no user input is ever passed to shell commands.
  */
 function findMcpCliInfo(): McpCliInfo | null {
-  // Check if already found
-  if (mcpCliInfo !== null) {
+  // Return cached result (positive or negative)
+  if (mcpCliInfoChecked) {
     return mcpCliInfo;
   }
 
@@ -150,6 +151,7 @@ function findMcpCliInfo(): McpCliInfo | null {
   }
 
   mcpCliInfo = null;
+  mcpCliInfoChecked = true;
   return null;
 }
 
@@ -213,6 +215,7 @@ export async function isMcpCliAvailable(): Promise<boolean> {
 export function resetMcpCliCache(): void {
   mcpCliAvailable = null;
   mcpCliInfo = null;
+  mcpCliInfoChecked = false;
 }
 
 // ============================================================================

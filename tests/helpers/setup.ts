@@ -13,7 +13,7 @@ beforeEach(() => {
   resetMcpCliCache();
 });
 
-// Safety check: ensure no leaked state after each test
+// Placeholder for future leak detection logic
 afterEach(() => {
-  // Intentionally empty for now -- Phase 4 will add leak detection
+  // intentionally empty
 });

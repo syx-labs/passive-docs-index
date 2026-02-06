@@ -222,10 +222,9 @@ describe("cleanCommand", () => {
   });
 
   test("handles uninitialized project", async () => {
-    await cleanCommand({ projectRoot: "/project" });
-
-    const logs = logSpy.mock.calls.map((c) => c.join(" "));
-    expect(logs.some((l) => l.includes("not initialized"))).toBe(true);
+    await expect(cleanCommand({ projectRoot: "/project" })).rejects.toThrow(
+      "not initialized"
+    );
   });
 
   test("dry run mode does not remove files", async () => {

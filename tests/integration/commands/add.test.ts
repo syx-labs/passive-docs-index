@@ -231,11 +231,9 @@ describe("addCommand", () => {
 
   test("handles uninitialized project", async () => {
     // No config.json
-
-    await addCommand(["hono"], { projectRoot: "/project" });
-
-    const logs = logSpy.mock.calls.map((c) => c.join(" "));
-    expect(logs.some((l) => l.includes("not initialized"))).toBe(true);
+    await expect(
+      addCommand(["hono"], { projectRoot: "/project" })
+    ).rejects.toThrow("not initialized");
   });
 
   test("skips already-existing framework without --force", async () => {

@@ -39,15 +39,13 @@ export async function updateCommand(
 
   // Check if initialized
   if (!configExists(projectRoot)) {
-    console.log(chalk.red("PDI not initialized. Run: pdi init"));
-    return;
+    throw new Error("PDI not initialized. Run: pdi init");
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    console.log(chalk.red("Failed to read config"));
-    return;
+    throw new Error("Failed to read config");
   }
 
   // Determine which frameworks to update
@@ -149,12 +147,11 @@ export async function updateCommand(
       continue;
     }
 
-    const existingConfig =
-      config.frameworks[frameworkName] ?? ({} as Partial<FrameworkConfig>);
-    const version = existingConfig.version ?? template.version;
+    const existingConfig = config.frameworks[frameworkName];
+    const version = existingConfig?.version ?? template.version;
 
     // Skip recently updated frameworks unless --force is passed
-    if (!options.force && existingConfig.lastUpdate) {
+    if (!options.force && existingConfig?.lastUpdate) {
       const hoursSinceUpdate =
         (Date.now() - new Date(existingConfig.lastUpdate).getTime()) /
         (1000 * 60 * 60);
@@ -256,10 +253,13 @@ export async function updateCommand(
     // Only update config if files were successfully updated
     if (successCount > 0) {
       const frameworkConfig: FrameworkConfig = {
-        ...existingConfig,
+        version,
         source: "context7",
+        libraryId: existingConfig?.libraryId ?? template.libraryId,
         lastUpdate: new Date().toISOString(),
         files: queries.length,
+        categories:
+          existingConfig?.categories ?? Object.keys(template.structure),
       };
 
       config = updateFrameworkInConfig(config, frameworkName, frameworkConfig);

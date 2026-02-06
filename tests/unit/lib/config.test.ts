@@ -7,7 +7,7 @@
  * updateFrameworkInConfig, removeFrameworkFromConfig, updateSyncTime.
  */
 
-import { beforeEach, describe, expect, mock, spyOn, test } from "bun:test";
+import { beforeEach, describe, expect, mock, test } from "bun:test";
 import { join } from "node:path";
 import {
   createConfig,
@@ -211,17 +211,13 @@ describe("readPackageJson", () => {
     expect(result).toBeNull();
   });
 
-  test("returns null when file has invalid JSON and logs error", async () => {
+  test("throws when file has invalid JSON", async () => {
     const pkgPath = join("/project", "package.json");
     files.set(pkgPath, "not json {{{");
 
-    const consoleSpy = spyOn(console, "error").mockImplementation(
-      () => undefined
+    await expect(readPackageJson("/project")).rejects.toThrow(
+      "Failed to parse package.json"
     );
-    const result = await readPackageJson("/project");
-    expect(result).toBeNull();
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
   });
 });
 

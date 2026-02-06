@@ -181,10 +181,9 @@ describe("statusCommand", () => {
   });
 
   test("handles missing config.json (uninitialized)", async () => {
-    await statusCommand({ projectRoot: "/project" });
-
-    const logs = logSpy.mock.calls.map((c) => c.join(" "));
-    expect(logs.some((l) => l.includes("not initialized"))).toBe(true);
+    await expect(statusCommand({ projectRoot: "/project" })).rejects.toThrow(
+      "not initialized"
+    );
   });
 
   test("shows missing frameworks when installed deps are undocumented", async () => {

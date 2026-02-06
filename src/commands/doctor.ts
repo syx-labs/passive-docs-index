@@ -24,8 +24,14 @@ interface DiagnosticResult {
   hint?: string;
 }
 
-export async function doctorCommand(): Promise<void> {
-  const projectRoot = process.cwd();
+export interface DoctorOptions {
+  projectRoot?: string;
+}
+
+export async function doctorCommand(
+  options: DoctorOptions = {}
+): Promise<void> {
+  const projectRoot = options.projectRoot || process.cwd();
   const spinner = ora();
   const results: DiagnosticResult[] = [];
 

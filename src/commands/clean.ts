@@ -41,15 +41,13 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
 
   // Check if initialized
   if (!configExists(projectRoot)) {
-    console.log(chalk.red("PDI not initialized. Run: pdi init"));
-    return;
+    throw new Error("PDI not initialized. Run: pdi init");
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    console.log(chalk.red("Failed to read config"));
-    return;
+    throw new Error("Failed to read config");
   }
 
   // Read package.json

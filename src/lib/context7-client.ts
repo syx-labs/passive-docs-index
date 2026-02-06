@@ -11,7 +11,7 @@
 // NOTE: @upstash/context7-sdk is dynamically imported in getHttpClient()
 // to allow bun:test mock.module() to intercept before module resolution.
 
-// Re-export the Documentation type for consumers
+// Local type matching Context7 SDK's Documentation shape (duck-typed for mock compatibility)
 interface Documentation {
   title?: string;
   source?: string;

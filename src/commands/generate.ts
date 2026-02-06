@@ -674,22 +674,18 @@ export async function generateCommand(
   const spinner = ora();
 
   if (type !== "internal") {
-    console.log(chalk.red(`Unknown type: ${type}`));
-    console.log(chalk.dim("Available: internal"));
-    return;
+    throw new Error(`Unknown type: ${type}. Available: internal`);
   }
 
   // Check if initialized
   if (!configExists(projectRoot)) {
-    console.log(chalk.red("PDI not initialized. Run: pdi init"));
-    return;
+    throw new Error("PDI not initialized. Run: pdi init");
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    console.log(chalk.red("Failed to read config"));
-    return;
+    throw new Error("Failed to read config");
   }
 
   console.log(chalk.bold("Analyzing codebase...\n"));

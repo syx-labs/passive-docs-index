@@ -2,8 +2,8 @@
  * MCP Client Interface
  * Provides a clean abstraction over MCP CLI interactions for testability.
  *
- * This interface is designed for Phase 4 (Error Handling) and Phase 6
- * (Claude Code Skills) to build on -- not a throwaway test seam.
+ * This interface provides a clean abstraction for testability and future
+ * extensibility (e.g., enhanced error handling, Claude Code Skills integration).
  */
 
 import {

@@ -38,22 +38,19 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
 
   // Check if initialized
   if (!configExists(projectRoot)) {
-    console.log(chalk.red("PDI not initialized. Run: pdi init"));
-    return;
+    throw new Error("PDI not initialized. Run: pdi init");
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    console.log(chalk.red("Failed to read config"));
-    return;
+    throw new Error("Failed to read config");
   }
 
   // Read package.json
   const packageJson = await readPackageJson(projectRoot);
   if (!packageJson) {
-    console.log(chalk.red("No package.json found"));
-    return;
+    throw new Error("No package.json found");
   }
 
   console.log(chalk.bold("Checking package.json..."));
