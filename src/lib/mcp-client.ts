@@ -67,8 +67,8 @@ function findInPath(executable: string): string | null {
     if (firstLine && existsSync(firstLine)) {
       return firstLine;
     }
-  } catch {
-    // Expected to fail for missing executables -- Phase 4 will add debug logging
+  } catch (_error) {
+    // Expected: executable not found in PATH
   }
   return null;
 }
@@ -127,8 +127,8 @@ function findMcpCliInfo(): McpCliInfo | null {
             return mcpCliInfo;
           }
         }
-      } catch {
-        // Continue checking
+      } catch (_error) {
+        // Failed to read versions directory — continue checking other paths
       }
     }
 

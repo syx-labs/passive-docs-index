@@ -549,15 +549,15 @@ describe("getClaudeMdPath", () => {
 // ============================================================================
 
 describe("claudeMdExists", () => {
-  test("returns true when CLAUDE.md exists", async () => {
+  test("returns true when CLAUDE.md exists", () => {
     const claudePath = join("/project", "CLAUDE.md");
     files.set(claudePath, "# CLAUDE.md");
-    const result = await claudeMdExists("/project");
+    const result = claudeMdExists("/project");
     expect(result).toBe(true);
   });
 
-  test("returns false when CLAUDE.md does not exist", async () => {
-    const result = await claudeMdExists("/project");
+  test("returns false when CLAUDE.md does not exist", () => {
+    const result = claudeMdExists("/project");
     expect(result).toBe(false);
   });
 });

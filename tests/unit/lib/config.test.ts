@@ -87,15 +87,15 @@ describe("getDocsPath", () => {
 // ============================================================================
 
 describe("configExists", () => {
-  test("returns true when config file exists", async () => {
+  test("returns true when config file exists", () => {
     const configPath = join("/project", ".claude-docs", "config.json");
     files.set(configPath, "{}");
-    const result = await configExists("/project");
+    const result = configExists("/project");
     expect(result).toBe(true);
   });
 
-  test("returns false when config file does not exist", async () => {
-    const result = await configExists("/project");
+  test("returns false when config file does not exist", () => {
+    const result = configExists("/project");
     expect(result).toBe(false);
   });
 });

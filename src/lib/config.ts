@@ -13,6 +13,7 @@ import {
   KNOWN_FRAMEWORKS,
   PROJECT_TYPE_INDICATORS,
 } from "./constants.js";
+import { hasTemplate } from "./templates.js";
 import type { DetectedDependency, PDIConfig, ProjectConfig } from "./types.js";
 
 // ============================================================================
@@ -27,7 +28,7 @@ export function getDocsPath(projectRoot: string): string {
   return join(projectRoot, CLAUDE_DOCS_DIR);
 }
 
-export async function configExists(projectRoot: string): Promise<boolean> {
+export function configExists(projectRoot: string): boolean {
   return existsSync(getConfigPath(projectRoot));
 }
 
@@ -203,7 +204,7 @@ export function detectDependencies(
         name,
         version: cleanVersion(version),
         framework,
-        hasTemplate: true, // TODO: Check if template exists
+        hasTemplate: hasTemplate(framework.name),
       });
     }
   }

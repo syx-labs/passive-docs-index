@@ -26,7 +26,7 @@ export async function statusCommand(
   const projectRoot = options.projectRoot || process.cwd();
 
   // Check if initialized
-  if (!(await configExists(projectRoot))) {
+  if (!configExists(projectRoot)) {
     console.log(chalk.red("PDI not initialized. Run: pdi init"));
     return;
   }

@@ -28,7 +28,7 @@ export async function initCommand(options: InitOptions): Promise<void> {
   const spinner = ora();
 
   // Check if already initialized
-  if (!options.force && (await configExists(projectRoot))) {
+  if (!options.force && configExists(projectRoot)) {
     console.log(chalk.yellow("PDI already initialized in this project."));
     console.log(chalk.dim("Use --force to reinitialize."));
     return;

@@ -37,7 +37,12 @@ async function readGlobalConfig(): Promise<GlobalConfig> {
   try {
     const content = await readFile(CONFIG_FILE, "utf-8");
     return JSON.parse(content);
-  } catch {
+  } catch (error) {
+    console.error(
+      chalk.dim(
+        `Warning: Could not parse ${CONFIG_FILE}: ${error instanceof Error ? error.message : error}`
+      )
+    );
     return {};
   }
 }
@@ -71,7 +76,7 @@ export async function authCommand(options: AuthOptions): Promise<void> {
         spinner.succeed(chalk.yellow("API key saved but not loaded"));
         console.log(chalk.dim(`  Your API key: ${maskApiKey(config.apiKey)}`));
         console.log(chalk.dim("  Add to your shell profile:"));
-        console.log(chalk.dim('  export CONTEXT7_API_KEY="<your-key>"'));
+        console.log(chalk.dim(`  export CONTEXT7_API_KEY="${config.apiKey}"`));
       } else {
         spinner.info("Not authenticated");
         console.log(chalk.dim("  Run: pdi auth"));
@@ -185,7 +190,8 @@ export async function authCommand(options: AuthOptions): Promise<void> {
 
   if (!newAvailability.http) {
     spinner.fail("Invalid API key");
-    process.env.CONTEXT7_API_KEY = undefined;
+    // biome-ignore lint/performance/noDelete: process.env.X = undefined sets string "undefined", delete is required
+    delete process.env.CONTEXT7_API_KEY;
     return;
   }
 
@@ -206,8 +212,8 @@ export async function authCommand(options: AuthOptions): Promise<void> {
       chalk.bold("Add this to your shell profile (~/.bashrc, ~/.zshrc, etc.):")
     );
     console.log("");
-    console.log(chalk.cyan('  export CONTEXT7_API_KEY="<your-key>"'));
-    console.log(chalk.dim(`  (Your key: ${maskApiKey(response.apiKey)})`));
+    console.log(chalk.cyan(`  export CONTEXT7_API_KEY="${response.apiKey}"`));
+    console.log(chalk.dim(`  (Masked: ${maskApiKey(response.apiKey)})`));
     console.log("");
     console.log(chalk.dim("Then reload your shell or run:"));
     console.log(chalk.dim("  source ~/.zshrc  # or ~/.bashrc"));

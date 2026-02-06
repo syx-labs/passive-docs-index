@@ -213,8 +213,8 @@ const PATTERN_DETECTORS: Array<{
             suggestedContent: generatePathAliasesDoc(paths),
           };
         }
-      } catch {
-        // Invalid JSON
+      } catch (_error) {
+        // Invalid tsconfig JSON — skip path alias detection
       }
 
       return null;
@@ -309,8 +309,8 @@ async function scanProjectFiles(projectRoot: string): Promise<FileInfo[]> {
               name: entry.name,
               size: fileStat.size,
             });
-          } catch {
-            // Skip inaccessible files
+          } catch (_error) {
+            // Skip inaccessible files (permission denied, broken symlinks, etc.)
           }
         }
       }
@@ -334,8 +334,8 @@ async function readFileContents(
     try {
       const content = await readFile(join(projectRoot, file.path), "utf-8");
       contents.set(file.path, content);
-    } catch {
-      // Skip files that can't be read
+    } catch (_error) {
+      // Skip files that can't be read (encoding issues, permissions, etc.)
     }
   }
 
@@ -680,7 +680,7 @@ export async function generateCommand(
   }
 
   // Check if initialized
-  if (!(await configExists(projectRoot))) {
+  if (!configExists(projectRoot)) {
     console.log(chalk.red("PDI not initialized. Run: pdi init"));
     return;
   }

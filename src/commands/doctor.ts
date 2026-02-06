@@ -63,7 +63,7 @@ export async function doctorCommand(): Promise<void> {
 
   // 2. Check PDI initialization
   spinner.start("Checking PDI initialization...");
-  const isInitialized = await configExists(projectRoot);
+  const isInitialized = configExists(projectRoot);
 
   if (isInitialized) {
     results.push({

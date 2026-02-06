@@ -38,7 +38,7 @@ export async function updateCommand(
   const spinner = ora();
 
   // Check if initialized
-  if (!(await configExists(projectRoot))) {
+  if (!configExists(projectRoot)) {
     console.log(chalk.red("PDI not initialized. Run: pdi init"));
     return;
   }
