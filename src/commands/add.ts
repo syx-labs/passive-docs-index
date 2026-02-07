@@ -33,20 +33,18 @@ export async function addCommand(
   frameworks: string[],
   options: ExtendedAddOptions
 ): Promise<void> {
-  const projectRoot = process.cwd();
+  const projectRoot = options.projectRoot || process.cwd();
   const spinner = ora();
 
   // Check if initialized
-  if (!(await configExists(projectRoot))) {
-    console.log(chalk.red("PDI not initialized. Run: pdi init"));
-    return;
+  if (!configExists(projectRoot)) {
+    throw new Error("PDI not initialized. Run: pdi init");
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    console.log(chalk.red("Failed to read config"));
-    return;
+    throw new Error("Failed to read config");
   }
 
   // Interactive mode if no frameworks specified
@@ -78,7 +76,9 @@ export async function addCommand(
     console.log(
       chalk.yellow(`Unknown frameworks: ${invalidFrameworks.join(", ")}`)
     );
-    const available = listTemplates().map((t) => t.name).join(", ");
+    const available = listTemplates()
+      .map((t) => t.name)
+      .join(", ");
     console.log(chalk.dim(`Available: ${available}`));
   }
 
@@ -119,6 +119,9 @@ export async function addCommand(
   }
 
   // Process each framework
+  let totalSuccessCount = 0;
+  let totalFallbackCount = 0;
+
   for (const frameworkName of validFrameworks) {
     const template = getTemplate(frameworkName)!;
     const version = options.version || template.version;
@@ -155,7 +158,7 @@ export async function addCommand(
       if (canFetchDocs) {
         const result = await queryContext7(query.libraryId, query.query);
 
-        if (result.success && result.content) {
+        if (result.success) {
           content = processContext7Response(result.content, {
             framework: template.displayName,
             version,
@@ -178,11 +181,9 @@ export async function addCommand(
           );
           fallbackCount++;
 
-          if (result.error) {
-            spinner.warn(
-              `  ${chalk.yellow("!")} ${query.category}/${query.file} (fallback - ${result.error})`
-            );
-          }
+          spinner.warn(
+            `  ${chalk.yellow("!")} ${query.category}/${query.file} (fallback - ${result.error})`
+          );
         }
       } else {
         // Generate placeholder content
@@ -229,6 +230,9 @@ export async function addCommand(
       );
     }
 
+    totalSuccessCount += successCount;
+    totalFallbackCount += fallbackCount;
+
     // Update config
     const frameworkConfig: FrameworkConfig = {
       version,
@@ -272,9 +276,20 @@ export async function addCommand(
   }
 
   console.log("");
-  console.log(chalk.green("✓ Docs added successfully"));
-
-  if (!canFetchDocs) {
+  if (totalSuccessCount > 0 && totalFallbackCount === 0) {
+    console.log(chalk.green("✓ Docs added successfully"));
+  } else if (totalSuccessCount > 0) {
+    console.log(
+      chalk.yellow(
+        `⚠ Docs added with ${totalFallbackCount} placeholder(s). Run: pdi update`
+      )
+    );
+  } else {
+    console.log(
+      chalk.yellow(
+        "⚠ Placeholder docs added (no documentation source available)"
+      )
+    );
     console.log("");
     console.log(chalk.dim("To fetch real documentation:"));
     console.log(chalk.dim("  1. Get API key from https://context7.com"));

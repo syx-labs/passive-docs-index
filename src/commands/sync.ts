@@ -33,27 +33,24 @@ interface SyncAction {
 }
 
 export async function syncCommand(options: SyncOptions): Promise<void> {
-  const projectRoot = process.cwd();
+  const projectRoot = options.projectRoot || process.cwd();
   const spinner = ora();
 
   // Check if initialized
-  if (!(await configExists(projectRoot))) {
-    console.log(chalk.red("PDI not initialized. Run: pdi init"));
-    return;
+  if (!configExists(projectRoot)) {
+    throw new Error("PDI not initialized. Run: pdi init");
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    console.log(chalk.red("Failed to read config"));
-    return;
+    throw new Error("Failed to read config");
   }
 
   // Read package.json
   const packageJson = await readPackageJson(projectRoot);
   if (!packageJson) {
-    console.log(chalk.red("No package.json found"));
-    return;
+    throw new Error("No package.json found");
   }
 
   console.log(chalk.bold("Checking package.json..."));
@@ -216,7 +213,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
   // Add new frameworks
   if (addActions.length > 0) {
     const frameworksToAdd = addActions.map((a) => a.framework);
-    await addCommand(frameworksToAdd, { noIndex: true });
+    await addCommand(frameworksToAdd, { noIndex: true, projectRoot });
   }
 
   // Update frameworks (re-add with force)
@@ -226,6 +223,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
         version: action.newVersion,
         force: true,
         noIndex: true,
+        projectRoot,
       });
     }
   }

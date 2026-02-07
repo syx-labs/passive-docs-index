@@ -25,6 +25,7 @@ export interface GenerateOptions {
   category?: string;
   dryRun?: boolean;
   ai?: boolean;
+  projectRoot?: string;
 }
 
 interface DetectedPattern {
@@ -212,8 +213,8 @@ const PATTERN_DETECTORS: Array<{
             suggestedContent: generatePathAliasesDoc(paths),
           };
         }
-      } catch {
-        // Invalid JSON
+      } catch (_error) {
+        // Invalid tsconfig JSON — skip path alias detection
       }
 
       return null;
@@ -286,8 +287,8 @@ async function scanProjectFiles(projectRoot: string): Promise<FileInfo[]> {
     let entries: import("node:fs").Dirent[];
     try {
       entries = await readdir(dir, { withFileTypes: true });
-    } catch {
-      // Skip inaccessible directories
+    } catch (error) {
+      console.error("Failed to scan directory:", dir, error);
       return;
     }
 
@@ -308,8 +309,8 @@ async function scanProjectFiles(projectRoot: string): Promise<FileInfo[]> {
               name: entry.name,
               size: fileStat.size,
             });
-          } catch {
-            // Skip inaccessible files
+          } catch (_error) {
+            // Skip inaccessible files (permission denied, broken symlinks, etc.)
           }
         }
       }
@@ -333,8 +334,8 @@ async function readFileContents(
     try {
       const content = await readFile(join(projectRoot, file.path), "utf-8");
       contents.set(file.path, content);
-    } catch {
-      // Skip files that can't be read
+    } catch (_error) {
+      // Skip files that can't be read (encoding issues, permissions, etc.)
     }
   }
 
@@ -669,26 +670,22 @@ export async function generateCommand(
   type: string,
   options: GenerateOptions
 ): Promise<void> {
-  const projectRoot = process.cwd();
+  const projectRoot = options.projectRoot || process.cwd();
   const spinner = ora();
 
   if (type !== "internal") {
-    console.log(chalk.red(`Unknown type: ${type}`));
-    console.log(chalk.dim("Available: internal"));
-    return;
+    throw new Error(`Unknown type: ${type}. Available: internal`);
   }
 
   // Check if initialized
-  if (!(await configExists(projectRoot))) {
-    console.log(chalk.red("PDI not initialized. Run: pdi init"));
-    return;
+  if (!configExists(projectRoot)) {
+    throw new Error("PDI not initialized. Run: pdi init");
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    console.log(chalk.red("Failed to read config"));
-    return;
+    throw new Error("Failed to read config");
   }
 
   console.log(chalk.bold("Analyzing codebase...\n"));

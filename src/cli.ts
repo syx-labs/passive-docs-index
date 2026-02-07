@@ -21,9 +21,11 @@ import { listTemplates } from "./lib/templates.js";
 // Load API key from global config if not in environment
 try {
   await loadApiKeyFromConfig();
-} catch {
-  // Silently ignore - API key loading is optional
-  // Commands that require auth will handle missing key
+} catch (error) {
+  // API key loading is optional — commands that require auth will handle missing key
+  if (process.env.PDI_DEBUG) {
+    console.error("Failed to load API key from config:", error);
+  }
 }
 
 const program = new Command();

@@ -1,0 +1,12 @@
+[
+  {
+    "title": "Hono Routing",
+    "content": "# Routing\n\nHono's router is one of the fastest in the JavaScript ecosystem.\n\n## Basic Routing\n\n```ts\nconst app = new Hono()\n\napp.get('/', (c) => c.text('Hello!'))\napp.post('/posts', (c) => c.json({ ok: true }))\napp.put('/posts/:id', (c) => {\n  const id = c.req.param('id')\n  return c.json({ id })\n})\n```\n\n## Route Parameters\n\nYou can use `:param` syntax for dynamic segments:\n\n```ts\napp.get('/users/:id', (c) => {\n  const id = c.req.param('id')\n  return c.json({ id })\n})\n```\n\n## Wildcards\n\n```ts\napp.get('/posts/*', (c) => {\n  return c.text('Wildcard matched')\n})\n```",
+    "source": "https://hono.dev/docs/api/routing"
+  },
+  {
+    "title": "Hono Context",
+    "content": "# Context\n\nThe Context object `c` is passed to every handler and middleware.\n\n## Request\n\n```ts\napp.get('/api/data', (c) => {\n  const query = c.req.query('q')\n  const header = c.req.header('Authorization')\n  return c.json({ query, header })\n})\n```\n\n## Response helpers\n\n- `c.text(text)` - Plain text\n- `c.json(data)` - JSON response\n- `c.html(html)` - HTML response\n- `c.redirect(url)` - Redirect",
+    "source": "https://hono.dev/docs/api/context"
+  }
+]

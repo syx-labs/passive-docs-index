@@ -27,26 +27,25 @@ import type { FrameworkConfig } from "../lib/types.js";
 export interface UpdateOptions {
   force?: boolean;
   yes?: boolean;
+  projectRoot?: string;
 }
 
 export async function updateCommand(
   frameworks: string[],
   options: UpdateOptions
 ): Promise<void> {
-  const projectRoot = process.cwd();
+  const projectRoot = options.projectRoot || process.cwd();
   const spinner = ora();
 
   // Check if initialized
-  if (!(await configExists(projectRoot))) {
-    console.log(chalk.red("PDI not initialized. Run: pdi init"));
-    return;
+  if (!configExists(projectRoot)) {
+    throw new Error("PDI not initialized. Run: pdi init");
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    console.log(chalk.red("Failed to read config"));
-    return;
+    throw new Error("Failed to read config");
   }
 
   // Determine which frameworks to update
@@ -68,7 +67,9 @@ export async function updateCommand(
     );
     for (const fw of frameworksToUpdate) {
       const cfg = config.frameworks[fw] ?? ({} as Partial<FrameworkConfig>);
-      console.log(`  - ${fw}@${cfg.version ?? "unknown"} (${cfg.files ?? 0} files)`);
+      console.log(
+        `  - ${fw}@${cfg.version ?? "unknown"} (${cfg.files ?? 0} files)`
+      );
     }
     console.log("");
 
@@ -146,11 +147,11 @@ export async function updateCommand(
       continue;
     }
 
-    const existingConfig = config.frameworks[frameworkName] ?? ({} as Partial<FrameworkConfig>);
-    const version = existingConfig.version ?? template.version;
+    const existingConfig = config.frameworks[frameworkName];
+    const version = existingConfig?.version ?? template.version;
 
     // Skip recently updated frameworks unless --force is passed
-    if (!options.force && existingConfig.lastUpdate) {
+    if (!options.force && existingConfig?.lastUpdate) {
       const hoursSinceUpdate =
         (Date.now() - new Date(existingConfig.lastUpdate).getTime()) /
         (1000 * 60 * 60);
@@ -186,7 +187,7 @@ export async function updateCommand(
         limit(async () => {
           try {
             const result = await queryContext7(query.libraryId, query.query);
-            if (result.success && result.content) {
+            if (result.success) {
               const content = processContext7Response(result.content, {
                 framework: template.displayName,
                 version,
@@ -207,7 +208,7 @@ export async function updateCommand(
             return {
               query,
               success: false as const,
-              error: result.error || "unknown error",
+              error: result.error,
             };
           } catch (err) {
             return {
@@ -237,7 +238,9 @@ export async function updateCommand(
 
     // Summary for this framework
     console.log(
-      chalk.dim(`  Total: ${successCount} files updated, ${formatSize(totalSize)}`)
+      chalk.dim(
+        `  Total: ${successCount} files updated, ${formatSize(totalSize)}`
+      )
     );
 
     if (failCount > 0) {
@@ -250,10 +253,13 @@ export async function updateCommand(
     // Only update config if files were successfully updated
     if (successCount > 0) {
       const frameworkConfig: FrameworkConfig = {
-        ...existingConfig,
+        version,
         source: "context7",
+        libraryId: existingConfig?.libraryId ?? template.libraryId,
         lastUpdate: new Date().toISOString(),
         files: queries.length,
+        categories:
+          existingConfig?.categories ?? Object.keys(template.structure),
       };
 
       config = updateFrameworkInConfig(config, frameworkName, frameworkConfig);

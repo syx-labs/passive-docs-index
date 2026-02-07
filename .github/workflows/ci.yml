@@ -1,0 +1,107 @@
+# CI Pipeline for passive-docs-index
+#
+# Triggers on push to main and PRs targeting main.
+# Draft PRs are excluded at job level (not workflow level).
+# Path filtering uses dorny/paths-filter at step level -- NOT paths-ignore
+# at workflow level, which would deadlock with required status checks.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false || github.event_name == 'push'
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Check for code changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            code:
+              - 'src/**'
+              - 'scripts/**'
+              - 'tests/**'
+              - 'package.json'
+              - 'tsconfig.json'
+              - 'biome.jsonc'
+              - 'bunfig.toml'
+
+      - name: Lint
+        if: steps.changes.outputs.code == 'true'
+        run: bunx biome ci . --reporter=github
+
+      - name: Typecheck
+        if: steps.changes.outputs.code == 'true'
+        run: |
+          echo "::add-matcher::.github/problem-matchers/tsc.json"
+          bun run typecheck
+
+      - name: Test with coverage
+        if: steps.changes.outputs.code == 'true'
+        run: bun test --coverage
+
+      - name: Check coverage thresholds
+        if: steps.changes.outputs.code == 'true'
+        run: bun run scripts/check-coverage.ts
+
+      - name: Report coverage on PR
+        if: github.event_name == 'pull_request' && steps.changes.outputs.code == 'true'
+        uses: zgosalvez/github-actions-report-lcov@v4
+        with:
+          coverage-files: coverage/lcov.info
+          minimum-coverage: 80
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          update-comment: true
+
+      # Extract coverage percentage from lcov.info for badge update.
+      # Uses awk to sum LF (lines found) and LH (lines hit) across all files.
+      - name: Extract coverage percentage
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && steps.changes.outputs.code == 'true'
+        id: coverage
+        run: |
+          COVERAGE=$(awk '
+            /^LF:/ { total += substr($0, 4) }
+            /^LH:/ { hit += substr($0, 4) }
+            END { if (total > 0) printf "%.1f", (hit / total) * 100; else print "0" }
+          ' coverage/lcov.info)
+          echo "percentage=$COVERAGE" >> "$GITHUB_OUTPUT"
+
+      # Coverage badge via Shields.io endpoint badge.
+      # One-time setup required:
+      #   1. Create a public Gist (any filename, e.g. coverage.json)
+      #   2. Create a GitHub PAT with 'gist' scope
+      #   3. Add the PAT as a repository secret named GIST_SECRET
+      #   4. Add the Gist ID as a repository variable named COVERAGE_GIST_ID
+      - name: Update coverage badge
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && steps.changes.outputs.code == 'true'
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: ${{ vars.COVERAGE_GIST_ID }}
+          filename: coverage.json
+          label: Coverage
+          message: "${{ steps.coverage.outputs.percentage }}%"
+          valColorRange: ${{ steps.coverage.outputs.percentage }}
+          maxColorRange: 90
+          minColorRange: 50

@@ -169,7 +169,7 @@ export function getClaudeMdPath(projectRoot: string): string {
   return join(projectRoot, CLAUDE_MD_FILE);
 }
 
-export async function claudeMdExists(projectRoot: string): Promise<boolean> {
+export function claudeMdExists(projectRoot: string): boolean {
   return existsSync(getClaudeMdPath(projectRoot));
 }
 
@@ -312,8 +312,6 @@ export function buildIndexSections(
 
   // Internal patterns section
   if (Object.keys(internal).length > 0) {
-    const _entries: IndexEntry[] = [];
-
     // For internal, we use a single "entry" with all categories
     // This is a slight deviation from the spec but makes more sense
     const categories: IndexCategory[] = Object.entries(internal).map(

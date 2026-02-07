@@ -11,6 +11,7 @@ import {
   createDefaultConfig,
   detectDependencies,
   detectProjectType,
+  getMajorVersion,
   readPackageJson,
   writeConfig,
 } from "../lib/config.js";
@@ -24,11 +25,11 @@ import { hasTemplate } from "../lib/templates.js";
 import type { DetectedDependency, InitOptions } from "../lib/types.js";
 
 export async function initCommand(options: InitOptions): Promise<void> {
-  const projectRoot = process.cwd();
+  const projectRoot = options.projectRoot || process.cwd();
   const spinner = ora();
 
   // Check if already initialized
-  if (!options.force && (await configExists(projectRoot))) {
+  if (!options.force && configExists(projectRoot)) {
     console.log(chalk.yellow("PDI already initialized in this project."));
     console.log(chalk.dim("Use --force to reinitialize."));
     return;
@@ -124,18 +125,6 @@ export async function initCommand(options: InitOptions): Promise<void> {
 
   console.log("");
   console.log(chalk.green("✓ PDI initialized successfully"));
-}
-
-function getMajorVersion(version: string): string {
-  const clean = version.replace(/^[\^~>=<]+/, "");
-  const parts = clean.split(".");
-  const major = Number.parseInt(parts[0], 10);
-
-  if (major === 0 && parts.length > 1) {
-    return `${parts[0]}.${parts[1]}`;
-  }
-
-  return `${major}.x`;
 }
 
 export function formatDetectedDependencies(deps: DetectedDependency[]): string {

@@ -24,8 +24,14 @@ interface DiagnosticResult {
   hint?: string;
 }
 
-export async function doctorCommand(): Promise<void> {
-  const projectRoot = process.cwd();
+export interface DoctorOptions {
+  projectRoot?: string;
+}
+
+export async function doctorCommand(
+  options: DoctorOptions = {}
+): Promise<void> {
+  const projectRoot = options.projectRoot || process.cwd();
   const spinner = ora();
   const results: DiagnosticResult[] = [];
 
@@ -63,7 +69,7 @@ export async function doctorCommand(): Promise<void> {
 
   // 2. Check PDI initialization
   spinner.start("Checking PDI initialization...");
-  const isInitialized = await configExists(projectRoot);
+  const isInitialized = configExists(projectRoot);
 
   if (isInitialized) {
     results.push({
@@ -126,8 +132,7 @@ export async function doctorCommand(): Promise<void> {
       config = await readConfig(projectRoot);
     } catch (err) {
       config = null;
-      const errorMessage =
-        err instanceof Error ? err.message : "Unknown error";
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
       results.push({
         name: "Docs",
         status: "error",

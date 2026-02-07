@@ -1,0 +1,35 @@
+{
+  "$schema": "https://pdi.dev/schema/config.json",
+  "version": "1.0.0",
+  "project": {
+    "name": "minimal-project",
+    "type": "backend"
+  },
+  "sync": {
+    "lastSync": null,
+    "autoSyncOnInstall": true
+  },
+  "frameworks": {},
+  "internal": {
+    "enabled": false,
+    "categories": [],
+    "totalFiles": 0
+  },
+  "mcp": {
+    "fallbackEnabled": true,
+    "preferredProvider": "context7",
+    "providers": {
+      "context7": {
+        "resolveLibraryId": "mcp__plugin_context7_context7__resolve-library-id",
+        "queryDocs": "mcp__plugin_context7_context7__query-docs"
+      }
+    },
+    "libraryMappings": {},
+    "cacheHours": 168
+  },
+  "limits": {
+    "maxIndexKb": 4,
+    "maxDocsKb": 80,
+    "maxFilesPerFramework": 20
+  }
+}

@@ -15,11 +15,9 @@ import { join } from "node:path";
 // Types
 // ============================================================================
 
-export interface MCPResult {
-  success: boolean;
-  content?: string;
-  error?: string;
-}
+export type MCPResult =
+  | { success: true; content: string }
+  | { success: false; error: string };
 
 export interface Context7QueryParams {
   libraryId: string;
@@ -44,6 +42,7 @@ interface McpCliInfo {
 }
 
 let mcpCliInfo: McpCliInfo | null = null;
+let mcpCliInfoChecked = false;
 let mcpCliAvailable: boolean | null = null;
 
 const isWindows = process.platform === "win32";
@@ -67,8 +66,8 @@ function findInPath(executable: string): string | null {
     if (firstLine && existsSync(firstLine)) {
       return firstLine;
     }
-  } catch {
-    // Not found
+  } catch (_error) {
+    // Expected: executable not found in PATH
   }
   return null;
 }
@@ -83,8 +82,8 @@ function findInPath(executable: string): string | null {
  * no user input is ever passed to shell commands.
  */
 function findMcpCliInfo(): McpCliInfo | null {
-  // Check if already found
-  if (mcpCliInfo !== null) {
+  // Return cached result (positive or negative)
+  if (mcpCliInfoChecked) {
     return mcpCliInfo;
   }
 
@@ -127,8 +126,8 @@ function findMcpCliInfo(): McpCliInfo | null {
             return mcpCliInfo;
           }
         }
-      } catch {
-        // Continue checking
+      } catch (_error) {
+        // Failed to read versions directory — continue checking other paths
       }
     }
 
@@ -150,6 +149,7 @@ function findMcpCliInfo(): McpCliInfo | null {
   }
 
   mcpCliInfo = null;
+  mcpCliInfoChecked = true;
   return null;
 }
 
@@ -213,6 +213,7 @@ export async function isMcpCliAvailable(): Promise<boolean> {
 export function resetMcpCliCache(): void {
   mcpCliAvailable = null;
   mcpCliInfo = null;
+  mcpCliInfoChecked = false;
 }
 
 // ============================================================================
