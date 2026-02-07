@@ -109,8 +109,15 @@ console.log("Per-module coverage report:");
 console.log("=".repeat(60));
 
 for (const mod of MODULES) {
-  // Match by exact file path
-  const moduleFiles = fileCoverages.filter((f) => f.file === mod.path);
+  // Match by normalized suffix (handles absolute paths from coverage tools)
+  const normalizedModPath = mod.path.replace(/\\/g, "/").toLowerCase();
+  const moduleFiles = fileCoverages.filter((f) => {
+    const normalizedFile = f.file.replace(/\\/g, "/").toLowerCase();
+    return (
+      normalizedFile === normalizedModPath ||
+      normalizedFile.endsWith(`/${normalizedModPath}`)
+    );
+  });
 
   if (moduleFiles.length === 0) {
     console.log(`  SKIP: ${mod.name} -- no coverage data`);
@@ -141,6 +148,16 @@ for (const mod of MODULES) {
 console.log("=".repeat(60));
 
 if (checkedModules === 0) {
+  if (fileCoverages.length > 0) {
+    console.error(
+      `\nWARNING: LCOV has ${fileCoverages.length} file(s) but none matched MODULES. Check path configuration.`
+    );
+    console.error("LCOV files:");
+    for (const f of fileCoverages.slice(0, 5)) {
+      console.error(`  - ${f.file}`);
+    }
+    process.exit(1);
+  }
   console.log(
     "\nNo modules had coverage data. This is expected before tests are written."
   );

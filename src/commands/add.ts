@@ -121,6 +121,7 @@ export async function addCommand(
   // Process each framework
   let totalSuccessCount = 0;
   let totalFallbackCount = 0;
+  let totalSkippedCount = 0;
 
   for (const frameworkName of validFrameworks) {
     const template = getTemplate(frameworkName)!;
@@ -139,6 +140,7 @@ export async function addCommand(
     // Check if already exists
     if (!options.force && config.frameworks[frameworkName]) {
       console.log(chalk.yellow("  Already exists. Use --force to overwrite."));
+      totalSkippedCount++;
       continue;
     }
 
@@ -282,6 +284,12 @@ export async function addCommand(
     console.log(
       chalk.yellow(
         `⚠ Docs added with ${totalFallbackCount} placeholder(s). Run: pdi update`
+      )
+    );
+  } else if (totalSkippedCount > 0 && totalFallbackCount === 0) {
+    console.log(
+      chalk.yellow(
+        "⚠ All frameworks were skipped (existing docs present). Use --force to overwrite."
       )
     );
   } else {

@@ -134,7 +134,7 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
     await updateClaudeMdIndex(
       projectRoot,
       sectionsAfter,
-      config?.mcp?.libraryMappings ?? {}
+      config.mcp.libraryMappings ?? {}
     );
 
     if (indexSizeBefore > indexSizeAfter) {
@@ -212,7 +212,7 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
   await updateClaudeMdIndex(
     projectRoot,
     sectionsAfter,
-    config?.mcp?.libraryMappings ?? {}
+    config.mcp.libraryMappings ?? {}
   );
   await writeConfig(projectRoot, config);
 

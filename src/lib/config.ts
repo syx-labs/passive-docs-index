@@ -30,45 +30,47 @@ const FrameworkConfigSchema = z.object({
   categories: z.array(z.string()).optional(),
 });
 
-const PDIConfigSchema = z.object({
-  $schema: z.string().optional(),
-  version: z.string(),
-  project: z.object({
-    name: z.string(),
-    type: z.enum(["backend", "frontend", "fullstack", "library", "cli"]),
-  }),
-  sync: z.object({
-    lastSync: z.string().nullable(),
-    autoSyncOnInstall: z.boolean(),
-  }),
-  frameworks: z.record(z.string(), FrameworkConfigSchema),
-  internal: z.object({
-    enabled: z.boolean(),
-    categories: z.array(z.string()),
-    totalFiles: z.number(),
-  }),
-  mcp: z.object({
-    fallbackEnabled: z.boolean(),
-    preferredProvider: z.enum(["context7", "firecrawl"]),
-    providers: z
-      .object({
-        context7: z
-          .object({
-            resolveLibraryId: z.string(),
-            queryDocs: z.string(),
-          })
-          .optional(),
-      })
-      .optional(),
-    libraryMappings: z.record(z.string(), z.string()).optional(),
-    cacheHours: z.number(),
-  }),
-  limits: z.object({
-    maxIndexKb: z.number(),
-    maxDocsKb: z.number(),
-    maxFilesPerFramework: z.number(),
-  }),
-});
+const PDIConfigSchema = z
+  .object({
+    $schema: z.string().optional(),
+    version: z.string(),
+    project: z.object({
+      name: z.string(),
+      type: z.enum(["backend", "frontend", "fullstack", "library", "cli"]),
+    }),
+    sync: z.object({
+      lastSync: z.string().nullable(),
+      autoSyncOnInstall: z.boolean(),
+    }),
+    frameworks: z.record(z.string(), FrameworkConfigSchema),
+    internal: z.object({
+      enabled: z.boolean(),
+      categories: z.array(z.string()),
+      totalFiles: z.number(),
+    }),
+    mcp: z.object({
+      fallbackEnabled: z.boolean(),
+      preferredProvider: z.enum(["context7", "firecrawl"]),
+      providers: z
+        .object({
+          context7: z
+            .object({
+              resolveLibraryId: z.string(),
+              queryDocs: z.string(),
+            })
+            .optional(),
+        })
+        .optional(),
+      libraryMappings: z.record(z.string(), z.string()).optional(),
+      cacheHours: z.number(),
+    }),
+    limits: z.object({
+      maxIndexKb: z.number(),
+      maxDocsKb: z.number(),
+      maxFilesPerFramework: z.number(),
+    }),
+  })
+  .passthrough();
 
 // ============================================================================
 // Config File Operations

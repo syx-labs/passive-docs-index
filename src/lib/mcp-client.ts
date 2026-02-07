@@ -91,6 +91,7 @@ function findMcpCliInfo(): McpCliInfo | null {
   const mcpCliExe = findInPath("mcp-cli");
   if (mcpCliExe) {
     mcpCliInfo = { cmd: mcpCliExe, baseArgs: [] };
+    mcpCliInfoChecked = true;
     return mcpCliInfo;
   }
 
@@ -123,6 +124,7 @@ function findMcpCliInfo(): McpCliInfo | null {
             : versionPath;
           if (existsSync(claudeExe)) {
             mcpCliInfo = { cmd: claudeExe, baseArgs: ["--mcp-cli"] };
+            mcpCliInfoChecked = true;
             return mcpCliInfo;
           }
         }
@@ -137,6 +139,7 @@ function findMcpCliInfo(): McpCliInfo | null {
       : join(basePath, "claude");
     if (existsSync(claudeExe)) {
       mcpCliInfo = { cmd: claudeExe, baseArgs: ["--mcp-cli"] };
+      mcpCliInfoChecked = true;
       return mcpCliInfo;
     }
   }
@@ -145,6 +148,7 @@ function findMcpCliInfo(): McpCliInfo | null {
   const claudeExe = findInPath(isWindows ? "claude.exe" : "claude");
   if (claudeExe) {
     mcpCliInfo = { cmd: claudeExe, baseArgs: ["--mcp-cli"] };
+    mcpCliInfoChecked = true;
     return mcpCliInfo;
   }
 

@@ -11,6 +11,10 @@
 // NOTE: @upstash/context7-sdk is dynamically imported in getHttpClient()
 // to allow bun:test mock.module() to intercept before module resolution.
 
+import type { IMcpClient } from "./interfaces/mcp-client.js";
+import { McpCliClient } from "./interfaces/mcp-client.js";
+import { extractContext7Content } from "./mcp-client.js";
+
 // Local type matching Context7 SDK's Documentation shape (duck-typed for mock compatibility)
 interface Documentation {
   title?: string;
@@ -261,11 +265,6 @@ async function queryViaHttp(
 // MCP Client (Fallback)
 // ============================================================================
 
-import type { IMcpClient } from "./interfaces/mcp-client.js";
-import { McpCliClient } from "./interfaces/mcp-client.js";
-// Import MCP client functions
-import { extractContext7Content } from "./mcp-client.js";
-
 /** Default MCP client instance (uses real mcp-cli) */
 let defaultMcpClient: IMcpClient = new McpCliClient();
 
@@ -354,9 +353,11 @@ export async function queryContext7(
   query: string,
   config?: Context7ClientConfig
 ): Promise<Context7Result> {
+  let mcpResult: Context7Result | null = null;
+
   // Option to force MCP
   if (config?.preferMcp) {
-    const mcpResult = await queryViaMcp(libraryId, query);
+    mcpResult = await queryViaMcp(libraryId, query);
     if (mcpResult.success) {
       return mcpResult;
     }
@@ -374,10 +375,12 @@ export async function queryContext7(
     console.error(`HTTP query failed: ${httpResult.error}`);
   }
 
-  // Try MCP as fallback
-  const mcpResult = await queryViaMcp(libraryId, query);
-  if (mcpResult.success) {
-    return mcpResult;
+  // Try MCP as fallback (skip if already tried via preferMcp)
+  if (!mcpResult) {
+    mcpResult = await queryViaMcp(libraryId, query);
+    if (mcpResult.success) {
+      return mcpResult;
+    }
   }
 
   // Both failed

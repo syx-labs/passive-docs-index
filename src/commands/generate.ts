@@ -288,7 +288,11 @@ async function scanProjectFiles(projectRoot: string): Promise<FileInfo[]> {
     try {
       entries = await readdir(dir, { withFileTypes: true });
     } catch (error) {
-      console.error("Failed to scan directory:", dir, error);
+      console.error(
+        "Failed to scan directory:",
+        dir,
+        error instanceof Error ? error.message : String(error)
+      );
       return;
     }
 
