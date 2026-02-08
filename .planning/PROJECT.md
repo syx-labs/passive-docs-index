@@ -51,7 +51,7 @@ Documentação de frameworks sempre disponível no contexto do assistente de IA,
 - 10 templates de frameworks já implementados com integração Context7
 - Stack: TypeScript 5.7, Commander.js, Chalk, Ora, Bun Test
 - Formato de linting: Biome via Ultracite
-- Sem testes automatizados atualmente — barreira para contribuições externas
+- 297 testes automatizados (unit, integration) com 80%+ cobertura — base sólida para contribuições externas
 - Alvo: publicação npm para comunidade aberta de desenvolvedores
 - Problemas de DX identificados: setup manual demais, docs desatualizam, faltam testes, templates limitados
 

@@ -68,7 +68,13 @@ function parseLcov(content: string): FileCoverage[] {
     } else if (line.startsWith("FNH:")) {
       current.functionsHit = Number.parseInt(line.slice(4), 10);
     } else if (line === "end_of_record") {
-      if (current.file) {
+      if (
+        current.file &&
+        current.linesFound !== undefined &&
+        current.linesHit !== undefined
+      ) {
+        current.functionsFound ??= 0;
+        current.functionsHit ??= 0;
         files.push(current as FileCoverage);
       }
       current = {};

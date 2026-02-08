@@ -361,10 +361,10 @@ describe("resetClients", () => {
     // Reset restores default McpCliClient
     resetClients();
 
-    // The default McpCliClient will check for real mcp-cli
-    // In test environment, it should be unavailable (no real mcp-cli)
-    // We just verify the reset didn't throw
-    expect(true).toBe(true);
+    // After reset, MCP should be unavailable (no real mcp-cli in test env)
+    const status = await checkAvailability();
+    expect(typeof status.mcp).toBe("boolean");
+    expect(status.mcp).toBe(false);
   });
 });
 

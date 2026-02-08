@@ -23,7 +23,7 @@ test("all source modules are loaded for coverage", async () => {
     loaded++;
   }
 
-  // Sanity check: we should load at least the known 10 modules
+  // Sanity check: we should load at least 8 source modules
   if (loaded < 8) {
     throw new Error(
       `Expected at least 8 source modules but only loaded ${loaded}`

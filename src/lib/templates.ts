@@ -438,6 +438,317 @@ export const TAILWIND_TEMPLATE: FrameworkTemplate = {
   },
 };
 
+export const ELYSIA_TEMPLATE: FrameworkTemplate = {
+  name: "elysia",
+  displayName: "Elysia",
+  version: "1.x",
+  source: "context7",
+  libraryId: "/elysiajs/elysia",
+  category: "backend",
+  priority: "P0",
+  description:
+    "Ergonomic and type-safe web framework for Bun with end-to-end type safety.",
+  structure: {
+    api: {
+      "app.mdx": {
+        query: "Elysia app creation new Elysia() configuration listen port",
+        topics: ["app creation", "configuration", "listen"],
+      },
+      "routing.mdx": {
+        query:
+          "Elysia routing get post put patch delete route parameters wildcard group prefix",
+        topics: ["routing", "methods", "params", "groups"],
+      },
+      "context.mdx": {
+        query:
+          "Elysia context handler request body query params headers set status cookie",
+        topics: ["context", "request", "response", "cookies"],
+      },
+    },
+    patterns: {
+      "lifecycle.mdx": {
+        query:
+          "Elysia lifecycle hooks onRequest onParse onTransform onBeforeHandle onAfterHandle onError onResponse",
+        topics: ["lifecycle", "hooks", "events"],
+      },
+      "validation.mdx": {
+        query:
+          "Elysia validation t.Object t.String t.Number body query params headers type-safe schema",
+        topics: ["validation", "typebox", "schema"],
+      },
+      "plugins.mdx": {
+        query:
+          "Elysia plugin system .use() plugin creation scoped plugin derive decorate state",
+        topics: ["plugins", "derive", "decorate", "state"],
+      },
+    },
+    advanced: {
+      "websocket.mdx": {
+        query: "Elysia WebSocket ws subscribe publish message handler upgrade",
+        topics: ["websocket", "realtime"],
+      },
+      "eden.mdx": {
+        query: "Elysia Eden treaty end-to-end type safety client RPC-like API",
+        topics: ["eden", "treaty", "type-safety", "client"],
+      },
+      "error-handling.mdx": {
+        query:
+          "Elysia error handling onError mapResponse custom error responses status codes",
+        topics: ["errors", "error handling", "status codes"],
+      },
+    },
+  },
+  criticalPatterns: [
+    {
+      pattern: "app.listen(3000)",
+      warning: "Use app.listen with object config for better control",
+      correct: "app.listen({ port: 3000, hostname: '0.0.0.0' })",
+    },
+    {
+      pattern: ".use(cors())",
+      warning: "CORS plugin must be installed: bun add @elysiajs/cors",
+      correct: "import { cors } from '@elysiajs/cors'; app.use(cors())",
+    },
+  ],
+};
+
+export const DRIZZLE_V1_TEMPLATE: FrameworkTemplate = {
+  name: "drizzle-v1",
+  displayName: "Drizzle ORM v1",
+  version: "1.0.0-beta",
+  source: "context7",
+  libraryId: "/drizzle-team/drizzle-orm",
+  category: "database",
+  priority: "P0",
+  description:
+    "Drizzle ORM v1.0 beta — new relational queries API, improved type inference, and migration system.",
+  structure: {
+    schema: {
+      "tables.mdx": {
+        query:
+          "Drizzle ORM v1 table definition pgTable mysqlTable sqliteTable column types integer text varchar boolean timestamp serial",
+        topics: ["tables", "columns", "types"],
+      },
+      "relations.mdx": {
+        query:
+          "Drizzle ORM v1 relations defineRelations one many relational queries",
+        topics: ["relations", "defineRelations"],
+      },
+      "types.mdx": {
+        query:
+          "Drizzle ORM v1 TypeScript types inference $inferSelect $inferInsert table type helpers",
+        topics: ["types", "inference", "$inferSelect"],
+      },
+    },
+    queries: {
+      "select.mdx": {
+        query:
+          "Drizzle ORM v1 select query db.select from where eq and or orderBy limit offset joins",
+        topics: ["select", "where", "joins", "operators"],
+      },
+      "mutations.mdx": {
+        query:
+          "Drizzle ORM v1 insert update delete db.insert db.update db.delete values set returning onConflictDoUpdate",
+        topics: ["insert", "update", "delete", "upsert"],
+      },
+      "relational.mdx": {
+        query:
+          "Drizzle ORM v1 relational queries db.query findMany findFirst with columns where",
+        topics: ["relational queries", "findMany", "with"],
+      },
+    },
+    migrations: {
+      "kit.mdx": {
+        query:
+          "Drizzle Kit v1 drizzle-kit generate migrate push pull config drizzle.config.ts",
+        topics: ["drizzle-kit", "generate", "migrate", "push"],
+      },
+      "config.mdx": {
+        query:
+          "Drizzle ORM v1 drizzle.config.ts configuration schema out driver dialect dbCredentials",
+        topics: ["config", "drizzle.config.ts"],
+      },
+    },
+  },
+  criticalPatterns: [
+    {
+      pattern: "InferSelectModel",
+      warning: "Drizzle v1 uses $inferSelect instead of InferSelectModel",
+      correct: "type User = typeof users.$inferSelect",
+    },
+    {
+      pattern: "InferInsertModel",
+      warning: "Drizzle v1 uses $inferInsert instead of InferInsertModel",
+      correct: "type NewUser = typeof users.$inferInsert",
+    },
+  ],
+};
+
+export const SHADCN_TEMPLATE: FrameworkTemplate = {
+  name: "shadcn",
+  displayName: "shadcn/ui",
+  version: "latest",
+  source: "context7",
+  libraryId: "/shadcn-ui/ui",
+  category: "ui",
+  priority: "P0",
+  description:
+    "Beautifully designed, accessible UI components using Radix UI and Tailwind CSS. Copy-paste, not npm install.",
+  structure: {
+    setup: {
+      "installation.mdx": {
+        query:
+          "shadcn/ui installation setup init CLI npx shadcn@latest init components.json configuration",
+        topics: ["installation", "init", "CLI", "components.json"],
+      },
+      "theming.mdx": {
+        query:
+          "shadcn/ui theming CSS variables dark mode themes colors customization globals.css",
+        topics: ["theming", "dark mode", "CSS variables"],
+      },
+    },
+    components: {
+      "forms.mdx": {
+        query:
+          "shadcn/ui form components Input Button Select Textarea Checkbox RadioGroup Switch react-hook-form zod",
+        topics: ["forms", "input", "validation"],
+      },
+      "layout.mdx": {
+        query:
+          "shadcn/ui layout components Card Dialog Sheet Drawer Tabs Accordion Collapsible Separator",
+        topics: ["layout", "card", "dialog", "tabs"],
+      },
+      "feedback.mdx": {
+        query:
+          "shadcn/ui feedback components Alert AlertDialog Toast Sonner Tooltip Popover HoverCard",
+        topics: ["feedback", "toast", "alert", "tooltip"],
+      },
+      "data-display.mdx": {
+        query:
+          "shadcn/ui data display Table DataTable Badge Avatar Calendar Command",
+        topics: ["table", "data-table", "badge"],
+      },
+    },
+    patterns: {
+      "data-table.mdx": {
+        query:
+          "shadcn/ui DataTable pattern TanStack Table sorting filtering pagination column definitions",
+        topics: ["data-table", "tanstack-table", "pagination"],
+      },
+      "composition.mdx": {
+        query:
+          "shadcn/ui component composition patterns extending components cn() utility class merging cva variants",
+        topics: ["composition", "cn()", "variants", "cva"],
+      },
+    },
+  },
+  criticalPatterns: [
+    {
+      pattern: "npm install shadcn",
+      warning:
+        "shadcn/ui is NOT installed via npm. Use the CLI to add components",
+      correct: "npx shadcn@latest add button",
+    },
+    {
+      pattern: 'import { Button } from "shadcn',
+      warning: "Import from your local components directory, not from shadcn",
+      correct: 'import { Button } from "@/components/ui/button"',
+    },
+  ],
+};
+
+export const NEXTJS_TEMPLATE: FrameworkTemplate = {
+  name: "nextjs",
+  displayName: "Next.js",
+  version: "16.x",
+  source: "context7",
+  libraryId: "/vercel/next.js",
+  category: "frontend",
+  priority: "P0",
+  description:
+    "React framework for full-stack web applications with App Router, Server Components, and Server Actions.",
+  structure: {
+    routing: {
+      "app-router.mdx": {
+        query:
+          "Next.js App Router file-based routing layout page loading error not-found route groups parallel routes intercepting",
+        topics: ["app router", "layouts", "pages", "route groups"],
+      },
+      "navigation.mdx": {
+        query:
+          "Next.js navigation Link useRouter usePathname useSearchParams redirect permanentRedirect",
+        topics: ["navigation", "Link", "useRouter"],
+      },
+      "middleware.mdx": {
+        query:
+          "Next.js middleware.ts request matching conditional routing headers cookies rewriting redirecting",
+        topics: ["middleware", "matching", "headers"],
+      },
+    },
+    rendering: {
+      "server-components.mdx": {
+        query:
+          "Next.js React Server Components async components data fetching use client use server streaming",
+        topics: ["RSC", "server components", "streaming"],
+      },
+      "server-actions.mdx": {
+        query:
+          "Next.js Server Actions use server form actions revalidatePath revalidateTag mutations",
+        topics: ["server actions", "forms", "revalidation"],
+      },
+      "caching.mdx": {
+        query:
+          "Next.js caching fetch cache revalidate unstable_cache generateStaticParams ISR on-demand revalidation",
+        topics: ["caching", "revalidation", "ISR"],
+      },
+    },
+    api: {
+      "route-handlers.mdx": {
+        query:
+          "Next.js Route Handlers GET POST PUT DELETE request response NextRequest NextResponse cookies headers",
+        topics: ["route handlers", "API routes", "NextRequest"],
+      },
+    },
+    optimization: {
+      "images.mdx": {
+        query:
+          "Next.js Image component next/image optimization sizes fill priority placeholder blur responsive",
+        topics: ["images", "optimization", "next/image"],
+      },
+      "fonts.mdx": {
+        query:
+          "Next.js Font optimization next/font/google next/font/local variable fonts subsets display",
+        topics: ["fonts", "next/font"],
+      },
+      "metadata.mdx": {
+        query:
+          "Next.js Metadata API generateMetadata title description openGraph twitter icons manifest",
+        topics: ["metadata", "SEO", "generateMetadata"],
+      },
+    },
+  },
+  criticalPatterns: [
+    {
+      pattern: "getServerSideProps",
+      warning:
+        "getServerSideProps is Pages Router. App Router uses async Server Components",
+      correct:
+        "export default async function Page() { const data = await fetch(...) }",
+    },
+    {
+      pattern: "getStaticProps",
+      warning:
+        "getStaticProps is Pages Router. App Router uses fetch with cache options",
+      correct: "const data = await fetch(url, { next: { revalidate: 3600 } })",
+    },
+    {
+      pattern: "useRouter from 'next/router'",
+      warning: "App Router uses next/navigation, not next/router",
+      correct: "import { useRouter } from 'next/navigation'",
+    },
+  ],
+};
+
 // ============================================================================
 // Template Registry
 // ============================================================================
@@ -453,6 +764,10 @@ export const FRAMEWORK_TEMPLATES: Record<string, FrameworkTemplate> = {
   vite: VITE_TEMPLATE,
   vitest: VITEST_TEMPLATE,
   tailwind: TAILWIND_TEMPLATE,
+  elysia: ELYSIA_TEMPLATE,
+  "drizzle-v1": DRIZZLE_V1_TEMPLATE,
+  shadcn: SHADCN_TEMPLATE,
+  nextjs: NEXTJS_TEMPLATE,
 };
 
 export function getTemplate(name: string): FrameworkTemplate | undefined {

@@ -525,7 +525,7 @@ describe("calculateIndexSize", () => {
     expect(typeof sizeKb).toBe("number");
   });
 
-  test("returns 0 for empty sections", () => {
+  test("returns non-zero for empty sections due to markers", () => {
     // Even empty sections produce markers, so it won't be exactly 0
     // But it should be a small number
     const sizeKb = calculateIndexSize([]);

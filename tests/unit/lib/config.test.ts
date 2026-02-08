@@ -306,6 +306,16 @@ describe("detectProjectType", () => {
     expect(result).toBe("backend");
   });
 
+  test('returns "backend" when has elysia dependency', () => {
+    const pkg = {
+      name: "elysia-api",
+      dependencies: { elysia: "^1.0.0" },
+      devDependencies: {},
+    };
+    const result = detectProjectType(pkg);
+    expect(result).toBe("backend");
+  });
+
   test('does not return "library" if has app indicators despite exports', () => {
     const pkg = {
       name: "framework-app",
@@ -353,6 +363,28 @@ describe("detectDependencies", () => {
     };
     const detected = detectDependencies(pkg);
     expect(detected.length).toBe(0);
+  });
+
+  test("detects elysia from dependencies", () => {
+    const pkg = {
+      dependencies: { elysia: "^1.0.0" },
+      devDependencies: {},
+    };
+    const detected = detectDependencies(pkg);
+    expect(detected.length).toBe(1);
+    expect(detected[0].framework?.name).toBe("elysia");
+  });
+
+  test("detects elysia plugins via @elysiajs/ prefix", () => {
+    const pkg = {
+      dependencies: { elysia: "^1.0.0", "@elysiajs/cors": "^1.0.0" },
+      devDependencies: {},
+    };
+    const detected = detectDependencies(pkg);
+    const elysiaDetections = detected.filter(
+      (d) => d.framework?.name === "elysia"
+    );
+    expect(elysiaDetections.length).toBe(1);
   });
 
   test("deduplicates framework detections", () => {
