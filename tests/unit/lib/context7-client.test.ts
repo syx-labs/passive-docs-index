@@ -3,8 +3,7 @@
  * Tests the unified Context7 client that coordinates HTTP SDK and MCP fallback.
  *
  * Mocking strategy:
- * - @upstash/context7-sdk: mock.module() before dynamic import
- * - HTTP fetch: spyOn(global, 'fetch') in the SDK internals (SDK uses fetch)
+ * - HTTP client: setHttpClientFactory() injects a mock factory (dependency injection)
  * - MCP: FakeMcpClient injected via setMcpClient()
  */
 
@@ -27,26 +26,13 @@ import queryDocsFixture from "../../fixtures/context7/query-docs.json";
 import searchLibraryFixture from "../../fixtures/context7/search-library.json";
 
 // ---------------------------------------------------------------------------
-// Mock the Context7 SDK before importing the module under test
-// ---------------------------------------------------------------------------
-
 // Configurable mock instances that tests can control
+// ---------------------------------------------------------------------------
 let mockGetContext = mock(async () => queryDocsFixture);
 let mockSearchLibrary = mock(async () => searchLibraryFixture);
 
-mock.module("@upstash/context7-sdk", () => ({
-  Context7: class MockContext7 {
-    getContext: typeof mockGetContext;
-    searchLibrary: typeof mockSearchLibrary;
-    constructor(_config: { apiKey: string }) {
-      this.getContext = mockGetContext;
-      this.searchLibrary = mockSearchLibrary;
-    }
-  },
-}));
-
 // ---------------------------------------------------------------------------
-// Import the module under test AFTER mock.module
+// Import the module under test (no mock.module needed — uses factory injection)
 // ---------------------------------------------------------------------------
 
 import {
@@ -54,8 +40,10 @@ import {
   isHttpClientAvailable,
   queryContext7,
   resetClients,
+  resetHttpClientFactory,
   resetMcpClient,
   searchLibrary,
+  setHttpClientFactory,
   setMcpClient,
 } from "../../../src/lib/context7-client.js";
 
@@ -67,16 +55,22 @@ let fakeMcp: FakeMcpClient;
 let consoleErrorSpy: ReturnType<typeof spyOn>;
 
 beforeEach(() => {
-  // Reset all client state
+  // Reset SDK mocks to default behavior
+  mockGetContext = mock(async () => queryDocsFixture);
+  mockSearchLibrary = mock(async () => searchLibraryFixture);
+
+  // Reset all client state (caches, MCP, factory)
   resetClients();
+
+  // Inject mock HTTP client factory AFTER resetClients (which resets factory)
+  setHttpClientFactory(async (_apiKey: string) => ({
+    getContext: (...args: any[]) => mockGetContext(...args),
+    searchLibrary: (...args: any[]) => mockSearchLibrary(...args),
+  }));
 
   // Fresh MCP fake per test
   fakeMcp = new FakeMcpClient();
   setMcpClient(fakeMcp);
-
-  // Reset SDK mocks
-  mockGetContext = mock(async () => queryDocsFixture);
-  mockSearchLibrary = mock(async () => searchLibraryFixture);
 
   // Suppress console.error noise in tests
   consoleErrorSpy = spyOn(console, "error").mockImplementation(() => undefined);
@@ -358,13 +352,19 @@ describe("resetClients", () => {
     setMcpClient(fakeMcp);
     fakeMcp.setAvailable(true);
 
-    // Reset restores default McpCliClient
+    // Reset restores default McpCliClient (real availability depends on environment)
     resetClients();
 
-    // After reset, MCP should be unavailable (no real mcp-cli in test env)
+    // Re-inject HTTP factory for consistent behavior
+    setHttpClientFactory(async (_apiKey: string) => ({
+      getContext: (...args: any[]) => mockGetContext(...args),
+      searchLibrary: (...args: any[]) => mockSearchLibrary(...args),
+    }));
+
+    // After reset, the MCP client is a real McpCliClient (not our fake)
+    // We can only verify it's a boolean — actual value depends on env
     const status = await checkAvailability();
     expect(typeof status.mcp).toBe("boolean");
-    expect(status.mcp).toBe(false);
   });
 });
 
@@ -502,6 +502,10 @@ describe("queryContext7 HTTP error handling", () => {
 
     // Reset clients then query again with same key (tests cache logic)
     resetClients();
+    setHttpClientFactory(async (_apiKey: string) => ({
+      getContext: (...args: any[]) => mockGetContext(...args),
+      searchLibrary: (...args: any[]) => mockSearchLibrary(...args),
+    }));
     process.env.CONTEXT7_API_KEY = "test-key";
     const result2 = await queryContext7("/honojs/hono", "routing");
     expect(result2.success).toBe(true);

@@ -8,8 +8,8 @@
  * 3. Offline mode (returns null, caller handles placeholders)
  */
 
-// NOTE: @upstash/context7-sdk is dynamically imported in getHttpClient()
-// to allow bun:test mock.module() to intercept before module resolution.
+// NOTE: @upstash/context7-sdk is dynamically imported via httpClientFactory
+// in getHttpClient(). Tests inject a mock factory via setHttpClientFactory().
 
 import type { IMcpClient } from "./interfaces/mcp-client.js";
 import { McpCliClient } from "./interfaces/mcp-client.js";
@@ -58,6 +58,23 @@ interface Context7Client {
   ): Promise<Array<{ id: string; name: string; trustScore?: number }> | null>;
 }
 
+export type HttpClientFactory = (apiKey: string) => Promise<Context7Client>;
+
+const defaultHttpClientFactory: HttpClientFactory = async (apiKey) => {
+  const { Context7 } = await import("@upstash/context7-sdk");
+  return new Context7({ apiKey });
+};
+
+let httpClientFactory: HttpClientFactory = defaultHttpClientFactory;
+
+export function setHttpClientFactory(factory: HttpClientFactory): void {
+  httpClientFactory = factory;
+}
+
+export function resetHttpClientFactory(): void {
+  httpClientFactory = defaultHttpClientFactory;
+}
+
 let httpClient: Context7Client | null = null;
 let httpClientApiKey: string | null = null;
 
@@ -83,10 +100,9 @@ async function getHttpClient(
     return httpClient;
   }
 
-  // Create new client with the requested key (dynamic import)
+  // Create new client with the requested key (via injectable factory)
   try {
-    const { Context7 } = await import("@upstash/context7-sdk");
-    httpClient = new Context7({ apiKey: requestedKey });
+    httpClient = await httpClientFactory(requestedKey);
     httpClientApiKey = requestedKey;
     return httpClient;
   } catch (error) {
@@ -484,4 +500,5 @@ export function resetClients(): void {
   httpClientApiKey = null;
   libraryIdCache.clear();
   resetMcpClient();
+  resetHttpClientFactory();
 }
