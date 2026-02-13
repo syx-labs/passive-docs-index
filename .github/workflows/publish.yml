@@ -1,0 +1,96 @@
+# npm publish with OIDC provenance
+#
+# Triggers on push to main when package.json changes (version PR merge).
+# Two-job design: check-version gates publish to avoid unnecessary OIDC attempts.
+#
+# OIDC Trusted Publishing eliminates the need for NPM_TOKEN secrets.
+# Requires one-time setup: npmjs.com -> package Settings -> Trusted Publishers.
+#
+# npm is upgraded to latest because Node 22 LTS ships npm 10.x which lacks
+# OIDC support (requires npm >= 11.5.1).
+
+name: Publish
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check-version:
+    name: Check Version Change
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.check.outputs.changed }}
+      current_version: ${{ steps.check.outputs.current }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare with npm registry
+        id: check
+        run: |
+          CURRENT=$(node -p "require('./package.json').version")
+          PUBLISHED=$(npm view passive-docs-index version 2>/dev/null || echo "0.0.0")
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          if [ "$CURRENT" != "$PUBLISHED" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Version changed: $PUBLISHED -> $CURRENT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Version unchanged: $CURRENT"
+          fi
+
+  publish:
+    name: Publish to npm
+    needs: check-version
+    if: needs.check-version.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      # npm >= 11.5.1 required for OIDC Trusted Publishing
+      - name: Upgrade npm for OIDC support
+        run: npm install -g npm@latest
+
+      - name: Verify npm version
+        run: |
+          NPM_VERSION=$(npm --version)
+          echo "npm version: $NPM_VERSION"
+          # Verify major version is >= 11
+          MAJOR=$(echo "$NPM_VERSION" | cut -d. -f1)
+          if [ "$MAJOR" -lt 11 ]; then
+            echo "::error::npm version $NPM_VERSION is too old for OIDC. Need >= 11.5.1"
+            exit 1
+          fi
+
+      - run: bun install
+
+      - name: Build
+        run: bun run build
+
+      - name: Verify build artifacts
+        run: |
+          # Verify essential files exist
+          test -f dist/cli.js || { echo "::error::dist/cli.js missing"; exit 1; }
+          test -f dist/index.js || { echo "::error::dist/index.js missing"; exit 1; }
+          test -f dist/index.d.ts || { echo "::error::dist/index.d.ts missing"; exit 1; }
+          # Verify shebang
+          head -1 dist/cli.js | grep -q "#!/usr/bin/env node" || { echo "::error::dist/cli.js missing shebang"; exit 1; }
+          echo "Build artifacts verified"
+
+      - name: Publish with provenance
+        run: npm publish --provenance --access public

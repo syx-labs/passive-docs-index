@@ -1,0 +1,35 @@
+# Changesets Version PR automation
+#
+# On push to main, runs changesets/action which:
+# - Detects pending changeset files in .changeset/
+# - Creates or updates a "Version Packages" PR with bumped version and CHANGELOG
+# - When the version PR is merged, publish.yml handles npm publish
+#
+# Split workflow pattern (separate from publish) per changesets/action#515.
+# GITHUB_TOKEN is sufficient for PR creation -- no PAT needed.
+
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    name: Version Packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - uses: changesets/action@v1
+        with:
+          title: "chore(release): version packages"
+          commit: "chore(release): version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
