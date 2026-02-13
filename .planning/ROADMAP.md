@@ -13,7 +13,7 @@ PDI evolves from a working prototype (v0.2.0) to a production-grade npm package 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Testing Infrastructure** - Unit and integration test suite with testability refactoring
-- [ ] **Phase 2: CI/CD Pipeline** - GitHub Actions workflows for automated validation on every push
+- [x] **Phase 2: CI/CD Pipeline** - GitHub Actions workflows for automated validation on every push
 - [ ] **Phase 3: Publishing & Distribution** - npm package configuration, provenance, and release automation
 - [ ] **Phase 4: Error Handling & Validation** - Structured error handling and Zod-based config validation
 - [ ] **Phase 5: Automation** - Postinstall hooks, freshness checking, and CI-friendly --check flags
@@ -54,7 +54,7 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md -- CI workflow, tsc problem matcher, and branch protection script
-- [ ] 02-02-PLAN.md -- README badges and end-to-end CI verification
+- [x] 02-02-PLAN.md -- README badges and end-to-end CI verification
 
 ### Phase 3: Publishing & Distribution
 **Goal**: PDI is installable from npm with `npx pdi` working out of the box, with provenance and changelogs
@@ -65,12 +65,12 @@ Plans:
   2. npm publish workflow triggers on GitHub release with OIDC provenance -- provenance badge visible on npmjs.com
   3. Package includes type declarations (.d.ts) that IDEs can consume for the programmatic API
   4. CHANGELOG.md is generated via Changesets with release notes for each version
-  5. `npm pack --dry-run` output includes dist/, templates, and type declarations -- no missing files
-**Plans**: TBD
+  5. `npm pack --dry-run` output includes dist/ and type declarations -- no missing files
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: Package configuration and build pipeline
-- [ ] 03-02: Publish workflow and release automation
+- [ ] 03-01-PLAN.md -- Package configuration, two-step build (JS + .d.ts), and Changesets initialization
+- [ ] 03-02-PLAN.md -- Release and publish workflows (changesets/action + npm OIDC provenance)
 
 ### Phase 4: Error Handling & Validation
 **Goal**: CLI commands fail gracefully with user-friendly messages and config is validated at runtime with Zod
@@ -184,7 +184,7 @@ Note: Phases 4 and 6 can start after Phase 1 (independent of Phase 2/3). Phase 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Testing Infrastructure | 4/4 | Complete | 2026-02-05 |
-| 2. CI/CD Pipeline | 1/2 | In progress | - |
+| 2. CI/CD Pipeline | 2/2 | Complete | 2026-02-13 |
 | 3. Publishing & Distribution | 0/2 | Not started | - |
 | 4. Error Handling & Validation | 0/2 | Not started | - |
 | 5. Automation | 0/1 | Not started | - |
