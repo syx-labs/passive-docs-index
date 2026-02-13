@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Testing Infrastructure** - Unit and integration test suite with testability refactoring
 - [x] **Phase 2: CI/CD Pipeline** - GitHub Actions workflows for automated validation on every push
-- [ ] **Phase 3: Publishing & Distribution** - npm package configuration, provenance, and release automation
+- [x] **Phase 3: Publishing & Distribution** - npm package configuration, provenance, and release automation
 - [ ] **Phase 4: Error Handling & Validation** - Structured error handling and Zod-based config validation
 - [ ] **Phase 5: Automation** - Postinstall hooks, freshness checking, and CI-friendly --check flags
 - [ ] **Phase 6: Claude Code Skills & Hooks** - Skills for analyze/generate/sync and PostToolUse/SessionStart hooks
@@ -69,8 +69,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md -- Package configuration, two-step build (JS + .d.ts), and Changesets initialization
-- [ ] 03-02-PLAN.md -- Release and publish workflows (changesets/action + npm OIDC provenance)
+- [x] 03-01-PLAN.md -- Package configuration, two-step build (JS + .d.ts), and Changesets initialization
+- [x] 03-02-PLAN.md -- Release and publish workflows (changesets/action + npm OIDC provenance)
 
 ### Phase 4: Error Handling & Validation
 **Goal**: CLI commands fail gracefully with user-friendly messages and config is validated at runtime with Zod
