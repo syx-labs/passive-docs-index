@@ -29,7 +29,7 @@ Documentação de frameworks sempre disponível no contexto do assistente de IA,
 - [ ] Skill `/pdi-generate` — Geração assistida de docs via Claude
 - [ ] Hook para `bun install`/`npm install` sugerindo `pdi sync` automaticamente
 - [ ] Integração com Git hooks (pre-commit: verificar índice, post-merge: sugerir atualização)
-- [x] Testes automatizados (unit, integration) — 297 tests, 16 files, 80%+ coverage
+- [x] Testes automatizados (unit, integration) — >300 tests, 16 files, 80%+ coverage
 - [ ] Publicação no npm
 - [ ] Publicação no JSR (Deno)
 - [x] GitHub Actions para CI/CD — ci.yml with lint, typecheck, test, coverage
@@ -51,7 +51,7 @@ Documentação de frameworks sempre disponível no contexto do assistente de IA,
 - 10 templates de frameworks já implementados com integração Context7
 - Stack: TypeScript 5.7, Commander.js, Chalk, Ora, Bun Test
 - Formato de linting: Biome via Ultracite
-- 297 testes automatizados (unit, integration) com 80%+ cobertura — base sólida para contribuições externas
+- >300 testes automatizados (unit, integration) com 80%+ cobertura — base sólida para contribuições externas
 - Alvo: publicação npm para comunidade aberta de desenvolvedores
 - Problemas de DX identificados: setup manual demais, docs desatualizam, faltam testes, templates limitados
 

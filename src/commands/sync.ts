@@ -243,7 +243,7 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
       config = removeFrameworkFromConfig(config, action.framework);
 
       // Remove from library mappings
-      if (config.mcp.libraryMappings) {
+      if (config.mcp?.libraryMappings) {
         delete config.mcp.libraryMappings[action.framework];
       }
 

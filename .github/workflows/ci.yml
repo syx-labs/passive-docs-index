@@ -67,7 +67,7 @@ jobs:
 
       - name: Install lcov
         if: github.event_name == 'pull_request' && steps.changes.outputs.code == 'true'
-        run: sudo apt-get install -y lcov
+        run: sudo apt-get update -y && sudo apt-get install -y lcov
 
       - name: Report coverage on PR
         if: github.event_name == 'pull_request' && steps.changes.outputs.code == 'true'

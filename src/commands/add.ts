@@ -248,9 +248,9 @@ export async function addCommand(
     config = updateFrameworkInConfig(config, frameworkName, frameworkConfig);
 
     // Update library mappings
-    if (template.libraryId) {
+    if (template.libraryId && config.mcp) {
       config.mcp.libraryMappings = {
-        ...config.mcp.libraryMappings,
+        ...(config.mcp.libraryMappings ?? {}),
         [frameworkName]: template.libraryId,
       };
     }

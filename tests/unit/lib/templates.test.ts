@@ -17,7 +17,7 @@ import {
 } from "../../../src/lib/templates.js";
 
 // ============================================================================
-// All 14 built-in template names
+// All built-in template names
 // ============================================================================
 
 const ALL_TEMPLATE_NAMES = [
@@ -76,9 +76,9 @@ describe("hasTemplate", () => {
 // ============================================================================
 
 describe("listTemplates", () => {
-  test("returns array with 14 templates", () => {
+  test("returns array with all templates", () => {
     const templates = listTemplates();
-    expect(templates.length).toBe(14);
+    expect(templates.length).toBe(ALL_TEMPLATE_NAMES.length);
   });
 
   test("each template has required fields", () => {
@@ -96,7 +96,7 @@ describe("listTemplates", () => {
     }
   });
 
-  test("all 14 template names are present", () => {
+  test("all template names are present", () => {
     const templates = listTemplates();
     const names = templates.map((t) => t.name);
     for (const name of ALL_TEMPLATE_NAMES) {

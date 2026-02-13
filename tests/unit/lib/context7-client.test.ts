@@ -53,6 +53,13 @@ import {
 let fakeMcp: FakeMcpClient;
 let consoleErrorSpy: ReturnType<typeof spyOn>;
 
+function injectMockHttpFactory(): void {
+  setHttpClientFactory(async (_apiKey: string) => ({
+    getContext: (...args: any[]) => mockGetContext(...args),
+    searchLibrary: (...args: any[]) => mockSearchLibrary(...args),
+  }));
+}
+
 beforeEach(() => {
   // Reset SDK mocks to default behavior
   mockGetContext = mock(async () => queryDocsFixture);
@@ -62,10 +69,7 @@ beforeEach(() => {
   resetClients();
 
   // Inject mock HTTP client factory AFTER resetClients (which resets factory)
-  setHttpClientFactory(async (_apiKey: string) => ({
-    getContext: (...args: any[]) => mockGetContext(...args),
-    searchLibrary: (...args: any[]) => mockSearchLibrary(...args),
-  }));
+  injectMockHttpFactory();
 
   // Fresh MCP fake per test
   fakeMcp = new FakeMcpClient();
@@ -347,21 +351,20 @@ describe("resetClients", () => {
   });
 
   test("resets MCP client to default", async () => {
-    // Set fake MCP
+    // Set fake MCP and confirm it's active
     setMcpClient(fakeMcp);
     fakeMcp.setAvailable(true);
+    const beforeStatus = await checkAvailability();
+    expect(beforeStatus.mcp).toBe(true); // fake reports true
 
-    // Reset restores default McpCliClient (real availability depends on environment)
+    // Reset restores the default McpCliClient
     resetClients();
 
     // Re-inject HTTP factory for consistent behavior
-    setHttpClientFactory(async (_apiKey: string) => ({
-      getContext: (...args: any[]) => mockGetContext(...args),
-      searchLibrary: (...args: any[]) => mockSearchLibrary(...args),
-    }));
+    injectMockHttpFactory();
 
-    // After reset, the MCP client is a real McpCliClient (not our fake)
-    // We can only verify it's a boolean — actual value depends on env
+    // After reset, if the fake were still active it would return true.
+    // With the real client, the result depends on the environment but the fake was removed.
     const status = await checkAvailability();
     expect(typeof status.mcp).toBe("boolean");
   });
@@ -501,10 +504,7 @@ describe("queryContext7 HTTP error handling", () => {
 
     // Reset clients then query again with same key (tests cache logic)
     resetClients();
-    setHttpClientFactory(async (_apiKey: string) => ({
-      getContext: (...args: any[]) => mockGetContext(...args),
-      searchLibrary: (...args: any[]) => mockSearchLibrary(...args),
-    }));
+    injectMockHttpFactory();
     process.env.CONTEXT7_API_KEY = "test-key";
     const result2 = await queryContext7("/honojs/hono", "routing");
     expect(result2.success).toBe(true);
