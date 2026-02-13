@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Testing Infrastructure** - Unit and integration test suite with testability refactoring
 - [x] **Phase 2: CI/CD Pipeline** - GitHub Actions workflows for automated validation on every push
-- [x] **Phase 3: Publishing & Distribution** - npm package configuration, provenance, and release automation
+- [ ] **Phase 3: Publishing & Distribution** - npm package configuration, provenance, and release automation
 - [ ] **Phase 4: Error Handling & Validation** - Structured error handling and Zod-based config validation
 - [ ] **Phase 5: Automation** - Postinstall hooks, freshness checking, and CI-friendly --check flags
 - [ ] **Phase 6: Claude Code Skills & Hooks** - Skills for analyze/generate/sync and PostToolUse/SessionStart hooks
@@ -66,11 +66,12 @@ Plans:
   3. Package includes type declarations (.d.ts) that IDEs can consume for the programmatic API
   4. CHANGELOG.md is generated via Changesets with release notes for each version
   5. `npm pack --dry-run` output includes dist/ and type declarations -- no missing files
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
 - [x] 03-01-PLAN.md -- Package configuration, two-step build (JS + .d.ts), and Changesets initialization
 - [x] 03-02-PLAN.md -- Release and publish workflows (changesets/action + npm OIDC provenance)
+- [ ] 03-03-PLAN.md -- Gap closure: merge to main and verify OIDC provenance pipeline end-to-end
 
 ### Phase 4: Error Handling & Validation
 **Goal**: CLI commands fail gracefully with user-friendly messages and config is validated at runtime with Zod
@@ -185,7 +186,7 @@ Note: Phases 4 and 6 can start after Phase 1 (independent of Phase 2/3). Phase 8
 |-------|----------------|--------|-----------|
 | 1. Testing Infrastructure | 4/4 | Complete | 2026-02-05 |
 | 2. CI/CD Pipeline | 2/2 | Complete | 2026-02-13 |
-| 3. Publishing & Distribution | 0/2 | Not started | - |
+| 3. Publishing & Distribution | 2/3 | Gap closure | - |
 | 4. Error Handling & Validation | 0/2 | Not started | - |
 | 5. Automation | 0/1 | Not started | - |
 | 6. Claude Code Skills & Hooks | 0/2 | Not started | - |
