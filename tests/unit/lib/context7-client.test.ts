@@ -40,7 +40,6 @@ import {
   isHttpClientAvailable,
   queryContext7,
   resetClients,
-  resetHttpClientFactory,
   resetMcpClient,
   searchLibrary,
   setHttpClientFactory,
