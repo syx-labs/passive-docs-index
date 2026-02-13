@@ -11,6 +11,7 @@
 // NOTE: @upstash/context7-sdk is dynamically imported via httpClientFactory
 // in getHttpClient(). Tests inject a mock factory via setHttpClientFactory().
 
+import { Context7Error } from "./errors.js";
 import type { IMcpClient } from "./interfaces/mcp-client.js";
 import { McpCliClient } from "./interfaces/mcp-client.js";
 import { extractContext7Content } from "./mcp-client.js";
@@ -20,6 +21,102 @@ interface Documentation {
   title?: string;
   source?: string;
   content?: string;
+}
+
+// ============================================================================
+// Error Classification
+// ============================================================================
+
+export function classifyContext7Error(
+  error: unknown,
+  source: "http" | "mcp" | "none"
+): Context7Error {
+  const message = error instanceof Error ? error.message : String(error);
+  const cause = error instanceof Error ? error : undefined;
+  const lowerMessage = message.toLowerCase();
+
+  // Auth errors (401, 403, invalid key)
+  if (
+    lowerMessage.includes("401") ||
+    lowerMessage.includes("403") ||
+    lowerMessage.includes("unauthorized") ||
+    (lowerMessage.includes("invalid") && lowerMessage.includes("key")) ||
+    lowerMessage.includes("forbidden")
+  ) {
+    return new Context7Error("Context7 API key is invalid or expired.", {
+      category: "auth",
+      source,
+      hint: "Run `pdi auth` to reconfigure your API key, or set CONTEXT7_API_KEY in your environment.",
+      cause,
+    });
+  }
+
+  // Rate limit (429, too many requests)
+  if (
+    lowerMessage.includes("429") ||
+    lowerMessage.includes("rate limit") ||
+    lowerMessage.includes("too many requests")
+  ) {
+    return new Context7Error("Context7 rate limit reached.", {
+      category: "rate_limit",
+      source,
+      hint: "Wait a moment and try again. Consider using `pdi update` with fewer frameworks at once.",
+      cause,
+    });
+  }
+
+  // Network errors (timeout, connection refused, DNS failure)
+  if (
+    lowerMessage.includes("timeout") ||
+    lowerMessage.includes("econnrefused") ||
+    lowerMessage.includes("enotfound") ||
+    lowerMessage.includes("fetch failed") ||
+    lowerMessage.includes("failed to fetch") ||
+    lowerMessage.includes("network") ||
+    lowerMessage.includes("aborted") ||
+    lowerMessage.includes("econnreset")
+  ) {
+    return new Context7Error("Cannot reach Context7 servers.", {
+      category: "network",
+      source,
+      hint: "Check your internet connection. If the issue persists, try again later.",
+      cause,
+    });
+  }
+
+  // Redirect errors
+  if (
+    lowerMessage.includes("library_redirected") ||
+    lowerMessage.includes("redirected")
+  ) {
+    return new Context7Error("Library ID has changed in Context7.", {
+      category: "redirect",
+      source,
+      hint: "Run `pdi add <framework> --force` to update with the new library ID.",
+      cause,
+    });
+  }
+
+  // Not found
+  if (
+    lowerMessage.includes("no documentation found") ||
+    lowerMessage.includes("not found") ||
+    lowerMessage.includes("404")
+  ) {
+    return new Context7Error("No documentation found for this query.", {
+      category: "not_found",
+      source,
+      hint: "The library may not be indexed by Context7, or the query returned no results.",
+      cause,
+    });
+  }
+
+  // Unknown/generic
+  return new Context7Error(message, {
+    category: "unknown",
+    source,
+    cause,
+  });
 }
 
 // ============================================================================
@@ -269,9 +366,12 @@ async function queryViaHttp(
       };
     }
 
+    const classified = classifyContext7Error(error, "http");
     return {
       success: false,
-      error: errorMessage,
+      error: classified.hint
+        ? `${classified.message} ${classified.hint}`
+        : classified.message,
       source: "http",
     };
   }
@@ -345,9 +445,12 @@ async function queryViaMcp(
       source: "mcp",
     };
   } catch (error) {
+    const classified = classifyContext7Error(error, "mcp");
     return {
       success: false,
-      error: error instanceof Error ? error.message : "MCP query failed",
+      error: classified.hint
+        ? `${classified.message} ${classified.hint}`
+        : classified.message,
       source: "mcp",
     };
   }
@@ -403,8 +506,8 @@ export async function queryContext7(
   return {
     success: false,
     error: httpAvailable
-      ? `HTTP failed, MCP failed: ${mcpResult.error}`
-      : `No API key set, MCP failed: ${mcpResult.error}`,
+      ? "Documentation fetch failed. Check connection and API key with `pdi doctor`."
+      : "No documentation source available. Run `pdi auth` to configure Context7 API.",
     source: "none",
   };
 }

@@ -14,6 +14,7 @@ import {
   updateSyncTime,
   writeConfig,
 } from "../lib/config.js";
+import { ConfigError, NotInitializedError } from "../lib/errors.js";
 import {
   formatSize,
   readInternalDocs,
@@ -683,13 +684,15 @@ export async function generateCommand(
 
   // Check if initialized
   if (!configExists(projectRoot)) {
-    throw new Error("PDI not initialized. Run: pdi init");
+    throw new NotInitializedError();
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    throw new Error("Failed to read config");
+    throw new ConfigError("Config file exists but returned null", {
+      hint: "Run `pdi init --force` to regenerate config.",
+    });
   }
 
   console.log(chalk.bold("Analyzing codebase...\n"));

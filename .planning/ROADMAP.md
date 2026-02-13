@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: CI/CD Pipeline** - GitHub Actions workflows for automated validation on every push
 - [x] **Phase 3: Publishing & Distribution** - npm package configuration, provenance, and release automation
 - [x] **Phase 4: Error Handling & Validation** - Structured error handling and Zod-based config validation
-- [ ] **Phase 5: Automation** - Postinstall hooks, freshness checking, and CI-friendly --check flags
+- [x] **Phase 5: Automation** - Postinstall hooks, freshness checking, and CI-friendly --check flags
 - [ ] **Phase 6: Claude Code Skills & Hooks** - Skills for analyze/generate/sync and PostToolUse/SessionStart hooks
 - [ ] **Phase 7: Claude Code Plugin** - Bundled plugin packaging for single-command installation
 - [ ] **Phase 8: Custom Templates** - User-defined template system with registry and scaffolding
@@ -99,8 +99,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01-PLAN.md -- Registry client and freshness checking engine (TDD)
-- [ ] 05-02-PLAN.md -- Status command --check/--format flags, postinstall hook, and exports
+- [x] 05-01-PLAN.md -- Registry client and freshness checking engine (TDD)
+- [x] 05-02-PLAN.md -- Status command --check/--format flags, postinstall hook, and exports
 
 ### Phase 6: Claude Code Skills & Hooks
 **Goal**: Claude Code users can invoke PDI via slash commands and get automatic sync suggestions after installing packages
@@ -189,7 +189,7 @@ Note: Phases 4 and 6 can start after Phase 1 (independent of Phase 2/3). Phase 8
 | 2. CI/CD Pipeline | 2/2 | Complete | 2026-02-13 |
 | 3. Publishing & Distribution | 3/3 | Complete | 2026-02-13 |
 | 4. Error Handling & Validation | 2/2 | Complete | 2026-02-13 |
-| 5. Automation | 0/1 | Not started | - |
+| 5. Automation | 2/2 | Complete | 2026-02-13 |
 | 6. Claude Code Skills & Hooks | 0/2 | Not started | - |
 | 7. Claude Code Plugin | 0/1 | Not started | - |
 | 8. Custom Templates | 0/2 | Not started | - |

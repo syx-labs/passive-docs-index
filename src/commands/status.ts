@@ -12,6 +12,12 @@ import {
   readPackageJson,
 } from "../lib/config.js";
 import { FRAMEWORKS_DIR } from "../lib/constants.js";
+import { ConfigError, NotInitializedError } from "../lib/errors.js";
+import {
+  checkFreshness,
+  EXIT_CODES,
+  type FreshnessCheckOutput,
+} from "../lib/freshness.js";
 import {
   calculateDocsSize,
   readAllFrameworkDocs,
@@ -24,20 +30,28 @@ import {
 } from "../lib/index-utils.js";
 import { hasTemplate } from "../lib/templates.js";
 
+export interface StatusCommandOptions {
+  projectRoot?: string;
+  check?: boolean;
+  format?: "table" | "json";
+}
+
 export async function statusCommand(
-  options: { projectRoot?: string } = {}
+  options: StatusCommandOptions = {}
 ): Promise<void> {
   const projectRoot = options.projectRoot || process.cwd();
 
   // Check if initialized
   if (!configExists(projectRoot)) {
-    throw new Error("PDI not initialized. Run: pdi init");
+    throw new NotInitializedError();
   }
 
   // Read config
   const config = await readConfig(projectRoot);
   if (!config) {
-    throw new Error("Failed to read config");
+    throw new ConfigError("Config file exists but returned null", {
+      hint: "Run `pdi init --force` to regenerate config.",
+    });
   }
 
   // Read package.json for comparison
@@ -195,6 +209,124 @@ export async function statusCommand(
         `\nRun: pdi add ${missingFrameworks.map((d) => d.framework?.name).join(" ")}`
       )
     );
+  }
+
+  // Freshness checking
+  let freshnessOutput: FreshnessCheckOutput;
+  try {
+    freshnessOutput = await checkFreshness(config, packageJson);
+  } catch (error) {
+    if (options.format === "json") {
+      console.log(
+        JSON.stringify(
+          {
+            project: config.project.name,
+            timestamp: new Date().toISOString(),
+            status: "issues_found",
+            exitCode: EXIT_CODES.NETWORK_ERROR,
+            issues: [
+              {
+                type: "network_error",
+                message: error instanceof Error ? error.message : String(error),
+              },
+            ],
+            summary: {
+              total: 0,
+              upToDate: 0,
+              stale: 0,
+              missing: 0,
+              orphaned: 0,
+            },
+          },
+          null,
+          2
+        )
+      );
+    } else {
+      console.log("");
+      console.log(
+        chalk.red("Freshness check failed:"),
+        error instanceof Error ? error.message : String(error)
+      );
+    }
+
+    if (options.check) {
+      process.exit(EXIT_CODES.NETWORK_ERROR);
+    }
+
+    console.log("");
+    return;
+  }
+
+  if (options.format === "json") {
+    const issues = freshnessOutput.results
+      .filter((r) => r.status !== "up-to-date")
+      .map((r) => ({
+        framework: r.framework,
+        displayName: r.displayName,
+        type: r.status,
+        indexedVersion: r.indexedVersion || undefined,
+        latestVersion: r.latestVersion || undefined,
+      }));
+
+    console.log(
+      JSON.stringify(
+        {
+          project: config.project.name,
+          timestamp: new Date().toISOString(),
+          status: freshnessOutput.exitCode === 0 ? "ok" : "issues_found",
+          exitCode: freshnessOutput.exitCode,
+          issues,
+          summary: freshnessOutput.summary,
+        },
+        null,
+        2
+      )
+    );
+  } else {
+    // Table output
+    console.log("");
+    console.log(chalk.bold("Freshness Check"));
+    console.log(chalk.dim("─".repeat(40)));
+
+    if (freshnessOutput.results.length > 0) {
+      // Column headers
+      console.log(
+        `  ${"Framework".padEnd(20)} ${"Indexed".padEnd(10)} ${"Latest".padEnd(10)} Status`
+      );
+      console.log(
+        chalk.dim(
+          `  ${"─".repeat(20)} ${"─".repeat(10)} ${"─".repeat(10)} ${"─".repeat(12)}`
+        )
+      );
+
+      for (const r of freshnessOutput.results) {
+        const statusColor =
+          r.status === "up-to-date"
+            ? chalk.green
+            : r.status === "stale"
+              ? chalk.yellow
+              : chalk.red;
+
+        console.log(
+          `  ${r.displayName.padEnd(20)} ${(r.indexedVersion || "—").padEnd(10)} ${(r.latestVersion || "—").padEnd(10)} ${statusColor(r.status)}`
+        );
+      }
+
+      const { summary } = freshnessOutput;
+      console.log("");
+      console.log(
+        chalk.dim(
+          `  ${summary.upToDate} up-to-date, ${summary.stale} stale, ${summary.missing} missing, ${summary.orphaned} orphaned`
+        )
+      );
+    } else {
+      console.log(chalk.dim("  No frameworks to check"));
+    }
+  }
+
+  if (options.check && freshnessOutput.exitCode !== 0) {
+    process.exit(freshnessOutput.exitCode);
   }
 
   console.log("");

@@ -16,6 +16,7 @@ import { initCommand } from "./commands/init.js";
 import { statusCommand } from "./commands/status.js";
 import { syncCommand } from "./commands/sync.js";
 import { updateCommand } from "./commands/update.js";
+import { handleCommandError } from "./lib/error-handler.js";
 import { listTemplates } from "./lib/templates.js";
 
 // Load API key from global config if not in environment
@@ -48,11 +49,7 @@ program
     try {
       await initCommand(options);
     } catch (error) {
-      console.error(
-        chalk.red("Error:"),
-        error instanceof Error ? error.message : error
-      );
-      process.exit(1);
+      handleCommandError(error);
     }
   });
 
@@ -73,11 +70,7 @@ program
     try {
       await addCommand(frameworks || [], options);
     } catch (error) {
-      console.error(
-        chalk.red("Error:"),
-        error instanceof Error ? error.message : error
-      );
-      process.exit(1);
+      handleCommandError(error);
     }
   });
 
@@ -92,27 +85,21 @@ program
     try {
       await syncCommand(options);
     } catch (error) {
-      console.error(
-        chalk.red("Error:"),
-        error instanceof Error ? error.message : error
-      );
-      process.exit(1);
+      handleCommandError(error);
     }
   });
 
 // Status command
 program
   .command("status")
-  .description("Show current PDI status")
-  .action(async () => {
+  .description("Show current PDI status and doc freshness")
+  .option("--check", "Exit with non-zero code if issues found (for CI)")
+  .option("--format <format>", "Output format: table or json", "table")
+  .action(async (options) => {
     try {
-      await statusCommand();
+      await statusCommand(options);
     } catch (error) {
-      console.error(
-        chalk.red("Error:"),
-        error instanceof Error ? error.message : error
-      );
-      process.exit(1);
+      handleCommandError(error);
     }
   });
 
@@ -126,11 +113,7 @@ program
     try {
       await cleanCommand(options);
     } catch (error) {
-      console.error(
-        chalk.red("Error:"),
-        error instanceof Error ? error.message : error
-      );
-      process.exit(1);
+      handleCommandError(error);
     }
   });
 
@@ -143,7 +126,7 @@ program
     const templates = listTemplates();
 
     console.log(chalk.bold("\nAvailable Framework Templates"));
-    console.log(chalk.dim("═".repeat(40)));
+    console.log(chalk.dim("=".repeat(40)));
     console.log("");
 
     const categories = new Map<string, typeof templates>();
@@ -196,11 +179,7 @@ program
     try {
       await updateCommand(frameworks, options);
     } catch (error) {
-      console.error(
-        chalk.red("Error:"),
-        error instanceof Error ? error.message : error
-      );
-      process.exit(1);
+      handleCommandError(error);
     }
   });
 
@@ -216,11 +195,7 @@ program
     try {
       await generateCommand(type, options);
     } catch (error) {
-      console.error(
-        chalk.red("Error:"),
-        error instanceof Error ? error.message : error
-      );
-      process.exit(1);
+      handleCommandError(error);
     }
   });
 
@@ -234,11 +209,7 @@ program
     try {
       await authCommand(options);
     } catch (error) {
-      console.error(
-        chalk.red("Error:"),
-        error instanceof Error ? error.message : error
-      );
-      process.exit(1);
+      handleCommandError(error);
     }
   });
 
@@ -250,11 +221,7 @@ program
     try {
       await doctorCommand();
     } catch (error) {
-      console.error(
-        chalk.red("Error:"),
-        error instanceof Error ? error.message : error
-      );
-      process.exit(1);
+      handleCommandError(error);
     }
   });
 

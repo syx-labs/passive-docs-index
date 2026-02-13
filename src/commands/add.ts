@@ -20,6 +20,7 @@ import {
   processContext7Response,
 } from "../lib/context7.js";
 import { checkAvailability, queryContext7 } from "../lib/context7-client.js";
+import { ConfigError, NotInitializedError } from "../lib/errors.js";
 import { formatSize, writeDocFile } from "../lib/fs-utils.js";
 import { updateClaudeMdFromConfig } from "../lib/index-utils.js";
 import { getTemplate, hasTemplate, listTemplates } from "../lib/templates.js";
@@ -38,13 +39,15 @@ export async function addCommand(
 
   // Check if initialized
   if (!configExists(projectRoot)) {
-    throw new Error("PDI not initialized. Run: pdi init");
+    throw new NotInitializedError();
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    throw new Error("Failed to read config");
+    throw new ConfigError("Config file exists but returned null", {
+      hint: "Run `pdi init --force` to regenerate config.",
+    });
   }
 
   // Interactive mode if no frameworks specified

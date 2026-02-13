@@ -16,6 +16,7 @@ import {
   writeConfig,
 } from "../lib/config.js";
 import { CLAUDE_DOCS_DIR, FRAMEWORKS_DIR } from "../lib/constants.js";
+import { ConfigError, NotInitializedError } from "../lib/errors.js";
 import {
   calculateDocsSize,
   formatSize,
@@ -45,13 +46,15 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
 
   // Check if initialized
   if (!configExists(projectRoot)) {
-    throw new Error("PDI not initialized. Run: pdi init");
+    throw new NotInitializedError();
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    throw new Error("Failed to read config");
+    throw new ConfigError("Config file exists but returned null", {
+      hint: "Run `pdi init --force` to regenerate config.",
+    });
   }
 
   // Read package.json

@@ -20,10 +20,13 @@
   "scripts": {
     "dev": "bun run --watch src/cli.ts",
     "build": "bun run build:js && bun run build:types",
-    "build:js": "bun build src/cli.ts --outfile dist/cli.js --target node --format esm && bun build src/index.ts --outfile dist/index.js --target node --format esm",
+    "build:js": "bun build src/cli.ts --outfile dist/cli.js --target node --format esm && bun build src/index.ts --outfile dist/index.js --target node --format esm && bun build src/lib/postinstall.ts --outfile dist/postinstall.js --target node --format esm",
+    "postinstall": "node ./dist/postinstall.js",
     "build:types": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "test": "bun test --coverage && bun run scripts/check-coverage.ts",
+    "test:isolated": "bun test tests/unit/commands/",
+    "test:main": "bun test --coverage tests/unit/lib tests/integration tests/coverage-loader.test.ts",
+    "test": "bun run test:isolated && bun run test:main && bun run scripts/check-coverage.ts",
     "prepublishOnly": "bun run build",
     "check": "ultracite check",
     "fix": "ultracite fix"
@@ -35,6 +38,7 @@
     "ora": "^8.2.0",
     "p-limit": "^6.2.0",
     "prompts": "^2.4.2",
+    "semver": "^7.7.4",
     "yaml": "^2.8.2",
     "zod": "^4.3.6"
   },
@@ -44,6 +48,7 @@
     "@changesets/cli": "^2.29.8",
     "@types/bun": "^1.3.9",
     "@types/prompts": "^2.4.9",
+    "@types/semver": "^7.7.1",
     "typescript": "^5.9.3",
     "ultracite": "^7.1.5"
   },

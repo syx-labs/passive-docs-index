@@ -143,8 +143,7 @@ describe("queryContext7 (unified)", () => {
     expect(result.success).toBe(false);
     expect(result.source).toBe("none");
     expect(result.error).toBeDefined();
-    expect(result.error).toContain("HTTP failed");
-    expect(result.error).toContain("MCP failed");
+    expect(result.error).toContain("Documentation fetch failed");
   });
 
   test("returns offline error when no API key and no MCP", async () => {
@@ -158,8 +157,7 @@ describe("queryContext7 (unified)", () => {
 
     expect(result.success).toBe(false);
     expect(result.source).toBe("none");
-    expect(result.error).toContain("No API key set");
-    expect(result.error).toContain("MCP failed");
+    expect(result.error).toContain("No documentation source available");
   });
 
   test("tries MCP first when config.preferMcp is true", async () => {
@@ -476,7 +474,7 @@ describe("queryContext7 HTTP error handling", () => {
     const result = await queryContext7("/honojs/hono", "routing");
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain("empty content");
+    expect(result.error).toContain("No documentation source available");
   });
 
   test("MCP query fails with error", async () => {

@@ -18,6 +18,7 @@ import {
   writeConfig,
 } from "../lib/config.js";
 import { CLAUDE_DOCS_DIR, FRAMEWORKS_DIR } from "../lib/constants.js";
+import { ConfigError, NotInitializedError, PDIError } from "../lib/errors.js";
 import { removeDir } from "../lib/fs-utils.js";
 import { updateClaudeMdFromConfig } from "../lib/index-utils.js";
 import { hasTemplate } from "../lib/templates.js";
@@ -38,19 +39,24 @@ export async function syncCommand(options: SyncOptions): Promise<void> {
 
   // Check if initialized
   if (!configExists(projectRoot)) {
-    throw new Error("PDI not initialized. Run: pdi init");
+    throw new NotInitializedError();
   }
 
   // Read config
   let config = await readConfig(projectRoot);
   if (!config) {
-    throw new Error("Failed to read config");
+    throw new ConfigError("Config file exists but returned null", {
+      hint: "Run `pdi init --force` to regenerate config.",
+    });
   }
 
   // Read package.json
   const packageJson = await readPackageJson(projectRoot);
   if (!packageJson) {
-    throw new Error("No package.json found");
+    throw new PDIError("No package.json found", {
+      code: "NO_PACKAGE_JSON",
+      hint: "Run this command in a Node.js project directory with a package.json file.",
+    });
   }
 
   console.log(chalk.bold("Checking package.json..."));

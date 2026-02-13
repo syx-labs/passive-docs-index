@@ -12,6 +12,7 @@ export {
   generateCommand,
   initCommand,
   loadApiKeyFromConfig,
+  type StatusCommandOptions,
   statusCommand,
   syncCommand,
   updateCommand,
@@ -61,6 +62,7 @@ export {
   type Context7ClientConfig,
   type Context7Result,
   checkAvailability,
+  classifyContext7Error,
   isHttpClientAvailable,
   queryContext7,
   resetClients,
@@ -68,6 +70,26 @@ export {
   searchLibrary,
   setMcpClient,
 } from "./lib/context7-client.js";
+export type { ValidationIssue } from "./lib/errors.js";
+// Errors
+export {
+  ConfigError,
+  Context7Error,
+  NotInitializedError,
+  PDIError,
+} from "./lib/errors.js";
+export type {
+  ExitCode,
+  FreshnessCheckOutput,
+  FreshnessResult,
+  FreshnessStatus,
+} from "./lib/freshness.js";
+// Freshness
+export {
+  checkFreshness,
+  checkVersionFreshness,
+  EXIT_CODES,
+} from "./lib/freshness.js";
 // File System Utils
 export {
   calculateDocsSize,
@@ -113,6 +135,14 @@ export {
   resetMcpCliCache,
   resolveContext7Library,
 } from "./lib/mcp-client.js";
+// Postinstall
+export { runPostinstall } from "./lib/postinstall.js";
+// Registry Client
+export {
+  fetchLatestVersion,
+  fetchLatestVersions,
+  NPM_REGISTRY_URL,
+} from "./lib/registry-client.js";
 // Templates
 export {
   FRAMEWORK_TEMPLATES,
