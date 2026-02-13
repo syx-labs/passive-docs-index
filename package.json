@@ -15,12 +15,13 @@
     }
   },
   "files": [
-    "dist",
-    "templates"
+    "dist"
   ],
   "scripts": {
     "dev": "bun run --watch src/cli.ts",
-    "build": "bun build src/cli.ts --outfile dist/cli.js --target node --format esm && bun build src/index.ts --outfile dist/index.js --target node --format esm",
+    "build": "bun run build:js && bun run build:types",
+    "build:js": "bun build src/cli.ts --outfile dist/cli.js --target node --format esm && bun build src/index.ts --outfile dist/index.js --target node --format esm",
+    "build:types": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "bun test --coverage && bun run scripts/check-coverage.ts",
     "prepublishOnly": "bun run build",
@@ -58,7 +59,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/syx-labs/passive-docs-index"
+    "url": "git+https://github.com/syx-labs/passive-docs-index.git"
   },
   "engines": {
     "node": ">=18.0.0"
