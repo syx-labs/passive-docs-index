@@ -257,16 +257,14 @@ export async function doctorCommand(
   console.log("");
   console.log(chalk.bold("Recommended Actions:\n"));
 
+  const recommendations: string[] = [];
+
   if (!(availability.http || availability.mcp)) {
-    console.log(
-      chalk.cyan("  1. pdi auth          # Configure Context7 API key")
-    );
+    recommendations.push("pdi auth          # Configure Context7 API key");
   }
 
   if (!isInitialized) {
-    console.log(
-      chalk.cyan("  2. pdi init          # Initialize PDI in this project")
-    );
+    recommendations.push("pdi init          # Initialize PDI in this project");
   }
 
   if (isInitialized && packageJson && config) {
@@ -279,13 +277,20 @@ export async function doctorCommand(
     );
 
     if (notInstalled.length > 0) {
-      const names = notInstalled.map((d) => d.framework?.name).join(" ");
-      console.log(
-        chalk.cyan(`  3. pdi add ${names}  # Add detected frameworks`)
-      );
+      const names = notInstalled
+        .map((d) => d.framework?.name)
+        .filter(Boolean)
+        .join(" ");
+      if (names) {
+        recommendations.push(`pdi add ${names}  # Add detected frameworks`);
+      }
     }
   }
 
-  console.log(chalk.cyan("  4. pdi status        # Check current status"));
+  recommendations.push("pdi status        # Check current status");
+
+  for (let i = 0; i < recommendations.length; i++) {
+    console.log(chalk.cyan(`  ${i + 1}. ${recommendations[i]}`));
+  }
   console.log("");
 }

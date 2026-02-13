@@ -80,7 +80,8 @@ export interface FrameworkTemplate {
     | "auth"
     | "styling"
     | "build"
-    | "testing";
+    | "testing"
+    | "ui";
   priority: "P0" | "P1" | "P2";
   description: string;
   structure: Record<string, Record<string, DocFileTemplate>>;

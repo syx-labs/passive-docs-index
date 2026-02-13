@@ -93,6 +93,20 @@ export const KNOWN_FRAMEWORKS: KnownFramework[] = [
     libraryId: "/fastify/fastify",
     category: "backend",
   },
+  {
+    pattern: /^elysia$/,
+    name: "elysia",
+    displayName: "Elysia",
+    libraryId: "/elysiajs/elysia",
+    category: "backend",
+  },
+  {
+    pattern: /^@elysiajs\//,
+    name: "elysia",
+    displayName: "Elysia",
+    libraryId: "/elysiajs/elysia",
+    category: "backend",
+  },
 
   // Database
   {
@@ -200,6 +214,15 @@ export const KNOWN_FRAMEWORKS: KnownFramework[] = [
     category: "frontend",
   },
 
+  // UI
+  {
+    pattern: /^shadcn$/,
+    name: "shadcn",
+    displayName: "shadcn/ui",
+    libraryId: "/shadcn-ui/ui",
+    category: "ui",
+  },
+
   // Styling
   {
     pattern: /^tailwindcss$/,
@@ -247,7 +270,15 @@ export const KNOWN_FRAMEWORKS: KnownFramework[] = [
 // ============================================================================
 
 export const PROJECT_TYPE_INDICATORS = {
-  backend: ["hono", "express", "fastify", "koa", "drizzle-orm", "prisma"],
+  backend: [
+    "hono",
+    "express",
+    "fastify",
+    "koa",
+    "drizzle-orm",
+    "prisma",
+    "elysia",
+  ],
   frontend: ["react", "vue", "svelte", "next", "@tanstack/react-query"],
   fullstack: ["next", "nuxt", "sveltekit", "remix"],
   library: [], // Detected by package.json fields

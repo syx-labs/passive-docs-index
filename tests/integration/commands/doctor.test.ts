@@ -58,7 +58,7 @@ mock.module("chalk", () => {
       if (prop === "default") {
         return new Proxy({}, handler);
       }
-      if (prop === "____esModule") {
+      if (prop === "__esModule") {
         return true;
       }
       return passthrough;

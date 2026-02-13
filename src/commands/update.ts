@@ -257,7 +257,7 @@ export async function updateCommand(
         source: "context7",
         libraryId: existingConfig?.libraryId ?? template.libraryId,
         lastUpdate: new Date().toISOString(),
-        files: queries.length,
+        files: successCount,
         categories:
           existingConfig?.categories ?? Object.keys(template.structure),
       };

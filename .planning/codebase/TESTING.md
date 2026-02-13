@@ -196,7 +196,7 @@ export function createTestPackageJson(deps = {}): PackageJson {
 **Requirements:** None enforced
 
 **Strategy for Future Implementation:**
-- Threshold recommendation: 70% statements, 60% branches, 70% functions, 70% lines
+- Threshold recommendation: 80% statements, 70% branches, 80% functions, 80% lines
 - Focus high-risk areas first: Config parsing, dependency detection, file I/O
 - Commands secondary (harder to test without full environment)
 

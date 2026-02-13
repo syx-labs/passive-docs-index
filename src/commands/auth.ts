@@ -74,9 +74,13 @@ export async function authCommand(options: AuthOptions): Promise<void> {
       const config = await readGlobalConfig();
       if (config.apiKey) {
         spinner.succeed(chalk.yellow("API key saved but not loaded"));
-        console.log(chalk.dim(`  Your API key: ${maskApiKey(config.apiKey)}`));
-        console.log(chalk.dim("  Add to your shell profile:"));
-        console.log(chalk.dim(`  export CONTEXT7_API_KEY="${config.apiKey}"`));
+        console.log(chalk.dim(`  Key: ${maskApiKey(config.apiKey)}`));
+        console.log(
+          chalk.dim(
+            "  To load, copy the full key from ~/.config/pdi/config.json:"
+          )
+        );
+        console.log(chalk.dim('  export CONTEXT7_API_KEY="<your-key>"'));
       } else {
         spinner.info("Not authenticated");
         console.log(chalk.dim("  Run: pdi auth"));

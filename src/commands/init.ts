@@ -113,7 +113,7 @@ export async function initCommand(options: InitOptions): Promise<void> {
 
       const frameworkNames = detected
         .filter((d) => d.framework && hasTemplate(d.framework.name))
-        .map((d) => d.framework?.name);
+        .map((d) => d.framework!.name);
 
       if (frameworkNames.length > 0) {
         console.log(chalk.bold("Next steps:"));

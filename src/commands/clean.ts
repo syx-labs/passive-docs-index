@@ -134,7 +134,7 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
     await updateClaudeMdIndex(
       projectRoot,
       sectionsAfter,
-      config?.mcp?.libraryMappings ?? {}
+      config.mcp?.libraryMappings ?? {}
     );
 
     if (indexSizeBefore > indexSizeAfter) {
@@ -182,7 +182,7 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
     config = removeFrameworkFromConfig(config, orphan.name);
 
     // Remove from library mappings
-    if (config.mcp.libraryMappings) {
+    if (config.mcp?.libraryMappings) {
       delete config.mcp.libraryMappings[orphan.name];
     }
 
@@ -212,7 +212,7 @@ export async function cleanCommand(options: CleanOptions = {}): Promise<void> {
   await updateClaudeMdIndex(
     projectRoot,
     sectionsAfter,
-    config?.mcp?.libraryMappings ?? {}
+    config.mcp?.libraryMappings ?? {}
   );
   await writeConfig(projectRoot, config);
 

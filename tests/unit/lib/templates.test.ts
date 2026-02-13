@@ -17,7 +17,7 @@ import {
 } from "../../../src/lib/templates.js";
 
 // ============================================================================
-// All 10 built-in template names
+// All built-in template names
 // ============================================================================
 
 const ALL_TEMPLATE_NAMES = [
@@ -31,6 +31,10 @@ const ALL_TEMPLATE_NAMES = [
   "vite",
   "vitest",
   "tailwind",
+  "elysia",
+  "drizzle-v1",
+  "shadcn",
+  "nextjs",
 ];
 
 // ============================================================================
@@ -72,9 +76,9 @@ describe("hasTemplate", () => {
 // ============================================================================
 
 describe("listTemplates", () => {
-  test("returns array with 10 templates", () => {
+  test("returns array with all templates", () => {
     const templates = listTemplates();
-    expect(templates.length).toBe(10);
+    expect(templates.length).toBe(ALL_TEMPLATE_NAMES.length);
   });
 
   test("each template has required fields", () => {
@@ -92,7 +96,7 @@ describe("listTemplates", () => {
     }
   });
 
-  test("all 10 template names are present", () => {
+  test("all template names are present", () => {
     const templates = listTemplates();
     const names = templates.map((t) => t.name);
     for (const name of ALL_TEMPLATE_NAMES) {
@@ -106,24 +110,36 @@ describe("listTemplates", () => {
 // ============================================================================
 
 describe("getTemplatesByCategory", () => {
-  test('"backend" returns hono', () => {
+  test('"backend" returns hono and elysia', () => {
     const templates = getTemplatesByCategory("backend");
     const names = templates.map((t) => t.name);
     expect(names).toContain("hono");
+    expect(names).toContain("elysia");
+    expect(templates.length).toBe(2);
   });
 
-  test('"frontend" returns react, tanstack-query, tanstack-router', () => {
+  test('"frontend" returns react, tanstack-query, tanstack-router, nextjs', () => {
     const templates = getTemplatesByCategory("frontend");
     const names = templates.map((t) => t.name);
     expect(names).toContain("react");
     expect(names).toContain("tanstack-query");
     expect(names).toContain("tanstack-router");
+    expect(names).toContain("nextjs");
+    expect(templates.length).toBe(4);
   });
 
-  test('"database" returns drizzle', () => {
+  test('"database" returns drizzle and drizzle-v1', () => {
     const templates = getTemplatesByCategory("database");
     const names = templates.map((t) => t.name);
     expect(names).toContain("drizzle");
+    expect(names).toContain("drizzle-v1");
+    expect(templates.length).toBe(2);
+  });
+
+  test('"ui" returns shadcn', () => {
+    const templates = getTemplatesByCategory("ui");
+    const names = templates.map((t) => t.name);
+    expect(names).toContain("shadcn");
     expect(templates.length).toBe(1);
   });
 
@@ -165,14 +181,18 @@ describe("getTemplatesByCategory", () => {
 // ============================================================================
 
 describe("getTemplatesByPriority", () => {
-  test('"P0" returns hono, drizzle, better-auth, zod', () => {
+  test('"P0" returns hono, drizzle, better-auth, zod, elysia, drizzle-v1, shadcn, nextjs', () => {
     const templates = getTemplatesByPriority("P0");
     const names = templates.map((t) => t.name);
     expect(names).toContain("hono");
     expect(names).toContain("drizzle");
     expect(names).toContain("better-auth");
     expect(names).toContain("zod");
-    expect(templates.length).toBe(4);
+    expect(names).toContain("elysia");
+    expect(names).toContain("drizzle-v1");
+    expect(names).toContain("shadcn");
+    expect(names).toContain("nextjs");
+    expect(templates.length).toBe(8);
   });
 
   test('"P1" returns the remaining 6', () => {
