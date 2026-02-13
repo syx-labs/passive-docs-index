@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+### Patch Changes
+
+- [`5f86286`](https://github.com/syx-labs/passive-docs-index/commit/5f86286fe0478ebc7ffdad035b2f46699e56a5bd) Thanks [@syx-labs](https://github.com/syx-labs)! - chore: verify automated release pipeline with OIDC provenance
+
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
@@ -8,6 +14,7 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [Unreleased]
 
 ### Planned
+
 - Hook para `npm install` / `bun install`
 - Skills Claude (`/pdi-analyze`, `/pdi-generate`)
 - Plugin para VS Code
@@ -17,6 +24,7 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [0.2.0] - 2026-02-02
 
 ### Added
+
 - **Cliente Context7 Unificado** - Busca documentação real via HTTP ou MCP
   - Integração com `@upstash/context7-sdk` para uso standalone
   - Fallback para MCP quando dentro do Claude Code
@@ -39,15 +47,18 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - **Carregamento automático de API key** - Lê de `~/.config/pdi/` no startup
 
 ### Changed
+
 - `pdi add` agora busca documentação real do Context7 por padrão
 - Mensagens de erro mais claras para MCP vs HTTP
 - Default do `pdi auth` agora é "Both" (salva + mostra export)
 
 ### Fixed
+
 - Library ID do Tailwind CSS corrigido (`/tailwindlabs/tailwindcss.com`)
 - Extração de conteúdo do MCP para arrays de content blocks
 
 ### Technical
+
 - Novo módulo `src/lib/context7-client.ts` (cliente unificado)
 - Novo módulo `src/lib/mcp-client.ts` (cliente MCP low-level)
 - Dependência `@upstash/context7-sdk` adicionada
@@ -56,6 +67,7 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [0.1.0] - 2026-02-02
 
 ### Added
+
 - CLI inicial com comandos: `init`, `add`, `sync`, `status`, `clean`, `list`
 - Formato de índice comprimido para CLAUDE.md
 - Parser e gerador do índice
@@ -76,6 +88,7 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Documentação completa em português
 
 ### Technical
+
 - TypeScript strict mode
 - Bun como runtime e bundler
 - ESM modules
