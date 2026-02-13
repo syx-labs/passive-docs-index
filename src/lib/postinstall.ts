@@ -99,6 +99,7 @@ export async function runPostinstall(): Promise<void> {
 
 // Only run when executed directly, not when imported by tests
 import { fileURLToPath } from "node:url";
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   runPostinstall();
 }

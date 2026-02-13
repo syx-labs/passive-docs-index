@@ -31,13 +31,13 @@ beforeEach(() => {
       errorOutput.push(args.map(String).join(" "));
     }
   );
-  delete process.env.PDI_DEBUG;
+  process.env.PDI_DEBUG = undefined;
 });
 
 afterEach(() => {
   mockExit.mockRestore();
   mockConsoleError.mockRestore();
-  delete process.env.PDI_DEBUG;
+  process.env.PDI_DEBUG = undefined;
 });
 
 // ============================================================================
