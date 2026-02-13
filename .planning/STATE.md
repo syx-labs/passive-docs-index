@@ -5,34 +5,35 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Documentacao de frameworks sempre disponivel no contexto do assistente de IA, sem decisao de busca necessaria
-**Current focus:** Phase 2 - CI/CD Pipeline
+**Current focus:** Phase 3 - Publishing & Distribution
 
 ## Current Position
 
-Phase: 2 of 10 (CI/CD Pipeline)
+Phase: 3 of 10 (Publishing & Distribution)
 Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-06 -- Completed 02-01-PLAN.md (CI workflow, tsc problem matcher, branch protection)
+Status: In progress (Plan 01 complete, Plan 02 next)
+Last activity: 2026-02-13 -- Completed 03-01 (Package Configuration)
 
-Progress: [#####-------------] 24%
+Progress: [#######-----------] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 6m 14s
-- Total execution time: ~0.49 hours
+- Total plans completed: 7
+- Average duration: ~5m 00s
+- Total execution time: ~0.60 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 Testing Infrastructure | 4/4 | 26m 51s | 6m 43s |
-| 02 CI/CD Pipeline | 1/2 | 2m 43s | 2m 43s |
+| 02 CI/CD Pipeline | 2/2 | ~5m | ~2m 30s |
+| 03 Publishing & Distribution | 1/2 | 2m 43s | 2m 43s |
 
 **Recent Trend:**
-- Last 4 plans: 01-02 (4m 56s), 01-03 (4m 34s), 01-04 (10m 32s), 02-01 (2m 43s)
-- Trend: 02-01 was fast (config-only, no code logic)
+- Last 4 plans: 01-04 (10m 32s), 02-01 (2m 43s), 02-02 (multi-session), 03-01 (2m 43s)
+- Trend: Config/infra plans continue fast (~2-3 min)
 
 *Updated after each plan completion*
 
@@ -57,10 +58,15 @@ Recent decisions affecting current work:
 - [02-01]: dorny/paths-filter at step level (not paths-ignore at workflow level) to avoid deadlock with required status checks
 - [02-01]: biome ci directly with --reporter=github (ultracite wrapper doesn't support GitHub annotations)
 - [02-01]: Coverage badge Gist ID stored as repository variable (not hardcoded)
+- [02-02]: lcov apt-get install needed for genhtml in CI (zgosalvez/github-actions-report-lcov dependency)
+- [03-01]: types: [] in tsconfig.build.json to avoid bun-types ambient declaration conflicts during tsc emit
+- [03-01]: Removed templates/ from files array (templates are code-defined in src/lib/templates.ts, bundled into dist/)
+- [03-01]: repository.url changed to git+ format for npm OIDC trusted publishing URL matching
 
 ### Pending Todos
 
-None.
+- Coverage badge Gist setup (manual, deferred -- badge shows "invalid" until configured)
+- Branch protection activation via scripts/setup-branch-protection.sh (manual, one-time)
 
 ### Blockers/Concerns
 
@@ -70,6 +76,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-06T00:33:30Z
-Stopped at: Completed 02-01-PLAN.md (CI workflow and branch protection)
+Last session: 2026-02-13
+Stopped at: Completed 03-01-PLAN.md (Package Configuration). Plan 03-02 next (Publish Workflow).
 Resume file: None
