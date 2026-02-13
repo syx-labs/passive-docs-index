@@ -52,7 +52,7 @@ export async function runPostinstall(): Promise<void> {
         .filter((r) => r.status === "stale")
         .map(
           (r) =>
-            `${r.framework} (v${r.indexedVersion}\u2192v${r.latestVersion})`
+            `${r.framework} (v${r.indexedVersion}\u2192v${r.latestVersion ?? "?"})`
         );
 
       const orphanedItems = result.results
@@ -77,11 +77,23 @@ export async function runPostinstall(): Promise<void> {
 
       message += `${DIM}  Run \`npx pdi sync\` to update${RESET}\n\n`;
       process.stderr.write(message);
-    } catch {
-      // Network/registry errors — silently swallow
+    } catch (error) {
+      // Network/registry errors — non-fatal, but log for debuggability
+      if (process.env.PDI_DEBUG) {
+        const msg = error instanceof Error ? error.message : String(error);
+        process.stderr.write(
+          `${DIM}[pdi] Freshness check skipped: ${msg}${RESET}\n`
+        );
+      }
     }
-  } catch {
-    // NEVER fail - postinstall errors break npm install
+  } catch (error) {
+    // NEVER exit non-zero (would break npm install), but log for debuggability
+    if (process.env.PDI_DEBUG) {
+      const msg = error instanceof Error ? error.message : String(error);
+      process.stderr.write(
+        `${DIM}[pdi] Postinstall check failed: ${msg}${RESET}\n`
+      );
+    }
   }
 }
 

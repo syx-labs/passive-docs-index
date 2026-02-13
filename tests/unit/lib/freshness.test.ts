@@ -136,22 +136,22 @@ describe("checkVersionFreshness", () => {
     expect(result.diffType).toBe("major");
   });
 
-  test("returns { isStale: false, diffType: null } for un-coercible versions", () => {
+  test('returns { isStale: false, diffType: "uncoercible" } for un-coercible versions', () => {
     const result = checkVersionFreshness("not-a-version", "also-not-a-version");
     expect(result.isStale).toBe(false);
-    expect(result.diffType).toBeNull();
+    expect(result.diffType).toBe("uncoercible");
   });
 
-  test("returns { isStale: false, diffType: null } when only indexed version is un-coercible", () => {
+  test('returns { isStale: false, diffType: "uncoercible" } when only indexed version is un-coercible', () => {
     const result = checkVersionFreshness("latest", "19.0.0");
     expect(result.isStale).toBe(false);
-    expect(result.diffType).toBeNull();
+    expect(result.diffType).toBe("uncoercible");
   });
 
-  test("returns { isStale: false, diffType: null } when only latest version is un-coercible", () => {
+  test('returns { isStale: false, diffType: "uncoercible" } when only latest version is un-coercible', () => {
     const result = checkVersionFreshness("19.0.0", "latest");
     expect(result.isStale).toBe(false);
-    expect(result.diffType).toBeNull();
+    expect(result.diffType).toBe("uncoercible");
   });
 });
 
@@ -178,6 +178,7 @@ describe("checkFreshness", () => {
     expect(output.results[0].status).toBe("up-to-date");
     expect(output.exitCode).toBe(EXIT_CODES.SUCCESS);
     expect(output.summary.upToDate).toBe(1);
+    expect(output.summary.unknown).toBe(0);
   });
 
   test('reports "stale" for frameworks where latest has new major version', async () => {
@@ -259,6 +260,30 @@ describe("checkFreshness", () => {
     );
     expect(output.exitCode).toBe(EXIT_CODES.MISSING);
     expect(output.summary.missing).toBe(1);
+  });
+
+  test('reports "unknown" when registry returns null for a known framework', async () => {
+    const config = createConfig({
+      frameworks: {
+        react: createFrameworkConfig({ version: "19.0.0" }),
+      },
+    });
+    const packageJson = {
+      dependencies: { react: "^19.0.0" },
+    };
+
+    // Registry returns null for react (e.g., fetch failed for this package)
+    mockFetchLatestVersions.mockResolvedValue(new Map([["react", null]]));
+
+    const output = await checkFreshness(config, packageJson);
+
+    expect(output.results[0].status).toBe("unknown");
+    expect(output.results[0].diffType).toBe("fetch-failed");
+    expect(output.results[0].latestVersion).toBeNull();
+    expect(output.summary.unknown).toBe(1);
+    expect(output.summary.upToDate).toBe(0);
+    // unknown alone should not cause a non-zero exit code
+    expect(output.exitCode).toBe(EXIT_CODES.SUCCESS);
   });
 
   test("handles frameworks with no npm package mapping (timestamp-based check)", async () => {
@@ -481,6 +506,7 @@ describe("checkFreshness", () => {
     expect(output.summary.stale).toBe(1); // hono
     expect(output.summary.missing).toBe(1); // zod
     expect(output.summary.orphaned).toBe(0);
+    expect(output.summary.unknown).toBe(0);
     expect(output.summary.total).toBe(3);
   });
 

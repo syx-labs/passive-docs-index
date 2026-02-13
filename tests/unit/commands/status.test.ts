@@ -121,7 +121,7 @@ const mockCheckFreshness = mock(
   async (): Promise<FreshnessCheckOutput> => ({
     results: [],
     exitCode: 0 as any,
-    summary: { total: 0, stale: 0, missing: 0, orphaned: 0, upToDate: 0 },
+    summary: { total: 0, stale: 0, missing: 0, orphaned: 0, upToDate: 0, unknown: 0 },
   })
 );
 
@@ -220,7 +220,7 @@ beforeEach(() => {
   mockCheckFreshness.mockResolvedValue({
     results: [],
     exitCode: 0 as any,
-    summary: { total: 0, stale: 0, missing: 0, orphaned: 0, upToDate: 0 },
+    summary: { total: 0, stale: 0, missing: 0, orphaned: 0, upToDate: 0, unknown: 0 },
   });
 
   consoleLogSpy = spyOn(console, "log").mockImplementation(() => undefined);
@@ -244,7 +244,7 @@ function makeFreshnessOutput(
   return {
     results: [],
     exitCode: 0 as any,
-    summary: { total: 0, stale: 0, missing: 0, orphaned: 0, upToDate: 0 },
+    summary: { total: 0, stale: 0, missing: 0, orphaned: 0, upToDate: 0, unknown: 0 },
     ...overrides,
   };
 }
@@ -268,7 +268,7 @@ describe("statusCommand --check flag", () => {
           },
         ],
         exitCode: 0 as any,
-        summary: { total: 1, stale: 0, missing: 0, orphaned: 0, upToDate: 1 },
+        summary: { total: 1, stale: 0, missing: 0, orphaned: 0, upToDate: 1, unknown: 0 },
       })
     );
 
@@ -291,7 +291,7 @@ describe("statusCommand --check flag", () => {
           },
         ],
         exitCode: 1 as any,
-        summary: { total: 1, stale: 1, missing: 0, orphaned: 0, upToDate: 0 },
+        summary: { total: 1, stale: 1, missing: 0, orphaned: 0, upToDate: 0, unknown: 0 },
       })
     );
 
@@ -314,7 +314,7 @@ describe("statusCommand --check flag", () => {
           },
         ],
         exitCode: 2 as any,
-        summary: { total: 1, stale: 0, missing: 1, orphaned: 0, upToDate: 0 },
+        summary: { total: 1, stale: 0, missing: 1, orphaned: 0, upToDate: 0, unknown: 0 },
       })
     );
 
@@ -337,7 +337,7 @@ describe("statusCommand --check flag", () => {
           },
         ],
         exitCode: 3 as any,
-        summary: { total: 1, stale: 0, missing: 0, orphaned: 1, upToDate: 0 },
+        summary: { total: 1, stale: 0, missing: 0, orphaned: 1, upToDate: 0, unknown: 0 },
       })
     );
 
@@ -368,7 +368,7 @@ describe("statusCommand --check flag", () => {
           },
         ],
         exitCode: 4 as any,
-        summary: { total: 2, stale: 1, missing: 1, orphaned: 0, upToDate: 0 },
+        summary: { total: 2, stale: 1, missing: 1, orphaned: 0, upToDate: 0, unknown: 0 },
       })
     );
 
@@ -405,7 +405,7 @@ describe("statusCommand --format=json", () => {
           },
         ],
         exitCode: 0 as any,
-        summary: { total: 1, stale: 0, missing: 0, orphaned: 0, upToDate: 1 },
+        summary: { total: 1, stale: 0, missing: 0, orphaned: 0, upToDate: 1, unknown: 0 },
       })
     );
 
@@ -441,7 +441,7 @@ describe("statusCommand --format=json", () => {
           },
         ],
         exitCode: 1 as any,
-        summary: { total: 1, stale: 1, missing: 0, orphaned: 0, upToDate: 0 },
+        summary: { total: 1, stale: 1, missing: 0, orphaned: 0, upToDate: 0, unknown: 0 },
       })
     );
 
@@ -503,7 +503,7 @@ describe("statusCommand without --check flag", () => {
           },
         ],
         exitCode: 1 as any,
-        summary: { total: 1, stale: 1, missing: 0, orphaned: 0, upToDate: 0 },
+        summary: { total: 1, stale: 1, missing: 0, orphaned: 0, upToDate: 0, unknown: 0 },
       })
     );
 
@@ -522,7 +522,7 @@ describe("statusCommand backward compatibility", () => {
     mockCheckFreshness.mockResolvedValue(
       makeFreshnessOutput({
         exitCode: 0 as any,
-        summary: { total: 0, stale: 0, missing: 0, orphaned: 0, upToDate: 0 },
+        summary: { total: 0, stale: 0, missing: 0, orphaned: 0, upToDate: 0, unknown: 0 },
       })
     );
 

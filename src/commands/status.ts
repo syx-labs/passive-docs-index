@@ -41,12 +41,10 @@ export async function statusCommand(
 ): Promise<void> {
   const projectRoot = options.projectRoot || process.cwd();
 
-  // Check if initialized
   if (!configExists(projectRoot)) {
     throw new NotInitializedError();
   }
 
-  // Read config
   const config = await readConfig(projectRoot);
   if (!config) {
     throw new ConfigError("Config file exists but returned null", {
@@ -54,18 +52,14 @@ export async function statusCommand(
     });
   }
 
-  // Read package.json for comparison
   const packageJson = await readPackageJson(projectRoot);
   const installedDeps = packageJson ? detectDependencies(packageJson) : [];
 
-  // Calculate sizes
+  // Gather data needed by both formats
   const sizes = await calculateDocsSize(projectRoot);
-
-  // Read docs structure
   const allDocs = await readAllFrameworkDocs(projectRoot);
   const internalDocs = await readInternalDocs(projectRoot);
 
-  // Build index to calculate size
   const frameworksIndex = buildFrameworksIndex(
     config.frameworks || {},
     allDocs
@@ -81,7 +75,89 @@ export async function statusCommand(
 
   const indexSizeKb = calculateIndexSize(sections);
 
-  // Print header
+  // Run freshness check
+  let freshnessOutput: FreshnessCheckOutput;
+  try {
+    freshnessOutput = await checkFreshness(config, packageJson);
+  } catch (error) {
+    if (options.format === "json") {
+      console.log(
+        JSON.stringify(
+          {
+            project: config.project.name,
+            timestamp: new Date().toISOString(),
+            status: "issues_found",
+            exitCode: EXIT_CODES.NETWORK_ERROR,
+            issues: [
+              {
+                type: "network_error",
+                message: error instanceof Error ? error.message : String(error),
+              },
+            ],
+            summary: {
+              total: 0,
+              upToDate: 0,
+              stale: 0,
+              missing: 0,
+              orphaned: 0,
+              unknown: 0,
+            },
+          },
+          null,
+          2
+        )
+      );
+    } else {
+      console.error("");
+      console.error(
+        chalk.red("Freshness check failed:"),
+        error instanceof Error ? error.message : String(error)
+      );
+    }
+
+    if (options.check) {
+      process.exit(EXIT_CODES.NETWORK_ERROR);
+    }
+
+    return;
+  }
+
+  // ---- JSON output: single clean JSON object, no human-readable text ----
+  if (options.format === "json") {
+    const issues = freshnessOutput.results
+      .filter((r) => r.status !== "up-to-date")
+      .map((r) => ({
+        framework: r.framework,
+        displayName: r.displayName,
+        type: r.status,
+        indexedVersion: r.indexedVersion || undefined,
+        latestVersion: r.latestVersion || undefined,
+      }));
+
+    console.log(
+      JSON.stringify(
+        {
+          project: config.project.name,
+          timestamp: new Date().toISOString(),
+          status: freshnessOutput.exitCode === 0 ? "ok" : "issues_found",
+          exitCode: freshnessOutput.exitCode,
+          issues,
+          summary: freshnessOutput.summary,
+        },
+        null,
+        2
+      )
+    );
+
+    if (options.check && freshnessOutput.exitCode !== 0) {
+      process.exit(freshnessOutput.exitCode);
+    }
+    return;
+  }
+
+  // ---- Table output: human-readable ----
+
+  // Header
   console.log("");
   console.log(chalk.bold(`PDI Status for ${config.project.name}`));
   console.log(chalk.dim("═".repeat(40)));
@@ -103,7 +179,6 @@ export async function statusCommand(
       const isLast = i === frameworkEntries.length - 1;
       const prefix = isLast ? "└──" : "├──";
 
-      // Check if update available
       const installed = installedDeps.find((d) => d.framework?.name === name);
       const installedVersion = installed
         ? getMajorVersion(installed.version)
@@ -211,118 +286,45 @@ export async function statusCommand(
     );
   }
 
-  // Freshness checking
-  let freshnessOutput: FreshnessCheckOutput;
-  try {
-    freshnessOutput = await checkFreshness(config, packageJson);
-  } catch (error) {
-    if (options.format === "json") {
-      console.log(
-        JSON.stringify(
-          {
-            project: config.project.name,
-            timestamp: new Date().toISOString(),
-            status: "issues_found",
-            exitCode: EXIT_CODES.NETWORK_ERROR,
-            issues: [
-              {
-                type: "network_error",
-                message: error instanceof Error ? error.message : String(error),
-              },
-            ],
-            summary: {
-              total: 0,
-              upToDate: 0,
-              stale: 0,
-              missing: 0,
-              orphaned: 0,
-            },
-          },
-          null,
-          2
-        )
-      );
-    } else {
-      console.log("");
-      console.log(
-        chalk.red("Freshness check failed:"),
-        error instanceof Error ? error.message : String(error)
-      );
-    }
+  // Freshness table
+  console.log("");
+  console.log(chalk.bold("Freshness Check"));
+  console.log(chalk.dim("─".repeat(40)));
 
-    if (options.check) {
-      process.exit(EXIT_CODES.NETWORK_ERROR);
-    }
-
-    console.log("");
-    return;
-  }
-
-  if (options.format === "json") {
-    const issues = freshnessOutput.results
-      .filter((r) => r.status !== "up-to-date")
-      .map((r) => ({
-        framework: r.framework,
-        displayName: r.displayName,
-        type: r.status,
-        indexedVersion: r.indexedVersion || undefined,
-        latestVersion: r.latestVersion || undefined,
-      }));
-
+  if (freshnessOutput.results.length > 0) {
     console.log(
-      JSON.stringify(
-        {
-          project: config.project.name,
-          timestamp: new Date().toISOString(),
-          status: freshnessOutput.exitCode === 0 ? "ok" : "issues_found",
-          exitCode: freshnessOutput.exitCode,
-          issues,
-          summary: freshnessOutput.summary,
-        },
-        null,
-        2
+      `  ${"Framework".padEnd(20)} ${"Indexed".padEnd(10)} ${"Latest".padEnd(10)} Status`
+    );
+    console.log(
+      chalk.dim(
+        `  ${"─".repeat(20)} ${"─".repeat(10)} ${"─".repeat(10)} ${"─".repeat(12)}`
       )
     );
-  } else {
-    // Table output
-    console.log("");
-    console.log(chalk.bold("Freshness Check"));
-    console.log(chalk.dim("─".repeat(40)));
 
-    if (freshnessOutput.results.length > 0) {
-      // Column headers
-      console.log(
-        `  ${"Framework".padEnd(20)} ${"Indexed".padEnd(10)} ${"Latest".padEnd(10)} Status`
-      );
-      console.log(
-        chalk.dim(
-          `  ${"─".repeat(20)} ${"─".repeat(10)} ${"─".repeat(10)} ${"─".repeat(12)}`
-        )
-      );
-
-      for (const r of freshnessOutput.results) {
-        const statusColor =
-          r.status === "up-to-date"
-            ? chalk.green
+    for (const r of freshnessOutput.results) {
+      const statusColor =
+        r.status === "up-to-date"
+          ? chalk.green
+          : r.status === "unknown"
+            ? chalk.dim
             : r.status === "stale"
               ? chalk.yellow
               : chalk.red;
 
-        console.log(
-          `  ${r.displayName.padEnd(20)} ${(r.indexedVersion || "—").padEnd(10)} ${(r.latestVersion || "—").padEnd(10)} ${statusColor(r.status)}`
-        );
-      }
-
-      const { summary } = freshnessOutput;
-      console.log("");
       console.log(
-        chalk.dim(
-          `  ${summary.upToDate} up-to-date, ${summary.stale} stale, ${summary.missing} missing, ${summary.orphaned} orphaned`
-        )
+        `  ${r.displayName.padEnd(20)} ${(r.indexedVersion || "—").padEnd(10)} ${(r.latestVersion || "—").padEnd(10)} ${statusColor(r.status)}`
       );
-    } else {
-      console.log(chalk.dim("  No frameworks to check"));
     }
+
+    const { summary } = freshnessOutput;
+    console.log("");
+    let summaryText = `  ${summary.upToDate} up-to-date, ${summary.stale} stale, ${summary.missing} missing, ${summary.orphaned} orphaned`;
+    if (summary.unknown > 0) {
+      summaryText += `, ${summary.unknown} unknown`;
+    }
+    console.log(chalk.dim(summaryText));
+  } else {
+    console.log(chalk.dim("  No frameworks to check"));
   }
 
   if (options.check && freshnessOutput.exitCode !== 0) {

@@ -29,7 +29,12 @@ const DEFAULT_STALE_DAYS = 30;
 // ============================================================================
 
 export type ExitCode = (typeof EXIT_CODES)[keyof typeof EXIT_CODES];
-export type FreshnessStatus = "up-to-date" | "stale" | "missing" | "orphaned";
+export type FreshnessStatus =
+  | "up-to-date"
+  | "stale"
+  | "missing"
+  | "orphaned"
+  | "unknown";
 
 export interface FreshnessResult {
   framework: string;
@@ -49,6 +54,7 @@ export interface FreshnessCheckOutput {
     missing: number;
     orphaned: number;
     upToDate: number;
+    unknown: number;
   };
 }
 
@@ -61,7 +67,7 @@ export interface FreshnessCheckOutput {
  * Only major and minor differences are considered stale; patch is acceptable.
  *
  * Uses semver.coerce() to handle loose version strings (e.g., "18.x", "v19", "4").
- * Returns { isStale: false, diffType: null } for un-coercible versions (graceful fallback).
+ * Returns { isStale: false, diffType: "uncoercible" } for un-coercible versions.
  */
 export function checkVersionFreshness(
   indexedVersion: string,
@@ -71,7 +77,7 @@ export function checkVersionFreshness(
   const coercedLatest = semver.coerce(latestVersion);
 
   if (!(coercedIndexed && coercedLatest)) {
-    return { isStale: false, diffType: null };
+    return { isStale: false, diffType: "uncoercible" };
   }
 
   const diff = semver.diff(coercedIndexed, coercedLatest);
@@ -148,6 +154,7 @@ export async function checkFreshness(
         missing: 0,
         orphaned: 0,
         upToDate: 0,
+        unknown: 0,
       },
     };
   }
@@ -200,14 +207,14 @@ export async function checkFreshness(
           diffType,
         });
       } else {
-        // Could not fetch latest version -> treat as up-to-date (graceful)
+        // Could not fetch latest version -> unknown (cannot verify freshness)
         results.push({
           framework: frameworkName,
           displayName,
           indexedVersion: frameworkConfig.version,
           latestVersion: null,
-          status: "up-to-date",
-          diffType: null,
+          status: "unknown",
+          diffType: "fetch-failed",
         });
       }
     } else {
@@ -266,6 +273,7 @@ export async function checkFreshness(
     missing: results.filter((r) => r.status === "missing").length,
     orphaned: results.filter((r) => r.status === "orphaned").length,
     upToDate: results.filter((r) => r.status === "up-to-date").length,
+    unknown: results.filter((r) => r.status === "unknown").length,
   };
 
   const exitCode = computeExitCode(summary);

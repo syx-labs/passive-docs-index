@@ -62,6 +62,19 @@ describe("handleCommandError - ConfigError", () => {
     expect(output).toContain("Fix: Fix the fields above.");
   });
 
+  test("shows hint but no validation block when ConfigError has no issues", () => {
+    const error = new ConfigError("Config file is empty", {
+      hint: "Run `pdi init --force` to regenerate.",
+    });
+
+    expect(() => handleCommandError(error)).toThrow("process.exit called");
+
+    const output = errorOutput.join("\n");
+    expect(output).toContain("Config Error:");
+    expect(output).toContain("Fix: Run `pdi init --force`");
+    expect(output).not.toContain("  - ");
+  });
+
   test("calls process.exit(1)", () => {
     const error = new ConfigError("test");
     expect(() => handleCommandError(error)).toThrow("process.exit called");
@@ -138,6 +151,17 @@ describe("handleCommandError - plain Error", () => {
     expect(output).toContain("Error:");
     expect(output).toContain("Something went wrong");
     expect(output).not.toContain("Fix:");
+  });
+
+  test("shows cause chain when error has a cause", () => {
+    const cause = new Error("Connection refused");
+    const error = new Error("Failed to fetch data", { cause });
+
+    expect(() => handleCommandError(error)).toThrow("process.exit called");
+
+    const output = errorOutput.join("\n");
+    expect(output).toContain("Failed to fetch data");
+    expect(output).toContain("Caused by: Connection refused");
   });
 });
 

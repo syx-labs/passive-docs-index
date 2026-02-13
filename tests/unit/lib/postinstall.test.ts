@@ -52,7 +52,7 @@ const mockCheckFreshness = mock(
   async (): Promise<FreshnessCheckOutput> => ({
     results: [],
     exitCode: EXIT_CODES.SUCCESS,
-    summary: { total: 0, stale: 0, missing: 0, orphaned: 0, upToDate: 0 },
+    summary: { total: 0, stale: 0, missing: 0, orphaned: 0, upToDate: 0, unknown: 0 },
   })
 );
 
@@ -105,7 +105,7 @@ beforeEach(() => {
   mockCheckFreshness.mockResolvedValue({
     results: [],
     exitCode: EXIT_CODES.SUCCESS,
-    summary: { total: 0, stale: 0, missing: 0, orphaned: 0, upToDate: 0 },
+    summary: { total: 0, stale: 0, missing: 0, orphaned: 0, upToDate: 0, unknown: 0 },
   });
 
   stderrWriteSpy = spyOn(process.stderr, "write").mockImplementation(
@@ -161,7 +161,7 @@ describe("runPostinstall", () => {
         },
       ],
       exitCode: EXIT_CODES.SUCCESS,
-      summary: { total: 1, stale: 0, missing: 0, orphaned: 0, upToDate: 1 },
+      summary: { total: 1, stale: 0, missing: 0, orphaned: 0, upToDate: 1, unknown: 0 },
     });
 
     await runPostinstall();
@@ -183,7 +183,7 @@ describe("runPostinstall", () => {
         },
       ],
       exitCode: EXIT_CODES.STALE,
-      summary: { total: 1, stale: 1, missing: 0, orphaned: 0, upToDate: 0 },
+      summary: { total: 1, stale: 1, missing: 0, orphaned: 0, upToDate: 0, unknown: 0 },
     });
 
     await runPostinstall();
@@ -208,7 +208,7 @@ describe("runPostinstall", () => {
         },
       ],
       exitCode: EXIT_CODES.ORPHANED,
-      summary: { total: 1, stale: 0, missing: 0, orphaned: 1, upToDate: 0 },
+      summary: { total: 1, stale: 0, missing: 0, orphaned: 1, upToDate: 0, unknown: 0 },
     });
 
     await runPostinstall();
@@ -231,7 +231,7 @@ describe("runPostinstall", () => {
         },
       ],
       exitCode: EXIT_CODES.MISSING,
-      summary: { total: 1, stale: 0, missing: 1, orphaned: 0, upToDate: 0 },
+      summary: { total: 1, stale: 0, missing: 1, orphaned: 0, upToDate: 0, unknown: 0 },
     });
 
     await runPostinstall();
@@ -254,7 +254,7 @@ describe("runPostinstall", () => {
         },
       ],
       exitCode: EXIT_CODES.STALE,
-      summary: { total: 1, stale: 1, missing: 0, orphaned: 0, upToDate: 0 },
+      summary: { total: 1, stale: 1, missing: 0, orphaned: 0, upToDate: 0, unknown: 0 },
     });
 
     await runPostinstall();
@@ -281,6 +281,19 @@ describe("runPostinstall", () => {
     expect(processExitSpy).not.toHaveBeenCalled();
   });
 
+  test("when checkFreshness throws with PDI_DEBUG, logs error to stderr", async () => {
+    process.env.PDI_DEBUG = "1";
+    mockCheckFreshness.mockRejectedValue(new Error("Registry timeout"));
+
+    await runPostinstall();
+
+    const output = getStderrOutput();
+    expect(output).toContain("Freshness check skipped");
+    expect(output).toContain("Registry timeout");
+
+    delete process.env.PDI_DEBUG;
+  });
+
   test("all output goes to stderr, never stdout", async () => {
     mockCheckFreshness.mockResolvedValue({
       results: [
@@ -294,7 +307,7 @@ describe("runPostinstall", () => {
         },
       ],
       exitCode: EXIT_CODES.STALE,
-      summary: { total: 1, stale: 1, missing: 0, orphaned: 0, upToDate: 0 },
+      summary: { total: 1, stale: 1, missing: 0, orphaned: 0, upToDate: 0, unknown: 0 },
     });
 
     await runPostinstall();
