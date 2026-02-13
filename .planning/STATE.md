@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Documentacao de frameworks sempre disponivel no contexto do assistente de IA, sem decisao de busca necessaria
-**Current focus:** Phase 4 - Error Handling & Validation
+**Current focus:** Phase 3 gap closure complete, Phase 4 ready for planning
 
 ## Current Position
 
-Phase: 4 of 10 (Error Handling & Validation)
-Plan: 0 of ? in current phase (phase not yet planned)
-Status: Phase 3 complete, Phase 4 ready for planning
-Last activity: 2026-02-13 -- Completed 03-02 (Publish Workflow)
+Phase: 3 of 10 (Publishing & Distribution) — gap closure complete
+Plan: 3 of 3 in current phase (all plans complete)
+Status: Phase 3 fully complete (including gap closure), awaiting verification
+Last activity: 2026-02-13 -- Completed 03-03 (Gap Closure: merge to main + OIDC provenance verification)
 
 Progress: [########----------] 38%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: ~5m 00s
-- Total execution time: ~0.68 hours
+- Total plans completed: 9
+- Average duration: ~5m 30s
+- Total execution time: ~0.93 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [########----------] 38%
 |-------|-------|-------|----------|
 | 01 Testing Infrastructure | 4/4 | 26m 51s | 6m 43s |
 | 02 CI/CD Pipeline | 2/2 | ~5m | ~2m 30s |
-| 03 Publishing & Distribution | 2/2 | ~8m | ~4m |
+| 03 Publishing & Distribution | 3/3 | ~23m | ~7m 40s |
 
 **Recent Trend:**
-- Last 4 plans: 02-01 (2m 43s), 02-02 (multi-session), 03-01 (2m 43s), 03-02 (~5m)
-- Trend: Config/infra plans continue fast (~2-5 min)
+- Last 4 plans: 02-02 (multi-session), 03-01 (2m 43s), 03-02 (~5m), 03-03 (~15m incl. human verification)
+- Trend: Gap closure plans with human checkpoints take longer due to verification wait time
 
 *Updated after each plan completion*
 
@@ -65,6 +65,9 @@ Recent decisions affecting current work:
 - [03-02]: Split workflow pattern (release.yml + publish.yml) per changesets/action issue #515
 - [03-02]: OIDC Trusted Publishing over NPM_TOKEN secret for zero-maintenance automated publishing
 - [03-02]: npm upgraded to latest in CI for OIDC support (Node 22 LTS ships npm 10.x, need >= 11.5.1)
+- [03-03]: Fixed self-dependency in package.json (passive-docs-index listed itself as dependency)
+- [03-03]: Enabled GitHub Actions PR creation permission for changesets/action
+- [03-03]: Merge commit strategy (not squash) for feature branch to preserve commit history
 
 ### Pending Todos
 
@@ -75,10 +78,10 @@ Recent decisions affecting current work:
 
 - ~~Codebase has silent exception swallowing and tight I/O coupling~~ (RESOLVED in 01-01: 5 catches fixed with console.error, IMcpClient extracted, projectRoot added)
 - Context7 SDK is pre-1.0 (0.3.0) -- monitor for breaking changes
-- `bun publish --provenance` not available -- must use npm for publish step
+- ~~`bun publish --provenance` not available~~ (RESOLVED: using npm publish with OIDC in publish.yml, verified working with v0.2.1)
 
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed 03-02-PLAN.md (Publish Workflow). Phase 3 complete. Phase 4 (Error Handling & Validation) ready for planning.
+Stopped at: Completed 03-03-PLAN.md (Gap Closure). Phase 3 fully complete with OIDC provenance verified. Awaiting phase verification before moving to Phase 4.
 Resume file: None
