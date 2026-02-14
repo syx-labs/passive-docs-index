@@ -14,9 +14,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Testing Infrastructure** - Unit and integration test suite with testability refactoring
 - [x] **Phase 2: CI/CD Pipeline** - GitHub Actions workflows for automated validation on every push
-- [ ] **Phase 3: Publishing & Distribution** - npm package configuration, provenance, and release automation
-- [ ] **Phase 4: Error Handling & Validation** - Structured error handling and Zod-based config validation
-- [ ] **Phase 5: Automation** - Postinstall hooks, freshness checking, and CI-friendly --check flags
+- [x] **Phase 3: Publishing & Distribution** - npm package configuration, provenance, and release automation
+- [x] **Phase 4: Error Handling & Validation** - Structured error handling and Zod-based config validation
+- [x] **Phase 5: Automation** - Postinstall hooks, freshness checking, and CI-friendly --check flags
 - [ ] **Phase 6: Claude Code Skills & Hooks** - Skills for analyze/generate/sync and PostToolUse/SessionStart hooks
 - [ ] **Phase 7: Claude Code Plugin** - Bundled plugin packaging for single-command installation
 - [ ] **Phase 8: Custom Templates** - User-defined template system with registry and scaffolding
@@ -71,7 +71,7 @@ Plans:
 Plans:
 - [x] 03-01-PLAN.md -- Package configuration, two-step build (JS + .d.ts), and Changesets initialization
 - [x] 03-02-PLAN.md -- Release and publish workflows (changesets/action + npm OIDC provenance)
-- [ ] 03-03-PLAN.md -- Gap closure: merge to main and verify OIDC provenance pipeline end-to-end
+- [x] 03-03-PLAN.md -- Gap closure: merge to main and verify OIDC provenance pipeline end-to-end
 
 ### Phase 4: Error Handling & Validation
 **Goal**: CLI commands fail gracefully with user-friendly messages and config is validated at runtime with Zod
@@ -82,11 +82,11 @@ Plans:
   2. Context7 failures (network timeout, auth error, rate limit) show a specific message explaining the issue and available fallback
   3. Invalid or corrupted config.json displays what is wrong and how to fix it (e.g., "Expected string for 'version', got number. Run `pdi init` to regenerate")
   4. Config is validated against a Zod schema at load time -- type mismatches are caught before commands execute
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: Zod schema and config validation
-- [ ] 04-02: CLI error handling conventions
+- [x] 04-01-PLAN.md -- Structured error types, config validation enhancements, and typed command errors
+- [x] 04-02-PLAN.md -- Unified CLI error handler and Context7 error categorization
 
 ### Phase 5: Automation
 **Goal**: PDI detects when docs are stale and can validate doc health in CI pipelines
@@ -96,10 +96,11 @@ Plans:
   1. After running `npm install` or `bun install`, a postinstall message suggests running `pdi sync` if PDI is configured in the project
   2. `pdi status` shows which frameworks have version mismatches between installed packages and indexed docs
   3. Running `pdi status --check` exits with non-zero code if docs are stale or missing -- usable as a CI gate
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: Postinstall hook, freshness checking, and --check flag
+- [x] 05-01-PLAN.md -- Registry client and freshness checking engine (TDD)
+- [x] 05-02-PLAN.md -- Status command --check/--format flags, postinstall hook, and exports
 
 ### Phase 6: Claude Code Skills & Hooks
 **Goal**: Claude Code users can invoke PDI via slash commands and get automatic sync suggestions after installing packages
@@ -186,9 +187,9 @@ Note: Phases 4 and 6 can start after Phase 1 (independent of Phase 2/3). Phase 8
 |-------|----------------|--------|-----------|
 | 1. Testing Infrastructure | 4/4 | Complete | 2026-02-05 |
 | 2. CI/CD Pipeline | 2/2 | Complete | 2026-02-13 |
-| 3. Publishing & Distribution | 2/3 | Gap closure | - |
-| 4. Error Handling & Validation | 0/2 | Not started | - |
-| 5. Automation | 0/1 | Not started | - |
+| 3. Publishing & Distribution | 3/3 | Complete | 2026-02-13 |
+| 4. Error Handling & Validation | 2/2 | Complete | 2026-02-13 |
+| 5. Automation | 2/2 | Complete | 2026-02-13 |
 | 6. Claude Code Skills & Hooks | 0/2 | Not started | - |
 | 7. Claude Code Plugin | 0/1 | Not started | - |
 | 8. Custom Templates | 0/2 | Not started | - |

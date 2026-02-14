@@ -122,24 +122,28 @@ describe("readConfig", () => {
     expect(result).toBeNull();
   });
 
-  test("throws Error when file has invalid JSON", async () => {
+  test("throws ConfigError when file has invalid JSON", async () => {
     const configPath = join("/project", ".claude-docs", "config.json");
     files.set(configPath, "{ invalid json !!!");
 
-    await expect(readConfig("/project")).rejects.toThrow(
-      "Failed to read config"
-    );
+    const { ConfigError } = await import("../../../src/lib/errors.js");
+    await expect(readConfig("/project")).rejects.toThrow("invalid JSON");
+    await expect(readConfig("/project")).rejects.toBeInstanceOf(ConfigError);
   });
 
-  test("throws Error when config has invalid schema (Zod validation)", async () => {
+  test("throws ConfigError when config has invalid schema (Zod validation)", async () => {
     const configPath = join("/project", ".claude-docs", "config.json");
     // Valid JSON but missing required fields
     files.set(configPath, JSON.stringify({ version: "1.0.0" }));
 
-    await expect(readConfig("/project")).rejects.toThrow("Invalid config");
+    const { ConfigError } = await import("../../../src/lib/errors.js");
+    await expect(readConfig("/project")).rejects.toThrow(
+      "Config validation failed"
+    );
+    await expect(readConfig("/project")).rejects.toBeInstanceOf(ConfigError);
   });
 
-  test("throws descriptive error for wrong field types", async () => {
+  test("throws descriptive ConfigError for wrong field types", async () => {
     const configPath = join("/project", ".claude-docs", "config.json");
     files.set(
       configPath,
@@ -158,7 +162,11 @@ describe("readConfig", () => {
       })
     );
 
-    await expect(readConfig("/project")).rejects.toThrow("Invalid config");
+    const { ConfigError } = await import("../../../src/lib/errors.js");
+    await expect(readConfig("/project")).rejects.toThrow(
+      "Config validation failed"
+    );
+    await expect(readConfig("/project")).rejects.toBeInstanceOf(ConfigError);
   });
 });
 

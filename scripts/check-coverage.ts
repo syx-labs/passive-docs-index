@@ -21,23 +21,19 @@ interface ModuleEntry {
 const MODULES: ModuleEntry[] = [
   // src/lib/ modules
   { name: "config", path: "src/lib/config.ts" },
-  { name: "templates", path: "src/lib/templates.ts" },
-  { name: "index-parser", path: "src/lib/index-parser.ts" },
-  { name: "fs-utils", path: "src/lib/fs-utils.ts" },
+  { name: "constants", path: "src/lib/constants.ts" },
   { name: "context7", path: "src/lib/context7.ts" },
   { name: "context7-client", path: "src/lib/context7-client.ts" },
-  { name: "mcp-client", path: "src/lib/mcp-client.ts" },
+  { name: "error-handler", path: "src/lib/error-handler.ts" },
+  { name: "errors", path: "src/lib/errors.ts" },
+  { name: "freshness", path: "src/lib/freshness.ts" },
+  { name: "fs-utils", path: "src/lib/fs-utils.ts" },
+  { name: "index-parser", path: "src/lib/index-parser.ts" },
   { name: "index-utils", path: "src/lib/index-utils.ts" },
-  // src/commands/ modules
-  { name: "cmd/add", path: "src/commands/add.ts" },
-  { name: "cmd/init", path: "src/commands/init.ts" },
-  { name: "cmd/sync", path: "src/commands/sync.ts" },
-  { name: "cmd/update", path: "src/commands/update.ts" },
-  { name: "cmd/status", path: "src/commands/status.ts" },
-  { name: "cmd/clean", path: "src/commands/clean.ts" },
-  { name: "cmd/auth", path: "src/commands/auth.ts" },
-  { name: "cmd/doctor", path: "src/commands/doctor.ts" },
-  { name: "cmd/generate", path: "src/commands/generate.ts" },
+  { name: "mcp-client", path: "src/lib/mcp-client.ts" },
+  { name: "postinstall", path: "src/lib/postinstall.ts" },
+  { name: "registry-client", path: "src/lib/registry-client.ts" },
+  { name: "templates", path: "src/lib/templates.ts" },
 ];
 
 // ============================================================================

@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Documentacao de frameworks sempre disponivel no contexto do assistente de IA, sem decisao de busca necessaria
-**Current focus:** Phase 4 - Error Handling & Validation
+**Current focus:** Phase 6 - Claude Code Skills & Hooks
 
 ## Current Position
 
-Phase: 4 of 10 (Error Handling & Validation)
-Plan: 0 of ? in current phase (phase not yet planned)
-Status: Phase 3 complete, Phase 4 ready for planning
-Last activity: 2026-02-13 -- Completed 03-02 (Publish Workflow)
+Phase: 6 of 10 (Claude Code Skills & Hooks)
+Plan: 0 of 2 in current phase (not yet planned)
+Status: Phase 5 complete. Phase 6 ready for planning.
+Last activity: 2026-02-13 -- Phase 5 executed (2 plans, 2 waves) and verified
 
-Progress: [########----------] 38%
+Progress: [############------] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: ~5m 00s
-- Total execution time: ~0.68 hours
+- Total plans completed: 13
+- Average duration: ~5m 45s
+- Total execution time: ~1.35 hours
 
 **By Phase:**
 
@@ -29,11 +29,13 @@ Progress: [########----------] 38%
 |-------|-------|-------|----------|
 | 01 Testing Infrastructure | 4/4 | 26m 51s | 6m 43s |
 | 02 CI/CD Pipeline | 2/2 | ~5m | ~2m 30s |
-| 03 Publishing & Distribution | 2/2 | ~8m | ~4m |
+| 03 Publishing & Distribution | 3/3 | ~23m | ~7m 40s |
+| 04 Error Handling & Validation | 2/2 | ~10m | ~5m |
+| 05 Automation | 2/2 | ~12m | ~6m |
 
 **Recent Trend:**
-- Last 4 plans: 02-01 (2m 43s), 02-02 (multi-session), 03-01 (2m 43s), 03-02 (~5m)
-- Trend: Config/infra plans continue fast (~2-5 min)
+- Last 4 plans: 04-01 (~5m), 04-02 (~5m), 05-01 (~6m), 05-02 (~6m)
+- Trend: Consistent execution with wave-based parallelization
 
 *Updated after each plan completion*
 
@@ -65,20 +67,39 @@ Recent decisions affecting current work:
 - [03-02]: Split workflow pattern (release.yml + publish.yml) per changesets/action issue #515
 - [03-02]: OIDC Trusted Publishing over NPM_TOKEN secret for zero-maintenance automated publishing
 - [03-02]: npm upgraded to latest in CI for OIDC support (Node 22 LTS ships npm 10.x, need >= 11.5.1)
+- [03-03]: Fixed self-dependency in package.json (passive-docs-index listed itself as dependency)
+- [03-03]: Enabled GitHub Actions PR creation permission for changesets/action
+- [03-03]: Merge commit strategy (not squash) for feature branch to preserve commit history
+- [04-01]: Shallow error hierarchy (2 levels: PDIError base + ConfigError/Context7Error/NotInitializedError)
+- [04-01]: Custom Zod issue formatting (not z.prettifyError()) for control over output
+- [04-01]: Doctor command unchanged (diagnostic tool that catches errors gracefully)
+- [04-02]: handleCommandError extracted to src/lib/error-handler.ts (avoids cli.ts side-effect issues in tests)
+- [04-02]: Explicit try-catch + handleCommandError pattern (simpler than wrapCommand HOF)
+- [04-02]: Added "failed to fetch" pattern to Context7 network detection
+- [05-01]: npm registry client uses abbreviated metadata Accept header for minimal payload
+- [05-01]: p-limit(5) for concurrent registry fetches (reuses existing dependency)
+- [05-01]: semver.coerce() for loose version handling (18.x, v19, etc.)
+- [05-01]: Framework-to-npm-package mapping extracted from KNOWN_FRAMEWORKS regex patterns
+- [05-02]: node ./dist/postinstall.js over npx pdi status (faster, no resolution overhead, spirit of decision honored)
+- [05-02]: ANSI codes directly in postinstall (no chalk import for minimal overhead)
+- [05-02]: stderr for all postinstall output (npm 7+ suppresses dependency stdout)
+- [05-02]: StatusCommandOptions interface with check/format fields
 
 ### Pending Todos
 
 - Coverage badge Gist setup (manual, deferred -- badge shows "invalid" until configured)
 - Branch protection activation via scripts/setup-branch-protection.sh (manual, one-time)
+- Bun trustedDependencies documentation for postinstall hook (Bun blocks dependency lifecycle scripts by default)
 
 ### Blockers/Concerns
 
 - ~~Codebase has silent exception swallowing and tight I/O coupling~~ (RESOLVED in 01-01: 5 catches fixed with console.error, IMcpClient extracted, projectRoot added)
 - Context7 SDK is pre-1.0 (0.3.0) -- monitor for breaking changes
-- `bun publish --provenance` not available -- must use npm for publish step
+- ~~`bun publish --provenance` not available~~ (RESOLVED: using npm publish with OIDC in publish.yml, verified working with v0.2.1)
+- Pre-existing test failures from Phase 4 uncommitted changes (89 fails in integration/config tests -- not caused by Phase 5)
 
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed 03-02-PLAN.md (Publish Workflow). Phase 3 complete. Phase 4 (Error Handling & Validation) ready for planning.
+Stopped at: Phase 5 executed (2 plans, 2 waves) and verified. Phase 6 (Claude Code Skills & Hooks) ready for planning.
 Resume file: None

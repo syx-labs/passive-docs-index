@@ -9,6 +9,6 @@ export { cleanCommand } from "./clean.js";
 export { doctorCommand } from "./doctor.js";
 export { type GenerateOptions, generateCommand } from "./generate.js";
 export { initCommand } from "./init.js";
-export { statusCommand } from "./status.js";
+export { type StatusCommandOptions, statusCommand } from "./status.js";
 export { syncCommand } from "./sync.js";
 export { type UpdateOptions, updateCommand } from "./update.js";

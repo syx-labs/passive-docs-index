@@ -14,6 +14,7 @@ import {
   KNOWN_FRAMEWORKS,
   PROJECT_TYPE_INDICATORS,
 } from "./constants.js";
+import { ConfigError } from "./errors.js";
 import { hasTemplate } from "./templates.js";
 import type { DetectedDependency, PDIConfig, ProjectConfig } from "./types.js";
 
@@ -99,22 +100,39 @@ export async function readConfig(
 
   try {
     const content = await readFile(configPath, "utf-8");
-    const parsed = JSON.parse(content);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(content);
+    } catch (parseError) {
+      throw new ConfigError("Config file contains invalid JSON", {
+        configPath,
+        hint: `Check ${configPath} for syntax errors (missing commas, brackets, quotes), or run \`pdi init --force\` to regenerate.`,
+        cause: parseError instanceof Error ? parseError : undefined,
+      });
+    }
     const result = PDIConfigSchema.safeParse(parsed);
     if (!result.success) {
-      const issues = result.error.issues
-        .map((i) => `${i.path.join(".")}: ${i.message}`)
-        .join("; ");
-      throw new Error(`Invalid config: ${issues}`);
+      const issues = result.error.issues.map((i) => ({
+        path: i.path.join("."),
+        message: i.message,
+        expected: "expected" in i ? String(i.expected) : undefined,
+      }));
+      throw new ConfigError("Config validation failed", {
+        configPath,
+        validationIssues: issues,
+        hint: `Fix the fields above in ${configPath}, or run \`pdi init --force\` to regenerate.`,
+      });
     }
     return result.data as PDIConfig;
   } catch (error) {
-    if (error instanceof Error && error.message.startsWith("Invalid config")) {
+    if (error instanceof ConfigError) {
       throw error;
     }
-    throw new Error(
-      `Failed to read config: ${error instanceof Error ? error.message : "Unknown error"}`
-    );
+    throw new ConfigError("Failed to read config file", {
+      configPath,
+      hint: `Check file permissions for ${configPath}.`,
+      cause: error instanceof Error ? error : undefined,
+    });
   }
 }
 
