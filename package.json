@@ -1,6 +1,6 @@
 {
   "name": "passive-docs-index",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Passive documentation indexing system for AI coding assistants - eliminates the decision point for documentation retrieval",
   "type": "module",
   "bin": {
