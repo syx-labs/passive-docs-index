@@ -3,8 +3,8 @@
  * Tests the freshness checking logic for indexed framework documentation.
  *
  * Mocking strategy:
- * - mock.module for registry-client.ts to control fetchLatestVersions
- * - Uses bun:test mock utilities (established pattern)
+ * - Dependency injection via fetchVersionsFn parameter on checkFreshness
+ * - No mock.module needed (avoids Bun module cache pollution)
  */
 
 import {
@@ -20,27 +20,18 @@ import {
   createConfig,
   createFrameworkConfig,
 } from "../../helpers/factories.js";
+import {
+  checkVersionFreshness,
+  checkFreshness,
+  EXIT_CODES,
+} from "../../../src/lib/freshness.js";
 
 // ---------------------------------------------------------------------------
-// Mock the registry client
+// Mock fetch function (injected via DI, no mock.module needed)
 // ---------------------------------------------------------------------------
 
 const mockFetchLatestVersions = mock(
   async (_names: string[]): Promise<Map<string, string | null>> => new Map()
-);
-
-mock.module("../../../src/lib/registry-client.js", () => ({
-  fetchLatestVersions: (...args: any[]) => mockFetchLatestVersions(...args),
-  fetchLatestVersion: mock(),
-  NPM_REGISTRY_URL: "https://registry.npmjs.org",
-}));
-
-// ---------------------------------------------------------------------------
-// Import module under test (after mocks)
-// ---------------------------------------------------------------------------
-
-const { checkVersionFreshness, checkFreshness, EXIT_CODES } = await import(
-  "../../../src/lib/freshness.js"
 );
 
 // ---------------------------------------------------------------------------
@@ -172,7 +163,9 @@ describe("checkFreshness", () => {
 
     mockFetchLatestVersions.mockResolvedValue(new Map([["react", "19.0.0"]]));
 
-    const output = await checkFreshness(config, packageJson);
+    const output = await checkFreshness(config, packageJson, {
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     expect(output.results).toHaveLength(1);
     expect(output.results[0].status).toBe("up-to-date");
@@ -193,7 +186,9 @@ describe("checkFreshness", () => {
 
     mockFetchLatestVersions.mockResolvedValue(new Map([["react", "19.1.0"]]));
 
-    const output = await checkFreshness(config, packageJson);
+    const output = await checkFreshness(config, packageJson, {
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     expect(output.results.find((r) => r.framework === "react")?.status).toBe(
       "stale"
@@ -214,7 +209,9 @@ describe("checkFreshness", () => {
 
     mockFetchLatestVersions.mockResolvedValue(new Map([["hono", "4.7.0"]]));
 
-    const output = await checkFreshness(config, packageJson);
+    const output = await checkFreshness(config, packageJson, {
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     expect(output.results.find((r) => r.framework === "hono")?.status).toBe(
       "stale"
@@ -234,7 +231,9 @@ describe("checkFreshness", () => {
 
     mockFetchLatestVersions.mockResolvedValue(new Map([["react", "19.0.0"]]));
 
-    const output = await checkFreshness(config, packageJson);
+    const output = await checkFreshness(config, packageJson, {
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     expect(output.results.find((r) => r.framework === "react")?.status).toBe(
       "orphaned"
@@ -253,7 +252,9 @@ describe("checkFreshness", () => {
 
     mockFetchLatestVersions.mockResolvedValue(new Map());
 
-    const output = await checkFreshness(config, packageJson);
+    const output = await checkFreshness(config, packageJson, {
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     expect(output.results.find((r) => r.framework === "hono")?.status).toBe(
       "missing"
@@ -275,7 +276,9 @@ describe("checkFreshness", () => {
     // Registry returns null for react (e.g., fetch failed for this package)
     mockFetchLatestVersions.mockResolvedValue(new Map([["react", null]]));
 
-    const output = await checkFreshness(config, packageJson);
+    const output = await checkFreshness(config, packageJson, {
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     expect(output.results[0].status).toBe("unknown");
     expect(output.results[0].diffType).toBe("fetch-failed");
@@ -305,7 +308,9 @@ describe("checkFreshness", () => {
 
     mockFetchLatestVersions.mockResolvedValue(new Map());
 
-    const output = await checkFreshness(config, packageJson);
+    const output = await checkFreshness(config, packageJson, {
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     const customResult = output.results.find(
       (r) => r.framework === "custom-framework"
@@ -333,7 +338,10 @@ describe("checkFreshness", () => {
     mockFetchLatestVersions.mockResolvedValue(new Map());
 
     // staleDays = 7 means 10 days old is stale
-    const output = await checkFreshness(config, packageJson, { staleDays: 7 });
+    const output = await checkFreshness(config, packageJson, {
+      staleDays: 7,
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     const customResult = output.results.find(
       (r) => r.framework === "custom-framework"
@@ -362,6 +370,7 @@ describe("checkFreshness", () => {
 
     const output = await checkFreshness(config, packageJson, {
       staleDays: 30,
+      fetchVersionsFn: mockFetchLatestVersions,
     });
 
     const customResult = output.results.find(
@@ -388,7 +397,9 @@ describe("checkFreshness", () => {
       ])
     );
 
-    const output = await checkFreshness(config, packageJson);
+    const output = await checkFreshness(config, packageJson, {
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     expect(output.exitCode).toBe(EXIT_CODES.SUCCESS);
     expect(output.summary.total).toBe(2);
@@ -418,7 +429,9 @@ describe("checkFreshness", () => {
       ])
     );
 
-    const output = await checkFreshness(config, packageJson);
+    const output = await checkFreshness(config, packageJson, {
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     // We have stale (react), orphaned (vue), and missing (hono)
     expect(output.exitCode).toBe(EXIT_CODES.MIXED);
@@ -438,7 +451,9 @@ describe("checkFreshness", () => {
       new Error("Network error: unable to reach registry")
     );
 
-    const output = await checkFreshness(config, packageJson);
+    const output = await checkFreshness(config, packageJson, {
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     expect(output.exitCode).toBe(EXIT_CODES.NETWORK_ERROR);
   });
@@ -452,7 +467,9 @@ describe("checkFreshness", () => {
 
     mockFetchLatestVersions.mockResolvedValue(new Map([["react", "19.0.0"]]));
 
-    const output = await checkFreshness(config, null);
+    const output = await checkFreshness(config, null, {
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     expect(output.results.find((r) => r.framework === "react")?.status).toBe(
       "orphaned"
@@ -470,7 +487,9 @@ describe("checkFreshness", () => {
 
     mockFetchLatestVersions.mockResolvedValue(new Map());
 
-    const output = await checkFreshness(config, packageJson);
+    const output = await checkFreshness(config, packageJson, {
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     expect(output.results.find((r) => r.framework === "vitest")?.status).toBe(
       "missing"
@@ -500,7 +519,9 @@ describe("checkFreshness", () => {
       ])
     );
 
-    const output = await checkFreshness(config, packageJson);
+    const output = await checkFreshness(config, packageJson, {
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     expect(output.summary.upToDate).toBe(1); // react
     expect(output.summary.stale).toBe(1); // hono
@@ -520,7 +541,9 @@ describe("checkFreshness", () => {
 
     mockFetchLatestVersions.mockResolvedValue(new Map());
 
-    const output = await checkFreshness(config, packageJson);
+    const output = await checkFreshness(config, packageJson, {
+      fetchVersionsFn: mockFetchLatestVersions,
+    });
 
     expect(
       output.results.find((r) => r.framework === "tanstack-query")?.status

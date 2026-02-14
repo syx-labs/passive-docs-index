@@ -115,9 +115,15 @@ export async function checkFreshness(
     dependencies?: Record<string, string>;
     devDependencies?: Record<string, string>;
   } | null,
-  options?: { staleDays?: number }
+  options?: {
+    staleDays?: number;
+    fetchVersionsFn?: (
+      names: string[]
+    ) => Promise<Map<string, string | null>>;
+  }
 ): Promise<FreshnessCheckOutput> {
   const staleDays = options?.staleDays ?? DEFAULT_STALE_DAYS;
+  const fetchVersions = options?.fetchVersionsFn ?? fetchLatestVersions;
   const results: FreshnessResult[] = [];
 
   // Merge all dependencies from package.json
@@ -142,7 +148,7 @@ export async function checkFreshness(
   // Fetch latest versions from registry
   let latestVersions: Map<string, string | null>;
   try {
-    latestVersions = await fetchLatestVersions(npmPackagesToFetch);
+    latestVersions = await fetchVersions(npmPackagesToFetch);
   } catch (error) {
     console.error("Failed to fetch versions from registry:", error);
     return {
