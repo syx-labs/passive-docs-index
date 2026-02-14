@@ -17,14 +17,14 @@ import {
   test,
 } from "bun:test";
 import {
+  checkFreshness,
+  checkVersionFreshness,
+  EXIT_CODES,
+} from "../../../src/lib/freshness.js";
+import {
   createConfig,
   createFrameworkConfig,
 } from "../../helpers/factories.js";
-import {
-  checkVersionFreshness,
-  checkFreshness,
-  EXIT_CODES,
-} from "../../../src/lib/freshness.js";
 
 // ---------------------------------------------------------------------------
 // Mock fetch function (injected via DI, no mock.module needed)

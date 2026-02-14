@@ -117,9 +117,7 @@ export async function checkFreshness(
   } | null,
   options?: {
     staleDays?: number;
-    fetchVersionsFn?: (
-      names: string[]
-    ) => Promise<Map<string, string | null>>;
+    fetchVersionsFn?: (names: string[]) => Promise<Map<string, string | null>>;
   }
 ): Promise<FreshnessCheckOutput> {
   const staleDays = options?.staleDays ?? DEFAULT_STALE_DAYS;
