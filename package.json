@@ -20,7 +20,7 @@
   "scripts": {
     "dev": "bun run --watch src/cli.ts",
     "build": "bun run build:js && bun run build:types",
-    "build:js": "bun build src/cli.ts --outfile dist/cli.js --target node --format esm && bun build src/index.ts --outfile dist/index.js --target node --format esm && bun build src/lib/postinstall.ts --outfile dist/postinstall.js --target node --format esm",
+    "build:js": "VERSION=$(node -p \"require('./package.json').version\") && bun build src/cli.ts --outfile dist/cli.js --target node --format esm --define \"process.env.npm_package_version=\\\"$VERSION\\\"\" && bun build src/index.ts --outfile dist/index.js --target node --format esm && bun build src/lib/postinstall.ts --outfile dist/postinstall.js --target node --format esm",
     "postinstall": "test -f ./dist/postinstall.js && node ./dist/postinstall.js || exit 0",
     "build:types": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
