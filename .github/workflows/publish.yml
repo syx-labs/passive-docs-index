@@ -50,7 +50,7 @@ jobs:
     if: needs.check-version.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
@@ -94,3 +94,12 @@ jobs:
 
       - name: Publish with provenance
         run: npm publish --provenance --access public
+
+      - name: Tag release
+        if: success()
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"

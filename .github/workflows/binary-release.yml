@@ -1,0 +1,147 @@
+# Build standalone binaries and publish GitHub Release + update Homebrew tap
+#
+# Triggered by version tags pushed from publish.yml after npm publish.
+# Cross-compiles for macOS (ARM64, x64) and Linux (x64) using bun build --compile.
+# Updates syx-labs/homebrew-tap Formula/pdi.rb with new checksums.
+#
+# Required secret: HOMEBREW_TAP_TOKEN (PAT with Contents:write on syx-labs/homebrew-tap)
+
+name: Binary Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Binaries & GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install
+
+      - name: Extract version from tag
+        id: version
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: echo "version=${REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build binaries
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          DEFINE_FLAG="--define process.env.npm_package_version=\"${VERSION}\""
+
+          bun build --compile --minify $DEFINE_FLAG \
+            --target=bun-darwin-arm64 src/cli.ts --outfile pdi-darwin-arm64
+
+          bun build --compile --minify $DEFINE_FLAG \
+            --target=bun-darwin-x64 src/cli.ts --outfile pdi-darwin-x64
+
+          bun build --compile --minify $DEFINE_FLAG \
+            --target=bun-linux-x64 src/cli.ts --outfile pdi-linux-x64
+
+      - name: Generate checksums
+        run: shasum -a 256 pdi-darwin-arm64 pdi-darwin-x64 pdi-linux-x64 > checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            pdi-darwin-arm64
+            pdi-darwin-x64
+            pdi-linux-x64
+            checksums.txt
+
+  update-formula:
+    name: Update Homebrew Formula
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version from tag
+        id: version
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: echo "version=${REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Download checksums from release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh release download "$TAG_NAME" \
+            --repo "$REPO" \
+            --pattern checksums.txt
+
+      - name: Parse checksums
+        id: checksums
+        run: |
+          echo "darwin_arm64=$(grep pdi-darwin-arm64 checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "darwin_x64=$(grep pdi-darwin-x64 checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "linux_x64=$(grep pdi-linux-x64 checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: syx-labs/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update formula
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          SHA_DARWIN_ARM64: ${{ steps.checksums.outputs.darwin_arm64 }}
+          SHA_DARWIN_X64: ${{ steps.checksums.outputs.darwin_x64 }}
+          SHA_LINUX_X64: ${{ steps.checksums.outputs.linux_x64 }}
+          REPO: ${{ github.repository }}
+        run: |
+          mkdir -p homebrew-tap/Formula
+          cat > homebrew-tap/Formula/pdi.rb << RUBY
+          class Pdi < Formula
+            desc "Passive documentation indexing for AI coding assistants"
+            homepage "https://github.com/syx-labs/passive-docs-index"
+            license "MIT"
+            version "${VERSION}"
+
+            if OS.mac?
+              if Hardware::CPU.arm?
+                url "https://github.com/${REPO}/releases/download/v${VERSION}/pdi-darwin-arm64"
+                sha256 "${SHA_DARWIN_ARM64}"
+              else
+                url "https://github.com/${REPO}/releases/download/v${VERSION}/pdi-darwin-x64"
+                sha256 "${SHA_DARWIN_X64}"
+              end
+            elsif OS.linux?
+              url "https://github.com/${REPO}/releases/download/v${VERSION}/pdi-linux-x64"
+              sha256 "${SHA_LINUX_X64}"
+            end
+
+            def install
+              binary_name = stable.url.split("/").last
+              bin.install binary_name => "pdi"
+            end
+
+            test do
+              assert_match version.to_s, shell_output("#{bin}/pdi --version")
+            end
+          end
+          RUBY
+
+      - name: Commit and push formula
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        working-directory: homebrew-tap
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/pdi.rb
+          git commit -m "pdi ${VERSION}"
+          git push
