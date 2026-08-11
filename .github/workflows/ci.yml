@@ -57,9 +57,15 @@ jobs:
           echo "::add-matcher::.github/problem-matchers/tsc.json"
           bun run typecheck
 
+      # Unit and integration run in separate processes so bun mock.module
+      # state from integration fixtures cannot poison unit suites (Linux CI).
       - name: Test with coverage
         if: steps.changes.outputs.code == 'true'
-        run: bun test --coverage
+        run: bun test --coverage tests/unit/lib tests/coverage-loader.test.ts
+
+      - name: Test integration
+        if: steps.changes.outputs.code == 'true'
+        run: bun test tests/integration
 
       - name: Check coverage thresholds
         if: steps.changes.outputs.code == 'true'
