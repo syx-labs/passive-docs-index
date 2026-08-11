@@ -57,11 +57,17 @@ jobs:
           echo "::add-matcher::.github/problem-matchers/tsc.json"
           bun run typecheck
 
-      # Unit and integration run in separate processes so bun mock.module
-      # state from integration fixtures cannot poison unit suites (Linux CI).
+      # Separate processes: bun mock.module leaks across files on Linux runners.
+      # postinstall.test.ts mocks freshness.js; integration mocks context7-client/p-limit.
       - name: Test with coverage
         if: steps.changes.outputs.code == 'true'
-        run: bun test --coverage tests/unit/lib tests/coverage-loader.test.ts
+        run: |
+          unit_tests=$(ls tests/unit/lib/*.test.ts | grep -v '/postinstall\.test\.ts$')
+          bun test --coverage $unit_tests tests/coverage-loader.test.ts
+
+      - name: Test postinstall unit
+        if: steps.changes.outputs.code == 'true'
+        run: bun test tests/unit/lib/postinstall.test.ts
 
       - name: Test integration
         if: steps.changes.outputs.code == 'true'
