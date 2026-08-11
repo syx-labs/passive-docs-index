@@ -84,9 +84,17 @@ jobs:
       - name: Parse checksums
         id: checksums
         run: |
-          echo "darwin_arm64=$(grep pdi-darwin-arm64 checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
-          echo "darwin_x64=$(grep pdi-darwin-x64 checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
-          echo "linux_x64=$(grep pdi-linux-x64 checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          darwin_arm64=$(grep -m1 pdi-darwin-arm64 checksums.txt | awk '{print $1}')
+          darwin_x64=$(grep -m1 pdi-darwin-x64 checksums.txt | awk '{print $1}')
+          linux_x64=$(grep -m1 pdi-linux-x64 checksums.txt | awk '{print $1}')
+          if [ -z "$darwin_arm64" ] || [ -z "$darwin_x64" ] || [ -z "$linux_x64" ]; then
+            echo "::error::Checksums ausentes no checksums.txt"
+            exit 1
+          fi
+          echo "darwin_arm64=$darwin_arm64" >> "$GITHUB_OUTPUT"
+          echo "darwin_x64=$darwin_x64" >> "$GITHUB_OUTPUT"
+          echo "linux_x64=$linux_x64" >> "$GITHUB_OUTPUT"
 
       - name: Checkout Homebrew tap
         uses: actions/checkout@v4

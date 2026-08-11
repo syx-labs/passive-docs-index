@@ -101,5 +101,9 @@ jobs:
           VERSION=$(node -p "require('./package.json').version")
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --tags origin "refs/tags/v${VERSION}" | grep -q .; then
+            echo "Tag v${VERSION} já existe; pulando."
+            exit 0
+          fi
           git tag "v${VERSION}"
           git push origin "v${VERSION}"
