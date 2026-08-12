@@ -36,7 +36,7 @@ program
   .description(
     "Passive Docs Index - Documentation management for AI coding assistants"
   )
-  .version("0.2.0");
+  .version(process.env.npm_package_version ?? "0.0.0-dev");
 
 // Init command
 program
