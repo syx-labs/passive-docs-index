@@ -59,19 +59,30 @@ jobs:
 
       # Separate processes: bun mock.module leaks across files on Linux runners.
       # postinstall.test.ts mocks freshness.js; integration mocks context7-client/p-limit.
+      # bunfig coverage=true overwrites lcov.info every process — merge unit+postinstall.
       - name: Test with coverage
         if: steps.changes.outputs.code == 'true'
         run: |
-          unit_tests=$(ls tests/unit/lib/*.test.ts | grep -v '/postinstall\.test\.ts$')
-          bun test --coverage $unit_tests tests/coverage-loader.test.ts
+          set -euo pipefail
+          mkdir -p coverage
+          mapfile -t unit_tests < <(ls tests/unit/lib/*.test.ts | grep -v '/postinstall\.test\.ts$')
+          bun test --coverage "${unit_tests[@]}" tests/coverage-loader.test.ts
+          cp coverage/lcov.info coverage/lcov.unit.info
 
-      - name: Test postinstall unit
-        if: steps.changes.outputs.code == 'true'
-        run: bun test tests/unit/lib/postinstall.test.ts
+          bun test --coverage tests/unit/lib/postinstall.test.ts
+          cp coverage/lcov.info coverage/lcov.postinstall.info
+
+          bun run scripts/merge-lcov.ts coverage/lcov.info \
+            coverage/lcov.unit.info coverage/lcov.postinstall.info
+          cp coverage/lcov.info coverage/lcov.merged.info
 
       - name: Test integration
         if: steps.changes.outputs.code == 'true'
-        run: bun test tests/integration
+        run: |
+          set -euo pipefail
+          bun test tests/integration
+          # Restore merged coverage after bunfig-driven overwrite
+          cp coverage/lcov.merged.info coverage/lcov.info
 
       - name: Check coverage thresholds
         if: steps.changes.outputs.code == 'true'

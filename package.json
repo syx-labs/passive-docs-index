@@ -24,9 +24,10 @@
     "postinstall": "test -f ./dist/postinstall.js && node ./dist/postinstall.js || exit 0",
     "build:types": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "test:isolated": "echo 'No isolated tests configured'",
-    "test:main": "bun test --coverage tests/unit/lib tests/integration tests/coverage-loader.test.ts",
-    "test": "bun run test:isolated && bun run test:main && bun run scripts/check-coverage.ts",
+    "test:unit": "bun test --coverage $(ls tests/unit/lib/*.test.ts | grep -v '/postinstall\\.test\\.ts$') tests/coverage-loader.test.ts",
+    "test:postinstall": "bun test --coverage tests/unit/lib/postinstall.test.ts",
+    "test:integration": "bun test tests/integration",
+    "test": "bun run test:unit && cp coverage/lcov.info coverage/lcov.unit.info && bun run test:postinstall && cp coverage/lcov.info coverage/lcov.postinstall.info && bun run scripts/merge-lcov.ts coverage/lcov.info coverage/lcov.unit.info coverage/lcov.postinstall.info && cp coverage/lcov.info coverage/lcov.merged.info && bun run test:integration && cp coverage/lcov.merged.info coverage/lcov.info && bun run scripts/check-coverage.ts",
     "prepublishOnly": "bun run build",
     "check": "ultracite check",
     "fix": "ultracite fix"
